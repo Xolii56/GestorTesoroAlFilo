@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Inventario — Login</title>
+  <link rel="stylesheet" href="./style.css"/>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="./config.js" defer></script>
+  <script src="./modules/db.js" defer></script>
+  <script src="./modules/auth.js" defer></script>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <header>
+    <img src="./assets/logo.png" alt="logo"/>
+    <h3>Inventario Guild</h3>
+  </header>
+  <main>
+    <div class="card">
+      <h2>Accede con Discord</h2>
+      <p>Consulta el stock, crea peticiones y, si tienes rol de encargado, revisa solicitudes.</p>
+      <div class="row">
+        <button id="login-discord">Entrar con Discord</button>
+        <a href="./app_ui.html"><button id="go-app">Entrar como invitado (solo lectura)</button></a>
+      </div>
+      <p style="opacity:.7;margin-top:.75rem">El acceso de invitado muestra el inventario público (demo).</p>
+    </div>
+  </main>
+</body>
+</html>
