@@ -3,8 +3,8 @@
     const { redirectUrl } = window.SUPABASE_CONFIG || {};
     const { data, error } = await window.supa.auth.signInWithOAuth({
       provider: 'discord',
-      options: {
-        redirectTo: redirectUrl
+      options: { 
+        redirectTo: window.SUPABASE_CONFIG.redirectUrl 
       }
     });
     if(error){ alert('Error login Discord: '+error.message); }
