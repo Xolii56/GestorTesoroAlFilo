@@ -27,5 +27,19 @@
       <p style="opacity:.7;margin-top:.75rem">El acceso de invitado muestra el inventario público (demo).</p>
     </div>
   </main>
+
+  <!-- 👇 Añade este script justo antes de cerrar body -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Espera a que el cliente Supabase esté listo
+      const { data: { session } } = await window.supa.auth.getSession();
+
+      // Si ya existe una sesión activa (el usuario ya ha hecho login antes)
+      if (session) {
+        // Redirige directamente al panel principal
+        window.location.href = "./app_ui.html";
+      }
+    });
+  </script>
 </body>
 </html>
