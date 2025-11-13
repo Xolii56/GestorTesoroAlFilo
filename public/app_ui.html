@@ -10,100 +10,149 @@
   <script src="./modules/db.js" defer></script>
   <script src="./modules/auth.js" defer></script>
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      const { supa } = window;
+  document.addEventListener('DOMContentLoaded', async () => {
+    const { supa } = window;
 
-      // 1) Comprobar sesión
-      const { data: { session } } = await supa.auth.getSession();
-      if (!session) {
-        // Si no hay sesión, fuera al login
+    // 1) Comprobar sesión
+    const { data: { session }, error } = await supa.auth.getSession();
+    console.log('session en app_ui:', session, 'error:', error);
+
+    if (!session) {
+      window.location.href = "./index.html";
+      return;
+    }
+
+    // 2) Datos del usuario
+    const profile = session.user;
+    const meta = profile.user_metadata || {};
+
+    const name =
+      meta.full_name ||
+      (meta.custom_claims && meta.custom_claims.global_name) ||
+      meta.name ||
+      profile.email ||
+      'Usuario';
+
+    const avatar =
+      meta.avatar_url ||
+      meta.picture ||
+      '';
+
+    const avatarImg = document.getElementById('avatar');
+    const userNameDiv = document.getElementById('user-name');
+
+    if (avatarImg && avatar) avatarImg.src = avatar;
+    if (userNameDiv) userNameDiv.textContent = name;
+
+    // 3) Menú desplegable
+    const avatarBtn = document.getElementById('avatar-button');
+    const dropdown = document.getElementById('user-dropdown');
+    const logoutBtn = document.getElementById('logout-btn');
+    const profileBtn = document.getElementById('profile-btn');
+
+    if (avatarBtn && dropdown) {
+      avatarBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('open');
+      });
+
+      // Cerrar al hacer click fuera
+      document.addEventListener('click', () => {
+        dropdown.classList.remove('open');
+      });
+
+      // Evitar que clicks dentro cierren el menú
+      dropdown.addEventListener('click', (e) => e.stopPropagation());
+    }
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', async () => {
+        await supa.auth.signOut();
         window.location.href = "./index.html";
-        return;
-      }
+      });
+    }
 
-      // 2) Rellenar datos de usuario
-      const profile = session.user;
-      const avatar = profile?.user_metadata?.avatar_url || '';
-      const name = profile?.user_metadata?.name || profile?.email || 'Invitado';
-      document.getElementById('whoami').textContent = name;
-      if (avatar) document.getElementById('avatar').src = avatar;
+    if (profileBtn) {
+      profileBtn.addEventListener('click', () => {
+        // Aquí luego podremos abrir página de perfil
+        alert('Vista de perfil pendiente de implementar 😄');
+      });
+    }
 
-      // 3) Botón salir
-      const logoutBtn = document.getElementById('logout');
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', async () => {
-          await supa.auth.signOut();
-          window.location.href = "./index.html";
-        });
-      }
+    // 4) Cargar datos
+    loadItems();
+    loadRequests();
+  });
 
-      // 4) Cargar datos
-      loadItems();
-      loadRequests();
+  async function loadItems(){
+    const { supa } = window;
+    const { data, error } = await supa.from('items').select('*').order('name');
+    if(error){ console.error('error loadItems:', error); return; }
+    const tbody = document.querySelector('#items tbody');
+    tbody.innerHTML = '';
+    (data||[]).forEach(it => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${it.name}</td>
+        <td>${it.type||''}</td>
+        <td>${it.quantity}</td>
+        <td>${it.unit_value ?? '-'}</td>
+        <td>${it.location||'-'}</td>`;
+      tbody.appendChild(tr);
     });
+  }
 
-    async function loadItems(){
-      const { supa } = window;
-      const { data, error } = await supa.from('items').select('*').order('name');
-      if(error){ console.error(error); return; }
-      const tbody = document.querySelector('#items tbody');
-      tbody.innerHTML = '';
-      (data||[]).forEach(it => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${it.name}</td>
-          <td>${it.type||''}</td>
-          <td>${it.quantity}</td>
-          <td>${it.unit_value ?? '-'}</td>
-          <td>${it.location||'-'}</td>`;
-        tbody.appendChild(tr);
-      });
+  async function createRequest(e){
+    e.preventDefault();
+    const { supa } = window;
+    const form = e.target;
+    const item_id = form.item_id.value;
+    const quantity = Number(form.quantity.value);
+
+    const { data: { session } } = await supa.auth.getSession();
+    if(!session){
+      alert('Necesitas iniciar sesión con Discord.');
+      window.location.href = "./index.html";
+      return;
     }
 
-    async function createRequest(e){
-      e.preventDefault();
-      const { supa } = window;
-      const form = e.target;
-      const item_id = form.item_id.value;
-      const quantity = Number(form.quantity.value);
-      const { data: { session } } = await supa.auth.getSession();
-      if(!session){ 
-        alert('Necesitas iniciar sesión con Discord.');
-        window.location.href = "./index.html";
-        return; 
-      }
-      const requester = session.user.id;
-      const { error } = await supa.from('requests')
-        .insert({ item_id, quantity, requester_discord_id: requester, status: 'pendiente' });
-      if(error){ 
-        alert('Error creando solicitud: '+error.message); 
-        return; 
-      }
-      form.reset();
-      loadRequests();
-      alert('Solicitud creada');
+    const requester = session.user.id;
+    const { error } = await supa
+      .from('requests')
+      .insert({ item_id, quantity, requester_discord_id: requester, status: 'pendiente' });
+
+    if(error){
+      alert('Error creando solicitud: ' + error.message);
+      return;
     }
 
-    async function loadRequests(){
-      const { supa } = window;
-      const { data, error } = await supa.from('requests')
-        .select('id,item_id,quantity,status,created_at,items(name)')
-        .order('created_at', { ascending:false });
-      if(error){ console.error(error); return; }
-      const tbody = document.querySelector('#requests tbody');
-      tbody.innerHTML='';
-      (data||[]).forEach(r => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>#${r.id}</td>
-          <td>${r.items?.name||'-'}</td>
-          <td>${r.quantity}</td>
-          <td><span class="badge">${r.status}</span></td>
-          <td>${new Date(r.created_at).toLocaleString()}</td>`;
-        tbody.appendChild(tr);
-      });
-    }
-  </script>
+    form.reset();
+    loadRequests();
+    alert('Solicitud creada');
+  }
+
+  async function loadRequests(){
+    const { supa } = window;
+    const { data, error } = await supa.from('requests')
+      .select('id,item_id,quantity,status,created_at,items(name)')
+      .order('created_at', { ascending:false });
+
+    if(error){ console.error('error loadRequests:', error); return; }
+
+    const tbody = document.querySelector('#requests tbody');
+    tbody.innerHTML='';
+    (data||[]).forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>#${r.id}</td>
+        <td>${r.items?.name||'-'}</td>
+        <td>${r.quantity}</td>
+        <td><span class="badge">${r.status}</span></td>
+        <td>${new Date(r.created_at).toLocaleString()}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+</script>
 </head>
 <body>
   <header class="topbar">
