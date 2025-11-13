@@ -9,6 +9,7 @@
   <script src="./config.js" defer></script>
   <script src="./modules/db.js" defer></script>
   <script src="./modules/auth.js" defer></script>
+  <script src="./modules/layout.js" defer></script>
   <script src="./app.js" defer></script>
 </head>
 <body>
@@ -38,5 +39,18 @@
       }
     });
   </script>
+  <script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Cargamos header en modo "public" (sin avatar/menú)
+    await loadHeader('public');
+
+    // Redirigir al panel si ya hay sesión
+    const { data: { session } } = await window.supa.auth.getSession();
+    if (session) {
+      window.location.href = "./app_ui.html";
+    }
+  });
+</script>
+
 </body>
 </html>
