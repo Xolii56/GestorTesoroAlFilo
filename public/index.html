@@ -6,10 +6,45 @@
   <title>Inventario — Login</title>
   <link rel="stylesheet" href="./style.css"/>
 
+  <style>
+    body {
+      margin: 0;
+    }
+    main.login-main {
+      min-height: calc(100vh - 80px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .login-card {
+      max-width: 420px;
+      width: 100%;
+    }
+    .btn-admin-login {
+      position: fixed;
+      top: 72px;      /* justo debajo del header aprox */
+      right: 1.5rem;
+      font-size: 0.8rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(0,0,0,0.55);
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+    }
+    .btn-admin-login:hover {
+      background: rgba(0,0,0,0.8);
+    }
+    #login-discord {
+      width: 100%;
+    }
+  </style>
+
+  <!-- Supabase + módulos base -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="./config.js" defer></script>
   <script src="./modules/db.js" defer></script>
-  <script src="./modules/auth.js" defer></script>
   <script src="./modules/layout.js" defer></script>
 </head>
 <body>
@@ -17,92 +52,161 @@
   <!-- HEADER (modo público) -->
   <div id="site-header"></div>
 
-  <main>
-    <div class="card">
-      <h2>Accede con Discord</h2>
-      <p>Consulta el stock, crea peticiones y, si tienes rol de encargado, revisa solicitudes.</p>
+  <!-- Botón pequeño para acceso admin -->
+  <button id="admin-login-btn" class="btn-admin-login">Acceso admin</button>
 
-      <div class="row">
+  <main class="login-main">
+    <div class="card login-card">
+      <h2>Departamento del Tesoro</h2>
+      <p>Accede con tu cuenta de Discord para consultar el inventario, crear solicitudes y, si eres encargado, gestionarlas.</p>
+
+      <div class="row" style="margin-top:1rem">
         <button id="login-discord">Entrar con Discord</button>
-        <a href="./app_ui.html"><button id="go-app">Entrar como invitado (solo lectura)</button></a>
       </div>
 
-      <p style="opacity:.7;margin-top:.75rem">El acceso de invitado muestra el inventario público (demo).</p>
+      <p style="opacity:.7;margin-top:1rem;font-size:.85rem">
+        También existe una cuenta de administración interna para pruebas.
+      </p>
     </div>
   </main>
 
-<script type="module">
-  import { ensureProfile, getOrgStatus } from './modules/profile.js';
+  <script type="module">
+    import { ensureProfile, getOrgStatus } from './modules/profile.js';
 
-  await loadHeader('public');
+    // Cargar header en modo público
+    await loadHeader('public');
 
-  const BOT_URL = 'https://juvhyzjjtwfokgnrnejv.supabase.co/functions/v1/check-discord-member';
+    const BOT_URL = 'https://juvhyzjjtwfokgnrnejv.supabase.co/functions/v1/check-discord-member';
+    const ALLOWED_STATUS = ['miembro','daga','espada','admin'];
 
-  async function callBotCheck(discord_user_id) {
-    try {
-      const res = await fetch(BOT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ discord_user_id })
-      });
-      if (!res.ok) {
-        return { allowed: false, reason: 'BOT_HTTP_ERROR' };
+    async function callBotCheck(discord_user_id) {
+      try {
+        const res = await fetch(BOT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ discord_user_id })
+        });
+        if (!res.ok) {
+          console.error('HTTP error en check-discord-member', res.status);
+          return { allowed: false, reason: 'BOT_HTTP_ERROR' };
+        }
+        return await res.json();
+      } catch (e) {
+        console.error('Error llamando a check-discord-member', e);
+        return { allowed: false, reason: 'BOT_FETCH_ERROR' };
       }
-      return await res.json();
-    } catch (e) {
-      return { allowed: false, reason: 'BOT_FETCH_ERROR' };
     }
-  }
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    const { supa } = window;
+    async function handleSessionCheck(session, fromLogin) {
+      const { supa } = window;
 
-    const { data: { session } } = await supa.auth.getSession();
+      if (!session) {
+        await supa.auth.signOut();
+        window.localStorage.removeItem('afterLogin');
+        return;
+      }
 
-    // NO hay sesión → esperar login
-    if (!session) {
+      const provider = session.user.app_metadata?.provider || 'email';
+      const isDiscord = provider === 'discord';
+
+      // Si viene de Discord, creamos/actualizamos perfil y preguntamos al bot
+      if (isDiscord) {
+        const profile = await ensureProfile();
+        if (!profile || !profile.discord_user_id) {
+          await supa.auth.signOut();
+          if (fromLogin) alert('No se ha podido obtener tu perfil de Discord.');
+          window.localStorage.removeItem('afterLogin');
+          return;
+        }
+
+        const botResult = await callBotCheck(profile.discord_user_id);
+        console.log('check-discord-member:', botResult);
+
+        if (!botResult.allowed) {
+          await supa.auth.signOut();
+          if (fromLogin) {
+            alert(
+              'No eres miembro de la organización o el sistema de verificación no ha podido validarte.\n\n' +
+              'Motivo: ' + (botResult.reason || 'desconocido')
+            );
+          }
+          window.localStorage.removeItem('afterLogin');
+          return;
+        }
+      }
+
+      // Aquí ya sea Discord (tras bot) o admin interno
+      const status = await getOrgStatus();
+      console.log('org_status desde BD:', status);
+
+      if (!status || !ALLOWED_STATUS.includes(status)) {
+        await supa.auth.signOut();
+        if (fromLogin) {
+          alert('Tu acceso al Tesoro no está activado como miembro de la organización. (org_status=' + status + ')');
+        }
+        window.localStorage.removeItem('afterLogin');
+        return;
+      }
+
+      // Todo OK → dentro
       window.localStorage.removeItem('afterLogin');
-      return;
+      window.location.href = './app_ui.html';
     }
 
-    const fromLogin = window.localStorage.getItem('afterLogin') === '1';
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { supa } = window;
 
-    // --- 1) perfil ---
-    const profile = await ensureProfile();
-    if (!profile || !profile.discord_user_id) {
-      await supa.auth.signOut();
-      if (fromLogin) alert('No se puede obtener tu perfil de Discord.');
-      window.localStorage.removeItem('afterLogin');
-      return;
-    }
+      // --- Botón Discord ---
+      const discordBtn = document.getElementById('login-discord');
+      discordBtn?.addEventListener('click', async () => {
+        try {
+          window.localStorage.setItem('afterLogin', '1');
+          await supa.auth.signInWithOAuth({
+            provider: 'discord',
+            options: {
+              redirectTo: window.location.origin + '/index.html'
+            }
+          });
+        } catch (e) {
+          console.error('Error iniciando login con Discord:', e);
+          alert('No se ha podido iniciar sesión con Discord.');
+        }
+      });
 
-    // --- 2) BOT ---
-    const check = await callBotCheck(profile.discord_user_id);
-    if (!check.allowed) {
-      await supa.auth.signOut();
-      if (fromLogin)
-        alert(
-          'No eres miembro de la organización o la verificación ha fallado.\n\nMotivo: ' + check.reason
-        );
-      window.localStorage.removeItem('afterLogin');
-      return;
-    }
+      // --- Botón admin (email/password) ---
+      const adminBtn = document.getElementById('admin-login-btn');
+      adminBtn?.addEventListener('click', async () => {
+        const email = prompt('Email del admin (ej: admin@alfilo.test):');
+        if (!email) return;
+        const password = prompt('Contraseña del admin:');
+        if (!password) return;
 
-    // --- 3) BD org_status ---
-    const status = await getOrgStatus();
-    if (!status || !['miembro','daga','espada','admin'].includes(status)) {
-      await supa.auth.signOut();
-      if (fromLogin)
-        alert('Tu acceso al Tesoro no está activado todavía (org_status=' + status + ')');
-      window.localStorage.removeItem('afterLogin');
-      return;
-    }
+        const { data, error } = await supa.auth.signInWithPassword({
+          email,
+          password
+        });
 
-    // Todo OK → entrar al panel
-    window.localStorage.removeItem('afterLogin');
-    window.location.href = './app_ui.html';
-  });
-</script>
+        if (error) {
+          console.error('Error login admin:', error);
+          alert('No se ha podido iniciar sesión como admin: ' + error.message);
+          return;
+        }
 
+        window.localStorage.setItem('afterLogin', '1');
+        await handleSessionCheck(data.session, true);
+      });
+
+      // --- Verificación automática si ya había sesión ---
+      const { data: { session } } = await supa.auth.getSession();
+      if (!session) {
+        window.localStorage.removeItem('afterLogin');
+        console.log('Sin sesión activa, esperando login.');
+        return;
+      }
+
+      const fromLogin = window.localStorage.getItem('afterLogin') === '1';
+      await handleSessionCheck(session, fromLogin);
+    });
+  </script>
 </body>
 </html>
