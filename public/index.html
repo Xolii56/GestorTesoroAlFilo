@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Inventario — Login</title>
   <link rel="stylesheet" href="./style.css"/>
+
+  <!-- Supabase y módulos base -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="./config.js" defer></script>
   <script src="./modules/db.js" defer></script>
@@ -14,99 +16,111 @@
 </head>
 <body>
   <div id="site-header"></div>
+
   <main>
     <div class="card">
       <h2>Accede con Discord</h2>
       <p>Consulta el stock, crea peticiones y, si tienes rol de encargado, revisa solicitudes.</p>
       <div class="row">
         <button id="login-discord">Entrar con Discord</button>
-        <a href="./app_ui.html"><button id="go-app">Entrar como invitado (solo lectura)</button></a>
+        <a href="./app_ui.html">
+          <button id="go-app">Entrar como invitado (solo lectura)</button>
+        </a>
       </div>
-      <p style="opacity:.7;margin-top:.75rem">El acceso de invitado muestra el inventario público (demo).</p>
+      <p style="opacity:.7;margin-top:.75rem">
+        El acceso de invitado muestra el inventario público (demo).
+      </p>
     </div>
   </main>
 
-  <!-- 👇 Añade este script justo antes de cerrar body -->
+  <!-- Cargar header en modo público, SIN redirigir -->
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
-      // Espera a que el cliente Supabase esté listo
-      const { data: { session } } = await window.supa.auth.getSession();
-
-      // Si ya existe una sesión activa (el usuario ya ha hecho login antes)
-      if (session) {
-        // Redirige directamente al panel principal
-        window.location.href = "./app_ui.html";
+      if (typeof loadHeader === 'function') {
+        try {
+          await loadHeader('public');
+        } catch (e) {
+          console.error('Error cargando header público:', e);
+        }
       }
     });
   </script>
-  <script>
-  document.addEventListener('DOMContentLoaded', async () => {
-    // Cargamos header en modo "public" (sin avatar/menú)
-    await loadHeader('public');
 
-    // Redirigir al panel si ya hay sesión
-    const { data: { session } } = await window.supa.auth.getSession();
-    if (session) {
-      window.location.href = "./app_ui.html";
+  <!-- Lógica de verificación con bot / Edge Function -->
+  <script type="module">
+    import { ensureProfile, getOrgStatus } from './modules/profile.js';
+
+    const BOT_URL = 'https://juvhyzjjtwfokgnrnejv.supabase.co/functions/v1/check-discord-member';
+
+    async function callBotCheck(discord_user_id) {
+      try {
+        const res = await fetch(BOT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ discord_user_id })
+        });
+
+        if (!res.ok) {
+          console.error('HTTP error en check-discord-member', res.status);
+          return { allowed: false, reason: 'BOT_HTTP_ERROR' };
+        }
+
+        return await res.json();
+      } catch (e) {
+        console.error('Error llamando a check-discord-member', e);
+        return { allowed: false, reason: 'BOT_FETCH_ERROR' };
+      }
     }
-  });
-</script>
-<script type="module">
-  import { ensureProfile, getOrgStatus } from './modules/profile.js';
 
-  const BOT_URL = 'https://juvhyzjjtwfokgnrnejv.supabase.co/functions/v1/check-discord-member';
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { supa } = window;
 
-  async function callBotCheck(discord_user_id) {
-    const res = await fetch(BOT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ discord_user_id })
+      // 0) Mirar si hay sesión activa (si no, que se quede en la pantalla de login)
+      const { data: { session } } = await supa.auth.getSession();
+      if (!session) {
+        console.log('Sin sesión, esperando a que el usuario pulse "Entrar con Discord".');
+        return;
+      }
+
+      console.log('Sesión detectada, comprobando acceso contra el bot...');
+
+      // 1) Crear / actualizar fila en public.users
+      const profile = await ensureProfile();
+      if (!profile || !profile.discord_user_id) {
+        await supa.auth.signOut();
+        alert('No se ha podido obtener tu perfil de Discord.');
+        return;
+      }
+
+      // 2) Preguntar al bot (Edge Function) -> ¿está en la guild? ¿qué roles tiene?
+      const botResult = await callBotCheck(profile.discord_user_id);
+      console.log('check-discord-member:', botResult);
+
+      if (!botResult.allowed) {
+        await supa.auth.signOut();
+        alert(
+          'No eres miembro de la organización o el sistema de verificación no ha podido validarte.\n\n' +
+          'Motivo: ' + (botResult.reason || 'desconocido')
+        );
+        return;
+      }
+
+      // 3) Doble comprobación leyendo org_status de la BD
+      const status = await getOrgStatus();
+      console.log('org_status desde BD:', status);
+
+      if (!status || !['miembro', 'daga', 'espada', 'admin'].includes(status)) {
+        await supa.auth.signOut();
+        alert(
+          'Tu acceso al Tesoro no está configurado como miembro de la organización.\n\n' +
+          '(org_status = ' + status + ')'
+        );
+        return;
+      }
+
+      // 4) Si pasa todas las comprobaciones -> entrar al panel principal
+      window.location.href = './app_ui.html';
     });
-
-    if (!res.ok) {
-      console.error('HTTP error en check-discord-member', res.status);
-      return { allowed: false, reason: 'BOT_HTTP_ERROR' };
-    }
-
-    return await res.json();
-  }
-
-  document.addEventListener('DOMContentLoaded', async () => {
-    const { supa } = window;
-
-    const { data: { session } } = await supa.auth.getSession();
-    if (!session) return; // todavía no ha hecho login
-
-    // 1) Crear/actualizar fila en public.users
-    const profile = await ensureProfile();
-    if (!profile || !profile.discord_user_id) {
-      await supa.auth.signOut();
-      alert('No se ha podido obtener tu perfil de Discord.');
-      return;
-    }
-
-    // 2) Preguntar al bot (Edge Function) -> ¿está en la guild? ¿roles?
-    const botResult = await callBotCheck(profile.discord_user_id);
-    console.log('check-discord-member:', botResult);
-
-    if (!botResult.allowed) {
-      await supa.auth.signOut();
-      alert('No eres miembro de la organización o no tienes un rol válido.\nMotivo: ' + (botResult.reason || 'desconocido'));
-      return;
-    }
-
-    // 3) Doble check leyendo org_status de la BD
-    const status = await getOrgStatus();
-    if (!status || !['miembro','daga','espada','admin'].includes(status)) {
-      await supa.auth.signOut();
-      alert('Tu acceso al Tesoro todavía no está activado. (org_status=' + status + ')');
-      return;
-    }
-
-    // 4) Si ha pasado todo, puede entrar al panel
-    window.location.href = './app_ui.html';
-  });
-</script>
-
+  </script>
 </body>
 </html>
