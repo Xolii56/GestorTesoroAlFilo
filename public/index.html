@@ -34,93 +34,95 @@
   </main>
 
   <!-- Cargar header en modo público, SIN redirigir -->
-  <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      if (typeof loadHeader === 'function') {
-        try {
-          await loadHeader('public');
-        } catch (e) {
-          console.error('Error cargando header público:', e);
-        }
-      }
-    });
-  </script>
-
-  <!-- Lógica de verificación con bot / Edge Function -->
   <script type="module">
-    import { ensureProfile, getOrgStatus } from './modules/profile.js';
+  import { ensureProfile, getOrgStatus } from './modules/profile.js';
 
-    const BOT_URL = 'https://juvhyzjjtwfokgnrnejv.supabase.co/functions/v1/check-discord-member';
+  const BOT_URL = 'https://juvhyzjjtwfokgnrnejv.supabase.co/functions/v1/check-discord-member';
 
-    async function callBotCheck(discord_user_id) {
-      try {
-        const res = await fetch(BOT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ discord_user_id })
-        });
+  async function callBotCheck(discord_user_id) {
+    try {
+      const res = await fetch(BOT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ discord_user_id })
+      });
 
-        if (!res.ok) {
-          console.error('HTTP error en check-discord-member', res.status);
-          return { allowed: false, reason: 'BOT_HTTP_ERROR' };
-        }
-
-        return await res.json();
-      } catch (e) {
-        console.error('Error llamando a check-discord-member', e);
-        return { allowed: false, reason: 'BOT_FETCH_ERROR' };
+      if (!res.ok) {
+        console.error('HTTP error en check-discord-member', res.status);
+        return { allowed: false, reason: 'BOT_HTTP_ERROR' };
       }
+
+      return await res.json();
+    } catch (e) {
+      console.error('Error llamando a check-discord-member', e);
+      return { allowed: false, reason: 'BOT_FETCH_ERROR' };
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const { supa } = window;
+
+    const { data: { session } } = await supa.auth.getSession();
+    if (!session) {
+      // si no hay sesión, nos aseguramos de limpiar el flag
+      window.localStorage.removeItem('afterLogin');
+      console.log('Sin sesión, esperando a que el usuario pulse "Entrar con Discord".');
+      return;
     }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      const { supa } = window;
+    // ¿Venimos de un login recién hecho?
+    const fromLogin = window.localStorage.getItem('afterLogin') === '1';
 
-      // 0) Mirar si hay sesión activa (si no, que se quede en la pantalla de login)
-      const { data: { session } } = await supa.auth.getSession();
-      if (!session) {
-        console.log('Sin sesión, esperando a que el usuario pulse "Entrar con Discord".');
-        return;
-      }
+    console.log('Sesión detectada, comprobando acceso contra el bot...');
 
-      console.log('Sesión detectada, comprobando acceso contra el bot...');
-
-      // 1) Crear / actualizar fila en public.users
-      const profile = await ensureProfile();
-      if (!profile || !profile.discord_user_id) {
-        await supa.auth.signOut();
+    // 1) Crear / actualizar fila en public.users
+    const profile = await ensureProfile();
+    if (!profile || !profile.discord_user_id) {
+      await supa.auth.signOut();
+      if (fromLogin) {
         alert('No se ha podido obtener tu perfil de Discord.');
-        return;
       }
+      window.localStorage.removeItem('afterLogin');
+      return;
+    }
 
-      // 2) Preguntar al bot (Edge Function) -> ¿está en la guild? ¿qué roles tiene?
-      const botResult = await callBotCheck(profile.discord_user_id);
-      console.log('check-discord-member:', botResult);
+    // 2) Preguntar al bot (Edge Function) -> guild + roles
+    const botResult = await callBotCheck(profile.discord_user_id);
+    console.log('check-discord-member:', botResult);
 
-      if (!botResult.allowed) {
-        await supa.auth.signOut();
+    if (!botResult.allowed) {
+      await supa.auth.signOut();
+      // ⚠️ solo mostramos mensaje si venimos de un login
+      if (fromLogin) {
         alert(
           'No eres miembro de la organización o el sistema de verificación no ha podido validarte.\n\n' +
           'Motivo: ' + (botResult.reason || 'desconocido')
         );
-        return;
       }
+      window.localStorage.removeItem('afterLogin');
+      return;
+    }
 
-      // 3) Doble comprobación leyendo org_status de la BD
-      const status = await getOrgStatus();
-      console.log('org_status desde BD:', status);
+    // 3) Doble check leyendo org_status de la BD
+    const status = await getOrgStatus();
+    console.log('org_status desde BD:', status);
 
-      if (!status || !['miembro', 'daga', 'espada', 'admin'].includes(status)) {
-        await supa.auth.signOut();
+    if (!status || !['miembro', 'daga', 'espada', 'admin'].includes(status)) {
+      await supa.auth.signOut();
+      if (fromLogin) {
         alert(
           'Tu acceso al Tesoro no está configurado como miembro de la organización.\n\n' +
           '(org_status = ' + status + ')'
         );
-        return;
       }
+      window.localStorage.removeItem('afterLogin');
+      return;
+    }
 
-      // 4) Si pasa todas las comprobaciones -> entrar al panel principal
-      window.location.href = './app_ui.html';
-    });
-  </script>
+    // 4) Todo OK -> entrar al panel
+    window.localStorage.removeItem('afterLogin');
+    window.location.href = './app_ui.html';
+  });
+</script>
 </body>
 </html>
