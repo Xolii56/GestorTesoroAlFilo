@@ -6,7 +6,6 @@
   <title>Inventario — Panel</title>
   <link rel="stylesheet" href="./style.css"/>
 
-  <!-- Supabase y módulos base -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="./config.js" defer></script>
   <script src="./modules/db.js" defer></script>
@@ -14,6 +13,8 @@
   <script src="./modules/layout.js" defer></script>
 </head>
 <body>
+
+  <!-- HEADER (modo app) -->
   <div id="site-header"></div>
 
   <main>
@@ -21,13 +22,7 @@
       <h2>Inventario</h2>
       <table class="table" id="items">
         <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Tipo</th>
-            <th>Stock</th>
-            <th>Valor</th>
-            <th>Ubicación</th>
-          </tr>
+          <tr><th>Nombre</th><th>Tipo</th><th>Stock</th><th>Valor</th><th>Ubicación</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -40,161 +35,124 @@
         <input type="number" name="quantity" min="1" placeholder="Cantidad" required/>
         <button>Enviar solicitud</button>
       </form>
-      <p style="opacity:.7;margin-top:.5rem">
-        *En una versión completa, seleccionas el ítem desde la tabla.
-      </p>
     </div>
 
     <div class="card" style="margin-top:1rem">
-      <h2>Mis solicitudes (demo)</h2>
+      <h2>Mis solicitudes</h2>
       <table class="table" id="requests">
         <thead>
-          <tr>
-            <th>ID</th>
-            <th>Ítem</th>
-            <th>Cant.</th>
-            <th>Estado</th>
-            <th>Creada</th>
-          </tr>
+          <tr><th>ID</th><th>Ítem</th><th>Cant.</th><th>Estado</th><th>Creada</th></tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
   </main>
 
-  <script type="module">
-    import { getOrgStatus } from './modules/profile.js';
+<script type="module">
+  import { getOrgStatus } from './modules/profile.js';
 
-    // Helpers que usaba tu script original
-    async function loadItems() {
-      const { supa } = window;
-      const { data, error } = await supa.from('items').select('*').order('name');
-      if (error) {
-        console.error('error loadItems:', error);
-        return;
-      }
-      const tbody = document.querySelector('#items tbody');
-      tbody.innerHTML = '';
-      (data || []).forEach(it => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${it.name}</td>
-          <td>${it.type || ''}</td>
-          <td>${it.quantity}</td>
-          <td>${it.unit_value ?? '-'}</td>
-          <td>${it.location || '-'}</td>`;
-        tbody.appendChild(tr);
-      });
+  // ==========================================================
+  // VALIDACIÓN DE ACCESO ANTES DE CARGAR EL PANEL
+  // ==========================================================
+  document.addEventListener('DOMContentLoaded', async () => {
+    const { supa } = window;
+
+    const { data: { session } } = await supa.auth.getSession();
+    if (!session) {
+      window.location.href = './index.html';
+      return;
     }
 
-    async function createRequest(e) {
-      e.preventDefault();
-      const { supa } = window;
-      const form = e.target;
-      const item_id = form.item_id.value;
-      const quantity = Number(form.quantity.value);
-
-      const { data: { session } } = await supa.auth.getSession();
-      if (!session) {
-        alert('Necesitas iniciar sesión con Discord.');
-        window.location.href = "./index.html";
-        return;
-      }
-
-      const requester = session.user.id;
-      const { error } = await supa
-        .from('requests')
-        .insert({
-          item_id,
-          quantity,
-          requester_discord_id: requester,
-          status: 'pendiente'
-        });
-
-      if (error) {
-        alert('Error creando solicitud: ' + error.message);
-        return;
-      }
-
-      form.reset();
-      loadRequests();
-      alert('Solicitud creada');
+    const status = await getOrgStatus();
+    if (!status || !['miembro','daga','espada','admin'].includes(status)) {
+      await supa.auth.signOut();
+      window.location.href = './index.html';
+      return;
     }
 
-    async function loadRequests() {
-      const { supa } = window;
-      const { data, error } = await supa.from('requests')
-        .select('id,item_id,quantity,status,created_at,items(name)')
-        .order('created_at', { ascending: false });
+    // --- HEADER ---
+    await loadHeader('app');
 
-      if (error) {
-        console.error('error loadRequests:', error);
-        return;
-      }
+    initHeaderUserMenu(
+      session,
+      async () => { await supa.auth.signOut(); window.location.href='./index.html'; },
+      () => { alert('Vista de perfil pendiente'); }
+    );
 
-      const tbody = document.querySelector('#requests tbody');
-      tbody.innerHTML = '';
-      (data || []).forEach(r => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>#${r.id}</td>
-          <td>${r.items?.name || '-'}</td>
-          <td>${r.quantity}</td>
-          <td><span class="badge">${r.status}</span></td>
-          <td>${new Date(r.created_at).toLocaleString()}</td>`;
-        tbody.appendChild(tr);
-      });
-    }
+    loadItems();
+    loadRequests();
+  });
 
-    // Guardia de acceso + inicialización
-    document.addEventListener('DOMContentLoaded', async () => {
-      const { supa } = window;
-
-      // 1) Comprobar sesión
-      const { data: { session }, error } = await supa.auth.getSession();
-      console.log('session en app_ui:', session, 'error:', error);
-
-      if (!session) {
-        window.location.href = "./index.html";
-        return;
-      }
-
-      // 2) Comprobar org_status antes de cargar nada
-      const status = await getOrgStatus();
-      console.log('org_status en app_ui:', status);
-
-      if (!status || !['miembro', 'daga', 'espada', 'admin'].includes(status)) {
-        await supa.auth.signOut();
-        window.location.href = "./index.html";
-        return;
-      }
-
-      // 3) Cargar header en modo app (con avatar + menú)
-      if (typeof loadHeader === 'function') {
-        await loadHeader('app');
-      }
-
-      // 4) Inicializar avatar + menú de usuario
-      if (typeof initHeaderUserMenu === 'function') {
-        initHeaderUserMenu(
-          session,
-          async () => { // onLogout
-            await supa.auth.signOut();
-            window.location.href = "./index.html";
-          },
-          () => { // onProfile
-            alert('Vista de perfil pendiente de implementar 😄');
-          }
-        );
-      }
-
-      // 5) Cargar datos del panel
-      loadItems();
-      loadRequests();
-
-      // Exponer funciones al scope global para el onsubmit="createRequest(event)"
-      window.createRequest = createRequest;
+  // ==========================================================
+  // FUNCIONES DEL PANEL
+  // ==========================================================
+  async function loadItems(){
+    const { supa } = window;
+    const { data, error } = await supa.from('items').select('*').order('name');
+    if(error){ console.error(error); return; }
+    const tbody = document.querySelector('#items tbody');
+    tbody.innerHTML='';
+    (data||[]).forEach(it=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td>${it.name}</td>
+        <td>${it.type||''}</td>
+        <td>${it.quantity}</td>
+        <td>${it.unit_value ?? '-'}</td>
+        <td>${it.location||'-'}</td>`;
+      tbody.appendChild(tr);
     });
-  </script>
+  }
+
+  async function createRequest(e){
+    e.preventDefault();
+    const { supa } = window;
+    const form = e.target;
+
+    const { data: { session } } = await supa.auth.getSession();
+    if(!session) return window.location.href='./index.html';
+
+    const { error } = await supa.from('requests').insert({
+      item_id: form.item_id.value,
+      quantity: Number(form.quantity.value),
+      requester_discord_id: session.user.id,
+      status: 'pendiente'
+    });
+
+    if(error){
+      alert('Error creando solicitud: ' + error.message);
+      return;
+    }
+
+    form.reset();
+    loadRequests();
+  }
+
+  async function loadRequests(){
+    const { supa } = window;
+    const { data, error } = await supa.from('requests')
+      .select('id,item_id,quantity,status,created_at,items(name)')
+      .order('created_at', { ascending:false });
+
+    if(error){ console.error(error); return; }
+
+    const tbody = document.querySelector('#requests tbody');
+    tbody.innerHTML='';
+    (data||[]).forEach(r=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td>#${r.id}</td>
+        <td>${r.items?.name||'-'}</td>
+        <td>${r.quantity}</td>
+        <td><span class="badge">${r.status}</span></td>
+        <td>${new Date(r.created_at).toLocaleString()}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Necesario para el onsubmit="createRequest(event)"
+  window.createRequest = createRequest;
+</script>
+
 </body>
 </html>
