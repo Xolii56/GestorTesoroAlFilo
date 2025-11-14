@@ -51,6 +51,62 @@
     }
   });
 </script>
+<script type="module">
+  import { ensureProfile, getOrgStatus } from './modules/profile.js';
+
+  const BOT_URL = 'https://juvhyzjjtwfokgnrnejv.supabase.co/functions/v1/check-discord-member';
+
+  async function callBotCheck(discord_user_id) {
+    const res = await fetch(BOT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ discord_user_id })
+    });
+
+    if (!res.ok) {
+      console.error('HTTP error en check-discord-member', res.status);
+      return { allowed: false, reason: 'BOT_HTTP_ERROR' };
+    }
+
+    return await res.json();
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const { supa } = window;
+
+    const { data: { session } } = await supa.auth.getSession();
+    if (!session) return; // todavía no ha hecho login
+
+    // 1) Crear/actualizar fila en public.users
+    const profile = await ensureProfile();
+    if (!profile || !profile.discord_user_id) {
+      await supa.auth.signOut();
+      alert('No se ha podido obtener tu perfil de Discord.');
+      return;
+    }
+
+    // 2) Preguntar al bot (Edge Function) -> ¿está en la guild? ¿roles?
+    const botResult = await callBotCheck(profile.discord_user_id);
+    console.log('check-discord-member:', botResult);
+
+    if (!botResult.allowed) {
+      await supa.auth.signOut();
+      alert('No eres miembro de la organización o no tienes un rol válido.\nMotivo: ' + (botResult.reason || 'desconocido'));
+      return;
+    }
+
+    // 3) Doble check leyendo org_status de la BD
+    const status = await getOrgStatus();
+    if (!status || !['miembro','daga','espada','admin'].includes(status)) {
+      await supa.auth.signOut();
+      alert('Tu acceso al Tesoro todavía no está activado. (org_status=' + status + ')');
+      return;
+    }
+
+    // 4) Si ha pasado todo, puede entrar al panel
+    window.location.href = './app_ui.html';
+  });
+</script>
 
 </body>
 </html>
