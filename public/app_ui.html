@@ -3,156 +3,156 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Inventario — Panel</title>
+  <title>Departamento del Tesoro — Panel</title>
   <link rel="stylesheet" href="./style.css"/>
 
+  <!-- Supabase + módulos -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="./config.js" defer></script>
   <script src="./modules/db.js" defer></script>
-  <script src="./modules/auth.js" defer></script>
   <script src="./modules/layout.js" defer></script>
+
+  <style>
+    main.tesoro-main {
+      padding: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1.2rem;
+      margin-top: 2rem;
+    }
+
+    .module-card {
+      cursor: pointer;
+      transition: transform .15s ease-out, box-shadow .15s ease-out, border-color .15s;
+      border-radius: 0.75rem;
+      padding: 1.2rem;
+    }
+
+    .module-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 26px rgba(0,0,0,0.45);
+      border-color: rgba(120,200,255,0.45);
+    }
+
+    .module-chip {
+      font-size: .75rem;
+      padding: .15rem .55rem;
+      border-radius: 999px;
+      opacity: .8;
+      border: 1px solid rgba(255,255,255,0.25);
+      margin-bottom: .4rem;
+      display: inline-block;
+    }
+
+    .module-card h3 {
+      margin: 0 0 .4rem;
+    }
+
+    .module-card p {
+      margin: 0;
+      opacity: .75;
+      font-size: .9rem;
+      line-height: 1.3rem;
+    }
+  </style>
 </head>
+
 <body>
 
-  <!-- HEADER (modo app) -->
+  <!-- Aquí se inyecta components/header.html -->
   <div id="site-header"></div>
 
-  <main>
-    <div class="card">
-      <h2>Inventario</h2>
-      <table class="table" id="items">
-        <thead>
-          <tr><th>Nombre</th><th>Tipo</th><th>Stock</th><th>Valor</th><th>Ubicación</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+  <main class="tesoro-main">
+    <h2>Panel del Departamento del Tesoro</h2>
+    <p style="opacity:.8;margin-top:.25rem">Selecciona un módulo.</p>
 
-    <div class="card" style="margin-top:1rem">
-      <h2>Nueva solicitud</h2>
-      <form class="row" onsubmit="createRequest(event)">
-        <input name="item_id" placeholder="ID de item (demo)" required/>
-        <input type="number" name="quantity" min="1" placeholder="Cantidad" required/>
-        <button>Enviar solicitud</button>
-      </form>
-    </div>
+    <div class="modules-grid">
 
-    <div class="card" style="margin-top:1rem">
-      <h2>Mis solicitudes</h2>
-      <table class="table" id="requests">
-        <thead>
-          <tr><th>ID</th><th>Ítem</th><th>Cant.</th><th>Estado</th><th>Creada</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div class="card module-card" data-module="solicitudes">
+        <span class="module-chip">Operaciones</span>
+        <h3>Solicitudes</h3>
+        <p>Crear y consultar solicitudes de retirada, préstamo o consumo.</p>
+      </div>
+
+      <div class="card module-card" data-module="revision">
+        <span class="module-chip">Encargados</span>
+        <h3>Revisión</h3>
+        <p>Bandeja para aprobar, denegar o modificar solicitudes.</p>
+      </div>
+
+      <div class="card module-card" data-module="inventario">
+        <span class="module-chip">Stock</span>
+        <h3>Inventario</h3>
+        <p>Listado y estado del stock general del Tesoro.</p>
+      </div>
+
+      <div class="card module-card" data-module="almacenes">
+        <span class="module-chip">Logística</span>
+        <h3>Almacenes</h3>
+        <p>Gestión de ubicaciones, hangares y contenedores.</p>
+      </div>
+
+      <div class="card module-card" data-module="registro">
+        <span class="module-chip">Auditoría</span>
+        <h3>Registro</h3>
+        <p>Histórico de movimientos y trazabilidad completa.</p>
+      </div>
+
     </div>
   </main>
 
-<script type="module">
-  import { getOrgStatus } from './modules/profile.js';
+  <script type="module">
+    import { getOrgStatus } from './modules/profile.js';
 
-  // ==========================================================
-  // VALIDACIÓN DE ACCESO ANTES DE CARGAR EL PANEL
-  // ==========================================================
-  document.addEventListener('DOMContentLoaded', async () => {
-    const { supa } = window;
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { supa } = window;
 
-    const { data: { session } } = await supa.auth.getSession();
-    if (!session) {
-      window.location.href = './index.html';
-      return;
-    }
+      // --- 1) Comprobar sesión ---
+      const { data: { session } } = await supa.auth.getSession();
+      if (!session) {
+        window.location.href = './index.html';
+        return;
+      }
 
-    const status = await getOrgStatus();
-    if (!status || !['miembro','daga','espada','admin'].includes(status)) {
-      await supa.auth.signOut();
-      window.location.href = './index.html';
-      return;
-    }
+      // --- 2) Comprobar rol permitido ---
+      const status = await getOrgStatus();
+      if (!status || !['miembro','daga','espada','admin'].includes(status)) {
+        await supa.auth.signOut();
+        window.location.href = './index.html';
+        return;
+      }
 
-    // --- HEADER ---
-    await loadHeader('app');
+      // --- 3) Cargar header existente ---
+      await loadHeader('app');
 
-    initHeaderUserMenu(
-      session,
-      async () => { await supa.auth.signOut(); window.location.href='./index.html'; },
-      () => { alert('Vista de perfil pendiente'); }
-    );
+      // --- 4) Inicializar menú usuario del header ---
+      if (typeof window.initHeaderUserMenu === 'function') {
+        window.initHeaderUserMenu(
+          session,
+          async () => {
+            await supa.auth.signOut();
+            window.location.href = "./index.html";
+          },
+          () => {
+            alert("Vista de perfil pendiente de implementar");
+          }
+        );
+      }
 
-    loadItems();
-    loadRequests();
-  });
-
-  // ==========================================================
-  // FUNCIONES DEL PANEL
-  // ==========================================================
-  async function loadItems(){
-    const { supa } = window;
-    const { data, error } = await supa.from('items').select('*').order('name');
-    if(error){ console.error(error); return; }
-    const tbody = document.querySelector('#items tbody');
-    tbody.innerHTML='';
-    (data||[]).forEach(it=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`
-        <td>${it.name}</td>
-        <td>${it.type||''}</td>
-        <td>${it.quantity}</td>
-        <td>${it.unit_value ?? '-'}</td>
-        <td>${it.location||'-'}</td>`;
-      tbody.appendChild(tr);
+      // --- 5) Módulos (placeholder) ---
+      document.querySelectorAll('.module-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const mod = card.getAttribute('data-module');
+          alert(`Módulo "${mod}" aún no está implementado.`);
+        });
+      });
     });
-  }
-
-  async function createRequest(e){
-    e.preventDefault();
-    const { supa } = window;
-    const form = e.target;
-
-    const { data: { session } } = await supa.auth.getSession();
-    if(!session) return window.location.href='./index.html';
-
-    const { error } = await supa.from('requests').insert({
-      item_id: form.item_id.value,
-      quantity: Number(form.quantity.value),
-      requester_discord_id: session.user.id,
-      status: 'pendiente'
-    });
-
-    if(error){
-      alert('Error creando solicitud: ' + error.message);
-      return;
-    }
-
-    form.reset();
-    loadRequests();
-  }
-
-  async function loadRequests(){
-    const { supa } = window;
-    const { data, error } = await supa.from('requests')
-      .select('id,item_id,quantity,status,created_at,items(name)')
-      .order('created_at', { ascending:false });
-
-    if(error){ console.error(error); return; }
-
-    const tbody = document.querySelector('#requests tbody');
-    tbody.innerHTML='';
-    (data||[]).forEach(r=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`
-        <td>#${r.id}</td>
-        <td>${r.items?.name||'-'}</td>
-        <td>${r.quantity}</td>
-        <td><span class="badge">${r.status}</span></td>
-        <td>${new Date(r.created_at).toLocaleString()}</td>`;
-      tbody.appendChild(tr);
-    });
-  }
-
-  // Necesario para el onsubmit="createRequest(event)"
-  window.createRequest = createRequest;
-</script>
+  </script>
 
 </body>
 </html>
