@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loginBtn.addEventListener('click', async () => {
     try {
+      window.localStorage.setItem('afterLogin', '1');
+      
       await supa.auth.signInWithOAuth({
         provider: 'discord',
         options: {
