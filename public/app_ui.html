@@ -144,7 +144,7 @@
       return;
     }
 
-    // --- 2) Comprobar rol de organización permitido (miembro de la org) ---
+    // --- 2) Comprobar rol de organización permitido ---
     const status = await getOrgStatus();
     if (!status || !['miembro','daga','espada','admin'].includes(status)) {
       await supa.auth.signOut();
@@ -169,7 +169,7 @@
       );
     }
 
-    // --- 5) Obtener rol interno del usuario desde public.users ---
+    // --- 5) Obtener rol interno del usuario ---
     const { data: userRow, error: userError } = await supa
       .from('users')
       .select('tesoro_internal_role')
@@ -182,13 +182,11 @@
 
     let internalRole = userRow?.tesoro_internal_role || null;
     if (typeof internalRole === 'string') internalRole = internalRole.trim();
-    console.log('Rol interno detectado:', internalRole);
 
-    // --- 6) Buscar fila de permisos en roles_app ---
+    // --- 6) Obtener permisos de ese rol desde roles_app ---
     let roleRow = null;
 
     if (internalRole) {
-      // ¿Numérico? → lo tratamos como id de roles_app
       const asNumber = Number(internalRole);
       if (!Number.isNaN(asNumber) && internalRole !== '') {
         const { data, error } = await supa
@@ -196,57 +194,33 @@
           .select('*')
           .eq('id', asNumber)
           .maybeSingle();
-
-        if (error) {
-          console.error('Error buscando rol por id en roles_app:', error);
-        } else {
-          roleRow = data;
-        }
+        if (!error) roleRow = data;
       }
 
-      // Si no hemos encontrado nada por id, probamos por nombre (case-insensitive)
       if (!roleRow) {
         const { data, error } = await supa
           .from('roles_app')
           .select('*')
-          .ilike('role_name', internalRole) // "Admin" == "admin"
+          .ilike('role_name', internalRole)
           .maybeSingle();
-
-        if (error) {
-          console.error('Error buscando rol por nombre en roles_app:', error);
-        } else {
-          roleRow = data;
-        }
+        if (!error) roleRow = data;
       }
     }
 
-    if (!roleRow) {
-      console.warn('No se encontró fila de roles_app para rol interno:', internalRole);
-    } else {
-      console.log('Fila de permisos cargada de roles_app:', roleRow);
-    }
-
-    // --- 6.1 Normalizar columnas de permisos (lowercase) ---
     const permsByModule = {};
     if (roleRow) {
       for (const [key, value] of Object.entries(roleRow)) {
-        // columnas que NO son módulos
         if (['id', 'role_name', 'created_at', 'updated_at'].includes(key)) continue;
-        // pasamos el nombre de la columna a minúsculas
         const normKey = key.toLowerCase();
         permsByModule[normKey] = value;
       }
     }
-    console.log('Mapa de permisos por módulo (normalizado):', permsByModule);
 
     // --- 7) Aplicar permisos a las tarjetas de módulos ---
-    const cards = document.querySelectorAll('.module-card');
-
-    cards.forEach(card => {
-      const mod = card.getAttribute('data-module'); // ej. "solicitudes"
+    document.querySelectorAll('.module-card').forEach(card => {
+      const mod = card.getAttribute('data-module');
       const normMod = mod.toLowerCase();
 
-      // Si no hay fila de permisos o no hay columna para ese módulo → 0
       const level = permsByModule.hasOwnProperty(normMod)
         ? (permsByModule[normMod] ?? 0)
         : 0;
@@ -265,7 +239,13 @@
           return;
         }
 
-        // Aquí más adelante redirigiremos según "mod" y diferenciaremos 1/2
+        // Redirecciones reales por módulo
+        if (mod === 'usuarios') {
+          window.location.href = './usuarios.html';
+          return;
+        }
+
+        // Placeholder para el resto hasta que los implementemos
         alert(`Módulo "${mod}" aún no está implementado (nivel ${currentLevel}).`);
       });
     });
