@@ -188,7 +188,7 @@
     let roleRow = null;
 
     if (internalRole) {
-      // ¿Es numérico? → lo tratamos como id de roles_app
+      // ¿Numérico? → lo tratamos como id de roles_app
       const asNumber = Number(internalRole);
       if (!Number.isNaN(asNumber) && internalRole !== '') {
         const { data, error } = await supa
@@ -209,7 +209,7 @@
         const { data, error } = await supa
           .from('roles_app')
           .select('*')
-          .ilike('role_name', internalRole) // "Admin" == "admin" == "ADMIN"
+          .ilike('role_name', internalRole) // "Admin" == "admin"
           .maybeSingle();
 
         if (error) {
@@ -226,37 +226,46 @@
       console.log('Fila de permisos cargada de roles_app:', roleRow);
     }
 
+    // --- 6.1 Normalizar columnas de permisos (lowercase) ---
+    const permsByModule = {};
+    if (roleRow) {
+      for (const [key, value] of Object.entries(roleRow)) {
+        // columnas que NO son módulos
+        if (['id', 'role_name', 'created_at', 'updated_at'].includes(key)) continue;
+        // pasamos el nombre de la columna a minúsculas
+        const normKey = key.toLowerCase();
+        permsByModule[normKey] = value;
+      }
+    }
+    console.log('Mapa de permisos por módulo (normalizado):', permsByModule);
+
     // --- 7) Aplicar permisos a las tarjetas de módulos ---
     const cards = document.querySelectorAll('.module-card');
 
     cards.forEach(card => {
-      const mod = card.getAttribute('data-module'); // ej. "solicitudes", "usuarios", etc.
+      const mod = card.getAttribute('data-module'); // ej. "solicitudes"
+      const normMod = mod.toLowerCase();
 
-      // Si no tenemos fila de permisos, o la columna no existe → 0
-      let level = 0;
-      if (roleRow && Object.prototype.hasOwnProperty.call(roleRow, mod)) {
-        level = roleRow[mod] ?? 0;
-      }
+      // Si no hay fila de permisos o no hay columna para ese módulo → 0
+      const level = permsByModule.hasOwnProperty(normMod)
+        ? (permsByModule[normMod] ?? 0)
+        : 0;
 
-      // Marcar visualmente si no tiene acceso (level 0)
       if (!level || level === 0) {
         card.classList.add('disabled');
       }
 
       card.addEventListener('click', () => {
-        // Releer por si acaso, aunque debería ser el mismo valor
-        let currentLevel = 0;
-        if (roleRow && Object.prototype.hasOwnProperty.call(roleRow, mod)) {
-          currentLevel = roleRow[mod] ?? 0;
-        }
+        const currentLevel = permsByModule.hasOwnProperty(normMod)
+          ? (permsByModule[normMod] ?? 0)
+          : 0;
 
         if (!currentLevel || currentLevel === 0) {
           alert('No tienes acceso a este módulo.');
           return;
         }
 
-        // Aquí más adelante redirigiremos a cada módulo real según "mod"
-        // y distinguiremos entre 1 (solo lectura) y 2 (acciones).
+        // Aquí más adelante redirigiremos según "mod" y diferenciaremos 1/2
         alert(`Módulo "${mod}" aún no está implementado (nivel ${currentLevel}).`);
       });
     });
