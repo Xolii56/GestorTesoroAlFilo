@@ -36,6 +36,7 @@
       flex-direction: column;
       align-items: center;
       gap: 0.6rem;
+      text-align: center;
     }
 
     .perfil-avatar img {
@@ -47,12 +48,15 @@
       box-shadow: 0 10px 26px rgba(0,0,0,0.6);
     }
 
-    .perfil-tag {
-      display: inline-block;
-      padding: 0.1rem 0.6rem;
+    .perfil-tag,
+    .perfil-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      padding: 0.15rem 0.65rem;
       border-radius: 999px;
-      font-size: 0.75rem;
-      border: 1px solid rgba(148,163,184,0.6);
+      font-size: .8rem;
+      border: 1px solid rgba(148,163,184,0.7);
       opacity: .9;
     }
 
@@ -120,16 +124,24 @@
       font-size: .8rem;
       opacity: .75;
       line-height: 1.2rem;
+      margin-top: .35rem;
     }
 
-    .perfil-status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: .35rem;
-      padding: 0.15rem 0.65rem;
-      border-radius: 999px;
-      font-size: .8rem;
-      border: 1px solid rgba(148,163,184,0.7);
+    /* Fila horizontal para Handle + Discord username */
+    .perfil-row-inline {
+      display: flex;
+      gap: .75rem;
+    }
+
+    .perfil-row-inline .perfil-field {
+      flex: 1;
+      margin-bottom: .8rem;
+    }
+
+    @media (max-width: 640px) {
+      .perfil-row-inline {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
@@ -155,11 +167,19 @@
 
     <div class="card">
       <div class="perfil-grid">
-        <!-- Columna izquierda: avatar + estado -->
+        <!-- Columna izquierda: avatar + nombre + rol + actividad -->
         <div class="perfil-avatar">
           <img id="perfil-avatar" src="./assets/logo.png" alt="Avatar Discord"/>
           <div id="perfil-handle" style="font-size:1.05rem;font-weight:600;">...</div>
-          <div id="perfil-org-status" class="perfil-tag">...</div>
+          <div id="perfil-org-status" class="perfil-status-pill">...</div>
+
+          <!-- Actividad bajo nombre + rol -->
+          <div style="margin-top:1rem;width:100%;">
+            <div class="perfil-section-title">Actividad</div>
+            <div class="perfil-meta" id="perfil-meta-fechas">
+              <!-- Rellenado por JS -->
+            </div>
+          </div>
         </div>
 
         <!-- Columna derecha: datos -->
@@ -167,19 +187,17 @@
           <div class="perfil-section-title">Datos de cuenta</div>
 
           <form id="perfil-form">
-            <div class="perfil-field">
-              <label for="handle_name">Handle en la app</label>
-              <input id="handle_name" name="handle_name" type="text" required/>
-            </div>
+            <!-- Handle + Discord username en la misma fila -->
+            <div class="perfil-row-inline">
+              <div class="perfil-field">
+                <label for="handle_name">Handle en la app</label>
+                <input id="handle_name" name="handle_name" type="text" required/>
+              </div>
 
-            <div class="perfil-field">
-              <label>Discord username</label>
-              <input id="discord_username" type="text" readonly/>
-            </div>
-
-            <div class="perfil-field">
-              <label>Discord user ID</label>
-              <input id="discord_user_id" type="text" readonly/>
+              <div class="perfil-field">
+                <label>Discord username</label>
+                <input id="discord_username" type="text" readonly/>
+              </div>
             </div>
 
             <div class="perfil-field">
@@ -190,11 +208,6 @@
             <div class="perfil-field">
               <label>Gremios</label>
               <input id="gremios" type="text" readonly placeholder="(gremios pendientes de configurar)"/>
-            </div>
-
-            <div class="perfil-section-title" style="margin-top:1.2rem;">Actividad</div>
-            <div class="perfil-meta" id="perfil-meta-fechas">
-              <!-- Se rellena por JS -->
             </div>
 
             <div class="perfil-actions">
@@ -227,7 +240,7 @@
         return;
       }
 
-      // 2) Comprobar org_status válido (igual que en app_ui)
+      // 2) Comprobar org_status válido
       const status = await getOrgStatus();
       if (!status || !['miembro','daga','espada','admin','afiliado'].includes(status)) {
         await supa.auth.signOut();
@@ -240,7 +253,7 @@
         await window.loadHeader('app');
       }
 
-      // 4) Menú usuario: aquí el botón de perfil debería traerte a esta página
+      // 4) Menú usuario: botón perfil nos trae aquí
       if (typeof window.initHeaderUserMenu === 'function') {
         window.initHeaderUserMenu(
           session,
@@ -249,7 +262,7 @@
             window.location.href = "./index.html";
           },
           () => {
-            // Ya estamos en perfil, no hace falta hacer nada
+            // Ya estamos en perfil
           }
         );
       }
@@ -279,7 +292,6 @@
       const handleInp = document.getElementById('handle_name');
 
       const discordUserInp  = document.getElementById('discord_username');
-      const discordIdInp    = document.getElementById('discord_user_id');
       const rolTesoroInp    = document.getElementById('tesoro_internal_role');
       const gremiosInp      = document.getElementById('gremios');
       const metaFechasEl    = document.getElementById('perfil-meta-fechas');
@@ -292,12 +304,10 @@
       handleEl.textContent = handle;
       orgEl.textContent = org;
 
-      handleInp.value = handle;
-      discordUserInp.value = userRow.discord_username || '';
-      discordIdInp.value   = userRow.discord_user_id || '';
-
-      rolTesoroInp.value = userRow.tesoro_internal_role || '';
-      gremiosInp.value   = (userRow.gremios && userRow.gremios.length > 0)
+      handleInp.value       = handle;
+      discordUserInp.value  = userRow.discord_username || '';
+      rolTesoroInp.value    = userRow.tesoro_internal_role || '';
+      gremiosInp.value      = (userRow.gremios && userRow.gremios.length > 0)
         ? userRow.gremios.join(', ')
         : '';
 
