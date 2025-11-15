@@ -59,6 +59,19 @@
       font-size: .9rem;
       line-height: 1.3rem;
     }
+
+    /* Estado deshabilitado por permisos */
+    .module-card.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      filter: grayscale(0.4);
+      border-color: rgba(248, 113, 113, 0.6); /* rojizo suave */
+    }
+
+    .module-card.disabled:hover {
+      transform: none;
+      box-shadow: none;
+    }
   </style>
 </head>
 
@@ -131,7 +144,7 @@
         return;
       }
 
-      // --- 2) Comprobar rol permitido ---
+      // --- 2) Comprobar rol de organización permitido ---
       const status = await getOrgStatus();
       if (!status || !['miembro','daga','espada','admin'].includes(status)) {
         await supa.auth.signOut();
@@ -151,16 +164,63 @@
             window.location.href = "./index.html";
           },
           () => {
-            // Ir a la página de perfil
             window.location.href = './perfil.html';
           }
         );
       }
 
-      // --- 5) Módulos (placeholder) ---
+      // --- 5) Obtener rol interno del usuario ---
+      const { data: userRow, error: userError } = await supa
+        .from('users')
+        .select('tesoro_internal_role')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (userError) {
+        console.error('Error leyendo tesoro_internal_role:', userError);
+      }
+
+      const internalRole = userRow?.tesoro_internal_role || 'Usuario';
+
+      // --- 6) Obtener permisos de ese rol desde roles_app ---
+      const { data: rolePerms, error: roleError } = await supa
+        .from('roles_app')
+        .select('solicitudes, revision, inventario, almacenes, registro, calendario, usuarios')
+        .eq('role_name', internalRole)
+        .maybeSingle();
+
+      if (roleError) {
+        console.error('Error leyendo permisos de roles_app:', roleError);
+      }
+
+      // Si no hay fila de permisos, tratamos todo como 0
+      const perms = rolePerms || {};
+
+      // --- 7) Aplicar permisos a las tarjetas de módulos ---
       document.querySelectorAll('.module-card').forEach(card => {
+        const mod = card.getAttribute('data-module');
+        // valor 0,1,2; si no existe, se considera 0
+        const level = (perms && Object.prototype.hasOwnProperty.call(perms, mod))
+          ? perms[mod]
+          : 0;
+
+        if (!level || level === 0) {
+          // Sin acceso → deshabilitado visualmente
+          card.classList.add('disabled');
+        }
+
         card.addEventListener('click', () => {
-          const mod = card.getAttribute('data-module');
+          const currentLevel = (perms && Object.prototype.hasOwnProperty.call(perms, mod))
+            ? perms[mod]
+            : 0;
+
+          if (!currentLevel || currentLevel === 0) {
+            alert('No tienes acceso a este módulo.');
+            return;
+          }
+
+          // Aquí más adelante redirigiremos a cada módulo real.
+          // De momento seguimos con el placeholder:
           alert(`Módulo "${mod}" aún no está implementado.`);
         });
       });
