@@ -1,5 +1,5 @@
 // Carga el header común desde components/header.html
-window.loadHeader = async function(variant) {
+window.loadHeader = async function (variant) {
   const container = document.getElementById('site-header');
   if (!container) return;
 
@@ -23,7 +23,7 @@ window.loadHeader = async function(variant) {
 };
 
 // Inicializa avatar, nombre y menú desplegable para páginas internas
-window.initHeaderUserMenu = function(session, onLogout, onProfile) {
+window.initHeaderUserMenu = function (session, onLogout, onProfile) {
   const profile = session?.user;
   const meta = profile?.user_metadata || {};
 
@@ -69,7 +69,15 @@ window.initHeaderUserMenu = function(session, onLogout, onProfile) {
     logoutBtn.addEventListener('click', onLogout);
   }
 
-  if (profileBtn && typeof onProfile === 'function') {
-    profileBtn.addEventListener('click', onProfile);
+  if (profileBtn) {
+    profileBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (typeof onProfile === 'function') {
+        onProfile();
+      } else {
+        // Comportamiento por defecto: ir a la página de perfil
+        window.location.href = './perfil.html';
+      }
+    });
   }
 };
