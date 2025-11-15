@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Departamento del Tesoro — Usuarios</title>
+  <link rel="stylesheet" href="./style.css"/>
+
+  <!-- Supabase + módulos -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="./config.js" defer></script>
+  <script src="./modules/db.js" defer></script>
+  <script src="./modules/layout.js" defer></script>
+
+  <style>
+    main.usuarios-main {
+      padding: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .usuarios-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+      gap: 1.3rem;
+    }
+
+    @media (max-width: 900px) {
+      .usuarios-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .usuarios-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .9rem;
+    }
+
+    .usuarios-table thead {
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      opacity: .8;
+    }
+
+    .usuarios-table th,
+    .usuarios-table td {
+      padding: 0.35rem 0.4rem;
+      border-bottom: 1px solid rgba(148,163,184,0.25);
+    }
+
+    .usuarios-table tbody tr {
+      cursor: pointer;
+      transition: background .12s ease-out;
+    }
+
+    .usuarios-table tbody tr:hover {
+      background: rgba(15,23,42,0.9);
+    }
+
+    .usuarios-table tbody tr.selected {
+      background: rgba(56,189,248,0.14);
+    }
+
+    .avatar-small {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      object-fit: cover;
+      margin-right: .35rem;
+      vertical-align: middle;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.1rem 0.55rem;
+      border-radius: 999px;
+      font-size: .75rem;
+      border: 1px solid rgba(148,163,184,0.7);
+    }
+
+    .badge-status.admin {
+      border-color: rgba(251,191,36,0.9);
+    }
+
+    .badge-status.vetado {
+      border-color: rgba(248,113,113,0.9);
+    }
+
+    .usuarios-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: .75rem;
+      margin-bottom: .5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .usuarios-toolbar input[type="search"] {
+      padding: 0.35rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.7);
+      background: #020617;
+      color: #e5e7eb;
+      font-size: .85rem;
+      min-width: 220px;
+    }
+
+    .usuarios-toolbar span.perms-label {
+      font-size: .8rem;
+      opacity: .75;
+    }
+
+    .usuarios-form .field {
+      margin-bottom: .75rem;
+    }
+
+    .usuarios-form label {
+      display: block;
+      font-size: .8rem;
+      opacity: .8;
+      margin-bottom: .2rem;
+    }
+
+    .usuarios-form input,
+    .usuarios-form select,
+    .usuarios-form textarea {
+      width: 100%;
+      padding: 0.4rem 0.5rem;
+      border-radius: 0.4rem;
+      border: 1px solid rgba(148,163,184,0.8);
+      background: #020617;
+      color: #e5e7eb;
+      font-size: .9rem;
+    }
+
+    .usuarios-form textarea {
+      min-height: 60px;
+      resize: vertical;
+    }
+
+    .usuarios-form input[readonly],
+    .usuarios-form select[disabled],
+    .usuarios-form textarea[readonly] {
+      opacity: .8;
+    }
+
+    .usuarios-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: .5rem;
+      margin-top: .7rem;
+    }
+
+    .btn {
+      padding: 0.35rem 0.85rem;
+      border-radius: 0.4rem;
+      border: none;
+      cursor: pointer;
+      font-size: .85rem;
+    }
+
+    .btn-secondary {
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid rgba(148,163,184,0.8);
+    }
+
+    .btn-primary {
+      background: #22c55e;
+      color: #020617;
+      font-weight: 600;
+    }
+
+    .btn-disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .help-text {
+      font-size: .75rem;
+      opacity: .7;
+      margin-top: .2rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="site-header"></div>
+
+  <main class="usuarios-main">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
+      <div>
+        <h2>Usuarios del Tesoro</h2>
+        <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
+          Gestión de miembros, estados internos y roles del Departamento del Tesoro.
+        </p>
+      </div>
+      <button type="button"
+              class="btn btn-secondary"
+              onclick="window.location.href='./app_ui.html'">
+        ← Volver al panel
+      </button>
+    </div>
+
+    <div class="usuarios-layout">
+      <!-- LISTA DE USUARIOS -->
+      <div class="card">
+        <div class="usuarios-toolbar">
+          <input type="search" id="user-search" placeholder="Buscar por handle o Discord..."/>
+          <span class="perms-label" id="perms-indicator">Permisos módulo Usuarios: ...</span>
+        </div>
+
+        <div style="max-height:480px;overflow:auto;">
+          <table class="usuarios-table">
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Org</th>
+                <th>Rol app</th>
+                <th>Último acceso</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody">
+              <!-- Rellenado por JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PANEL DE DETALLE / EDICIÓN -->
+      <div class="card">
+        <h3 style="margin-top:0;">Detalle de usuario</h3>
+        <p id="detail-empty" style="opacity:.75;font-size:.85rem;">
+          Selecciona un usuario de la lista para ver o editar su información.
+        </p>
+
+        <form id="user-form" class="usuarios-form" style="display:none;">
+          <div class="field">
+            <label>Discord username</label>
+            <input id="f_discord_username" type="text" readonly/>
+          </div>
+
+          <div class="field">
+            <label>Handle en la app</label>
+            <input id="f_handle_name" type="text"/>
+          </div>
+
+          <div class="field">
+            <label>Estado en la organización (org_status)</label>
+            <select id="f_org_status">
+              <option value="afiliado">Afiliado</option>
+              <option value="miembro">Miembro</option>
+              <option value="daga">Daga</option>
+              <option value="espada">Espada</option>
+              <option value="admin">Admin</option>
+              <option value="vetado">Vetado</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Rol interno app Tesoro</label>
+            <select id="f_tesoro_internal_role">
+              <option value="">(sin rol)</option>
+              <option value="Usuario">Usuario</option>
+              <option value="GestorTesoro">GestorTesoro</option>
+              <option value="RRHH">RRHH</option>
+              <option value="Admin">Admin</option>
+            </select>
+            <div class="help-text">
+              Este rol controla el acceso a módulos y permisos internos.
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Gremios (lista separada por comas)</label>
+            <input id="f_gremios" type="text" placeholder="logistica, mineria, escolta..."/>
+          </div>
+
+          <div class="field">
+            <label>Actividad</label>
+            <div id="f_activity" class="help-text"></div>
+          </div>
+
+          <div class="usuarios-actions">
+            <button type="button"
+                    class="btn btn-secondary"
+                    onclick="document.getElementById('user-form').style.display='none';document.getElementById('detail-empty').style.display='block';">
+              Cerrar
+            </button>
+            <button type="submit" class="btn btn-primary" id="save-btn">
+              Guardar cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { getOrgStatus } from './modules/profile.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { supa } = window;
+
+      // 1) Comprobar sesión
+      const { data: { session } } = await supa.auth.getSession();
+      if (!session) {
+        window.location.href = './index.html';
+        return;
+      }
+
+      // 2) Comprobar org_status (de la tabla public.users vía función que ya tienes)
+      const orgStatus = await getOrgStatus();
+      if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
+        await supa.auth.signOut();
+        window.location.href = './index.html';
+        return;
+      }
+
+      // 3) Cargar header app
+      if (typeof window.loadHeader === 'function') {
+        await window.loadHeader('app');
+      }
+
+      // 4) Menú usuario
+      if (typeof window.initHeaderUserMenu === 'function') {
+        window.initHeaderUserMenu(
+          session,
+          async () => {
+            await supa.auth.signOut();
+            window.location.href = "./index.html";
+          },
+          () => {
+            window.location.href = './perfil.html';
+          }
+        );
+      }
+
+      // 5) Leer rol interno actual del usuario
+      const { data: meRow, error: meError } = await supa
+        .from('users')
+        .select('tesoro_internal_role')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (meError) {
+        console.error('Error leyendo tesoro_internal_role del usuario actual:', meError);
+      }
+
+      let myInternalRole = meRow?.tesoro_internal_role || null;
+      if (typeof myInternalRole === 'string') myInternalRole = myInternalRole.trim();
+      console.log('Mi rol interno app:', myInternalRole);
+
+      // 6) Leer permisos específicos del módulo "usuarios" desde roles_app
+      let usuariosLevel = 0;
+      let roleRow = null;
+
+      if (myInternalRole) {
+        const asNumber = Number(myInternalRole);
+        if (!Number.isNaN(asNumber) && myInternalRole !== '') {
+          const { data, error } = await supa
+            .from('roles_app')
+            .select('*')
+            .eq('id', asNumber)
+            .maybeSingle();
+          if (!error) roleRow = data;
+        }
+
+        if (!roleRow) {
+          const { data, error } = await supa
+            .from('roles_app')
+            .select('*')
+            .ilike('role_name', myInternalRole)
+            .maybeSingle();
+          if (!error) roleRow = data;
+        }
+      }
+
+      if (roleRow && Object.prototype.hasOwnProperty.call(roleRow, 'usuarios')) {
+        usuariosLevel = roleRow.usuarios ?? 0;
+      }
+
+      console.log('Nivel de permiso en módulo Usuarios:', usuariosLevel);
+
+      // 6.1 Si no tiene ningún acceso → fuera
+      if (!usuariosLevel || usuariosLevel === 0) {
+        alert('No tienes acceso al módulo de Usuarios.');
+        window.location.href = './app_ui.html';
+        return;
+      }
+
+      // 6.2 Indicar nivel de permisos en la UI
+      const permsLabel = document.getElementById('perms-indicator');
+      if (permsLabel) {
+        let text = 'Permisos módulo Usuarios: ';
+        if (usuariosLevel === 1) text += 'Solo lectura';
+        if (usuariosLevel === 2) text += 'Edición completa';
+        permsLabel.textContent = text;
+      }
+
+      const isReadOnly = (usuariosLevel === 1);
+
+      // 7) Cargar lista de usuarios desde public.users
+      const { data: users, error: usersError } = await supa
+        .from('users')
+        .select('id, discord_username, discord_avatar_url, org_status, handle_name, created_at, last_login_at, tesoro_internal_role, gremios')
+        .order('handle_name', { ascending: true });
+
+      if (usersError) {
+        console.error('Error leyendo lista de usuarios:', usersError);
+        alert('No se ha podido cargar la lista de usuarios.');
+        return;
+      }
+
+      let currentFilter = '';
+      let currentSelectedId = null;
+
+      const tbody = document.getElementById('users-tbody');
+      const searchInput = document.getElementById('user-search');
+      const detailEmpty = document.getElementById('detail-empty');
+      const form = document.getElementById('user-form');
+      const saveBtn = document.getElementById('save-btn');
+
+      const fDiscordUsername = document.getElementById('f_discord_username');
+      const fHandleName = document.getElementById('f_handle_name');
+      const fOrgStatus = document.getElementById('f_org_status');
+      const fTesoroRole = document.getElementById('f_tesoro_internal_role');
+      const fGremios = document.getElementById('f_gremios');
+      const fActivity = document.getElementById('f_activity');
+
+      // 7.1 Aplicar modo solo lectura si level=1
+      if (isReadOnly) {
+        fHandleName.readOnly = true;
+        fOrgStatus.disabled = true;
+        fTesoroRole.disabled = true;
+        fGremios.readOnly = true;
+        saveBtn.classList.add('btn-disabled');
+      }
+
+      function renderTable() {
+        tbody.innerHTML = '';
+
+        const term = currentFilter.toLowerCase();
+
+        (users || []).forEach(u => {
+          const handle = u.handle_name || '';
+          const disc = u.discord_username || '';
+          if (term && !handle.toLowerCase().includes(term) && !disc.toLowerCase().includes(term)) {
+            return;
+          }
+
+          const tr = document.createElement('tr');
+          tr.dataset.id = u.id;
+
+          // Avatar + handle
+          const tdUser = document.createElement('td');
+          const img = document.createElement('img');
+          img.className = 'avatar-small';
+          img.src = u.discord_avatar_url || './assets/logo.png';
+          img.alt = 'avatar';
+
+          const spanName = document.createElement('span');
+          spanName.textContent = (u.handle_name || u.discord_username || '(sin nombre)');
+
+          tdUser.appendChild(img);
+          tdUser.appendChild(spanName);
+
+          // Org_status
+          const tdOrg = document.createElement('td');
+          const badge = document.createElement('span');
+          badge.className = 'badge-status';
+          badge.textContent = u.org_status || '-';
+          if (u.org_status === 'admin') badge.classList.add('admin');
+          if (u.org_status === 'vetado') badge.classList.add('vetado');
+          tdOrg.appendChild(badge);
+
+          // Rol app
+          const tdRol = document.createElement('td');
+          tdRol.textContent = u.tesoro_internal_role || '';
+
+          // Último acceso
+          const tdLast = document.createElement('td');
+          tdLast.textContent = u.last_login_at
+            ? new Date(u.last_login_at).toLocaleString()
+            : '-';
+
+          tr.appendChild(tdUser);
+          tr.appendChild(tdOrg);
+          tr.appendChild(tdRol);
+          tr.appendChild(tdLast);
+
+          // Selección
+          tr.addEventListener('click', () => {
+            currentSelectedId = u.id;
+            Array.from(tbody.querySelectorAll('tr')).forEach(r => r.classList.remove('selected'));
+            tr.classList.add('selected');
+            showDetail(u);
+          });
+
+          tbody.appendChild(tr);
+        });
+      }
+
+      function showDetail(u) {
+        detailEmpty.style.display = 'none';
+        form.style.display = 'block';
+
+        fDiscordUsername.value = u.discord_username || '';
+        fHandleName.value = u.handle_name || '';
+        fOrgStatus.value = u.org_status || 'afiliado';
+        fTesoroRole.value = u.tesoro_internal_role || '';
+        fGremios.value = (u.gremios && u.gremios.length > 0) ? u.gremios.join(', ') : '';
+
+        const creado = u.created_at
+          ? new Date(u.created_at).toLocaleString()
+          : 'desconocido';
+        const ultimo = u.last_login_at
+          ? new Date(u.last_login_at).toLocaleString()
+          : 'desconocido';
+
+        fActivity.textContent = `Alta en Tesoro: ${creado} · Último acceso: ${ultimo}`;
+      }
+
+      // Buscar
+      searchInput.addEventListener('input', () => {
+        currentFilter = searchInput.value || '';
+        renderTable();
+      });
+
+      // Primera renderización
+      renderTable();
+
+      // 8) Guardar cambios (solo si level 2)
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (isReadOnly) {
+          alert('Tienes permisos de solo lectura en este módulo.');
+          return;
+        }
+
+        if (!currentSelectedId) {
+          alert('No hay ningún usuario seleccionado.');
+          return;
+        }
+
+        const newHandle = fHandleName.value.trim();
+        if (!newHandle) {
+          alert('El handle no puede estar vacío.');
+          return;
+        }
+
+        const newOrgStatus = fOrgStatus.value;
+        const newTesoroRole = fTesoroRole.value || null;
+        const gremiosStr = fGremios.value.trim();
+        const newGremios = gremiosStr
+          ? gremiosStr.split(',').map(s => s.trim()).filter(Boolean)
+          : [];
+
+        const { error: updError } = await supa
+          .from('users')
+          .update({
+            handle_name: newHandle,
+            org_status: newOrgStatus,
+            tesoro_internal_role: newTesoroRole,
+            gremios: newGremios,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', currentSelectedId);
+
+        if (updError) {
+          console.error('Error actualizando usuario:', updError);
+          alert('No se han podido guardar los cambios.');
+          return;
+        }
+
+        // Actualizar la copia local
+        const idx = (users || []).findIndex(u => u.id === currentSelectedId);
+        if (idx !== -1) {
+          users[idx].handle_name = newHandle;
+          users[idx].org_status = newOrgStatus;
+          users[idx].tesoro_internal_role = newTesoroRole;
+          users[idx].gremios = newGremios;
+          showDetail(users[idx]);
+          renderTable();
+        }
+
+        alert('Usuario actualizado.');
+      });
+    });
+  </script>
+
+</body>
+</html>
