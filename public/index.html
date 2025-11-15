@@ -65,13 +65,13 @@
     </div>
   </main>
 
-  <!-- 🚨 Aquí NO TOCO tu lógica previa, solo la pego EXACTA como la tenías -->
+  <!-- 🚨 Lógica previa: header + redirect si ya hay sesión -->
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       // Header en modo público
       await loadHeader('public');
 
-      // Redirigir al panel si ya hay sesión (TU CÓDIGO EXACTO DE ANTES)
+      // Redirigir al panel si ya hay sesión
       const { data: { session } } = await window.supa.auth.getSession();
       if (session) {
         window.location.href = "./app_ui.html";
@@ -79,7 +79,7 @@
     });
   </script>
 
-  <!-- 🚨 Tu módulo completo previo: comprobación y doble check (idéntico al original) -->
+  <!-- 🚨 Tu módulo previo: comprobación + bot + org_status -->
   <script type="module">
     import { ensureProfile, getOrgStatus } from './modules/profile.js';
 
@@ -137,27 +137,124 @@
     });
   </script>
 
-  <!-- 🚨 Lógica de acceso admin SIN alterar nada de lo anterior -->
-  <script>
-    document.getElementById('admin-login-btn')?.addEventListener('click', async () => {
-      const email = prompt("Email del admin:");
-      if (!email) return;
-      const password = prompt("Contraseña:");
-      if (!password) return;
+  <!-- 🔻 MODAL PARA LOGIN ADMIN (NUEVO) -->
+  <div id="admin-modal-backdrop"
+       style="position:fixed;inset:0;background:rgba(0,0,0,.65);
+              display:none;align-items:center;justify-content:center;z-index:50;">
+    <div style="background:#111827;border-radius:0.75rem;padding:1.2rem 1.4rem;
+                width:100%;max-width:360px;border:1px solid rgba(148,163,184,0.6);
+                box-shadow:0 18px 40px rgba(0,0,0,0.6);">
+      <h3 style="margin:0 0 .75rem;">Acceso administrador</h3>
+      <p style="margin:0 0 1rem;opacity:.8;font-size:.85rem;">
+        Introduce las credenciales de administración interna.
+      </p>
 
+      <form id="admin-login-form">
+        <label style="display:block;font-size:.8rem;margin-bottom:.25rem;">Email</label>
+        <input id="admin-email" type="email" required
+               style="width:100%;margin-bottom:.75rem;padding:.4rem .5rem;
+                      border-radius:.4rem;border:1px solid rgba(148,163,184,0.8);
+                      background:#020617;color:#e5e7eb;"/>
+
+        <label style="display:block;font-size:.8rem;margin-bottom:.25rem;">Contraseña</label>
+        <div style="display:flex;align-items:center;margin-bottom:.75rem;
+                    border-radius:.4rem;border:1px solid rgba(148,163,184,0.8);
+                    background:#020617;overflow:hidden;">
+          <input id="admin-password" type="password" required
+                 style="flex:1;border:none;outline:none;background:transparent;
+                        color:#e5e7eb;padding:.4rem .5rem;"/>
+          <button type="button" id="admin-toggle-pass"
+                  style="border:none;background:transparent;color:#9ca3af;
+                         padding:0 .55rem;cursor:pointer;font-size:.85rem;">
+            👁
+          </button>
+        </div>
+
+        <div id="admin-error"
+             style="min-height:1rem;font-size:.8rem;color:#fca5a5;margin-bottom:.5rem;"></div>
+
+        <div style="display:flex;justify-content:flex-end;gap:.5rem;">
+          <button type="button" id="admin-cancel"
+                  style="padding:.35rem .7rem;font-size:.85rem;border-radius:.4rem;
+                         border:1px solid rgba(148,163,184,0.8);background:#020617;
+                         color:#e5e7eb;cursor:pointer;">
+            Cancelar
+          </button>
+          <button type="submit"
+                  style="padding:.35rem .9rem;font-size:.85rem;border-radius:.4rem;
+                         border:none;background:#22c55e;color:#020617;font-weight:600;
+                         cursor:pointer;">
+            Entrar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 🚨 Lógica de acceso admin usando el modal (contraseña oculta + botón ver) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
       const { supa } = window;
 
-      const { data, error } = await supa.auth.signInWithPassword({
-        email,
-        password
-      });
+      const adminBtn   = document.getElementById('admin-login-btn');
+      const backdrop   = document.getElementById('admin-modal-backdrop');
+      const form       = document.getElementById('admin-login-form');
+      const emailInput = document.getElementById('admin-email');
+      const passInput  = document.getElementById('admin-password');
+      const toggleBtn  = document.getElementById('admin-toggle-pass');
+      const cancelBtn  = document.getElementById('admin-cancel');
+      const errorBox   = document.getElementById('admin-error');
 
-      if (error) {
-        alert("Error al iniciar sesión como admin: " + error.message);
-        return;
+      function openModal() {
+        if (!backdrop) return;
+        backdrop.style.display = 'flex';
+        errorBox.textContent = '';
+        emailInput.value = '';
+        passInput.value = '';
+        passInput.type = 'password';
+        emailInput.focus();
       }
 
-      window.location.href = './app_ui.html';
+      function closeModal() {
+        if (!backdrop) return;
+        backdrop.style.display = 'none';
+      }
+
+      adminBtn?.addEventListener('click', () => {
+        openModal();
+      });
+
+      cancelBtn?.addEventListener('click', () => {
+        closeModal();
+      });
+
+      toggleBtn?.addEventListener('click', () => {
+        passInput.type = (passInput.type === 'password') ? 'text' : 'password';
+      });
+
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorBox.textContent = '';
+
+        const email = emailInput.value.trim();
+        const password = passInput.value;
+
+        if (!email || !password) {
+          errorBox.textContent = 'Introduce email y contraseña.';
+          return;
+        }
+
+        const { data, error } = await supa.auth.signInWithPassword({ email, password });
+
+        if (error) {
+          console.error('Error login admin:', error);
+          errorBox.textContent = 'No se ha podido iniciar sesión: ' + error.message;
+          return;
+        }
+
+        closeModal();
+        window.location.href = './app_ui.html';
+      });
     });
   </script>
 
