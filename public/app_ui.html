@@ -132,100 +132,136 @@
   </main>
 
   <script type="module">
-    import { getOrgStatus } from './modules/profile.js';
+  import { getOrgStatus } from './modules/profile.js';
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      const { supa } = window;
+  document.addEventListener('DOMContentLoaded', async () => {
+    const { supa } = window;
 
-      // --- 1) Comprobar sesión ---
-      const { data: { session } } = await supa.auth.getSession();
-      if (!session) {
-        window.location.href = './index.html';
-        return;
+    // --- 1) Comprobar sesión ---
+    const { data: { session } } = await supa.auth.getSession();
+    if (!session) {
+      window.location.href = './index.html';
+      return;
+    }
+
+    // --- 2) Comprobar rol de organización permitido (miembro de la org) ---
+    const status = await getOrgStatus();
+    if (!status || !['miembro','daga','espada','admin'].includes(status)) {
+      await supa.auth.signOut();
+      window.location.href = './index.html';
+      return;
+    }
+
+    // --- 3) Cargar header existente ---
+    await loadHeader('app');
+
+    // --- 4) Inicializar menú usuario del header ---
+    if (typeof window.initHeaderUserMenu === 'function') {
+      window.initHeaderUserMenu(
+        session,
+        async () => {
+          await supa.auth.signOut();
+          window.location.href = "./index.html";
+        },
+        () => {
+          window.location.href = './perfil.html';
+        }
+      );
+    }
+
+    // --- 5) Obtener rol interno del usuario desde public.users ---
+    const { data: userRow, error: userError } = await supa
+      .from('users')
+      .select('tesoro_internal_role')
+      .eq('id', session.user.id)
+      .maybeSingle();
+
+    if (userError) {
+      console.error('Error leyendo tesoro_internal_role:', userError);
+    }
+
+    let internalRole = userRow?.tesoro_internal_role || null;
+    if (typeof internalRole === 'string') internalRole = internalRole.trim();
+    console.log('Rol interno detectado:', internalRole);
+
+    // --- 6) Buscar fila de permisos en roles_app ---
+    let roleRow = null;
+
+    if (internalRole) {
+      // ¿Es numérico? → lo tratamos como id de roles_app
+      const asNumber = Number(internalRole);
+      if (!Number.isNaN(asNumber) && internalRole !== '') {
+        const { data, error } = await supa
+          .from('roles_app')
+          .select('*')
+          .eq('id', asNumber)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error buscando rol por id en roles_app:', error);
+        } else {
+          roleRow = data;
+        }
       }
 
-      // --- 2) Comprobar rol de organización permitido ---
-      const status = await getOrgStatus();
-      if (!status || !['miembro','daga','espada','admin'].includes(status)) {
-        await supa.auth.signOut();
-        window.location.href = './index.html';
-        return;
+      // Si no hemos encontrado nada por id, probamos por nombre (case-insensitive)
+      if (!roleRow) {
+        const { data, error } = await supa
+          .from('roles_app')
+          .select('*')
+          .ilike('role_name', internalRole) // "Admin" == "admin" == "ADMIN"
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error buscando rol por nombre en roles_app:', error);
+        } else {
+          roleRow = data;
+        }
+      }
+    }
+
+    if (!roleRow) {
+      console.warn('No se encontró fila de roles_app para rol interno:', internalRole);
+    } else {
+      console.log('Fila de permisos cargada de roles_app:', roleRow);
+    }
+
+    // --- 7) Aplicar permisos a las tarjetas de módulos ---
+    const cards = document.querySelectorAll('.module-card');
+
+    cards.forEach(card => {
+      const mod = card.getAttribute('data-module'); // ej. "solicitudes", "usuarios", etc.
+
+      // Si no tenemos fila de permisos, o la columna no existe → 0
+      let level = 0;
+      if (roleRow && Object.prototype.hasOwnProperty.call(roleRow, mod)) {
+        level = roleRow[mod] ?? 0;
       }
 
-      // --- 3) Cargar header existente ---
-      await loadHeader('app');
-
-      // --- 4) Inicializar menú usuario del header ---
-      if (typeof window.initHeaderUserMenu === 'function') {
-        window.initHeaderUserMenu(
-          session,
-          async () => {
-            await supa.auth.signOut();
-            window.location.href = "./index.html";
-          },
-          () => {
-            window.location.href = './perfil.html';
-          }
-        );
+      // Marcar visualmente si no tiene acceso (level 0)
+      if (!level || level === 0) {
+        card.classList.add('disabled');
       }
 
-      // --- 5) Obtener rol interno del usuario ---
-      const { data: userRow, error: userError } = await supa
-        .from('users')
-        .select('tesoro_internal_role')
-        .eq('id', session.user.id)
-        .maybeSingle();
-
-      if (userError) {
-        console.error('Error leyendo tesoro_internal_role:', userError);
-      }
-
-      const internalRole = userRow?.tesoro_internal_role || 'Usuario';
-
-      // --- 6) Obtener permisos de ese rol desde roles_app ---
-      const { data: rolePerms, error: roleError } = await supa
-        .from('roles_app')
-        .select('solicitudes, revision, inventario, almacenes, registro, calendario, usuarios')
-        .eq('role_name', internalRole)
-        .maybeSingle();
-
-      if (roleError) {
-        console.error('Error leyendo permisos de roles_app:', roleError);
-      }
-
-      // Si no hay fila de permisos, tratamos todo como 0
-      const perms = rolePerms || {};
-
-      // --- 7) Aplicar permisos a las tarjetas de módulos ---
-      document.querySelectorAll('.module-card').forEach(card => {
-        const mod = card.getAttribute('data-module');
-        // valor 0,1,2; si no existe, se considera 0
-        const level = (perms && Object.prototype.hasOwnProperty.call(perms, mod))
-          ? perms[mod]
-          : 0;
-
-        if (!level || level === 0) {
-          // Sin acceso → deshabilitado visualmente
-          card.classList.add('disabled');
+      card.addEventListener('click', () => {
+        // Releer por si acaso, aunque debería ser el mismo valor
+        let currentLevel = 0;
+        if (roleRow && Object.prototype.hasOwnProperty.call(roleRow, mod)) {
+          currentLevel = roleRow[mod] ?? 0;
         }
 
-        card.addEventListener('click', () => {
-          const currentLevel = (perms && Object.prototype.hasOwnProperty.call(perms, mod))
-            ? perms[mod]
-            : 0;
+        if (!currentLevel || currentLevel === 0) {
+          alert('No tienes acceso a este módulo.');
+          return;
+        }
 
-          if (!currentLevel || currentLevel === 0) {
-            alert('No tienes acceso a este módulo.');
-            return;
-          }
-
-          // Aquí más adelante redirigiremos a cada módulo real.
-          // De momento seguimos con el placeholder:
-          alert(`Módulo "${mod}" aún no está implementado.`);
-        });
+        // Aquí más adelante redirigiremos a cada módulo real según "mod"
+        // y distinguiremos entre 1 (solo lectura) y 2 (acciones).
+        alert(`Módulo "${mod}" aún no está implementado (nivel ${currentLevel}).`);
       });
     });
-  </script>
+  });
+</script>
 
 </body>
 </html>
