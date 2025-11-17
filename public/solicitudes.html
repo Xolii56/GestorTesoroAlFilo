@@ -508,12 +508,12 @@
         // if (notes) payload.notes = notes;
 
         const { error: insError } = await supa
-          .from('requests')
-          .insert(payload);
+        .from('requests')
+        .insert(payload);
 
         if (insError) {
           console.error('Error creando solicitud:', insError);
-          alert('No se ha podido crear la solicitud.');
+          alert('No se ha podido crear la solicitud.\n\nDetalle: ' + insError.message);
           return;
         }
 
