@@ -135,6 +135,52 @@
     .badge-status.rechazada {
       border-color: rgba(248,113,113,0.9);
     }
+
+    .badge-status.completada {
+      border-color: rgba(56,189,248,0.9);
+    }
+
+    .tipo-chip {
+      display:inline-block;
+      padding:0.08rem 0.45rem;
+      border-radius:999px;
+      font-size:.7rem;
+      border:1px solid rgba(148,163,184,0.9);
+      margin-left:.3rem;
+      opacity:.85;
+    }
+
+    .tipo-chip.compra {
+      border-color: rgba(34,197,94,0.9);
+    }
+
+    .tipo-chip.venta {
+      border-color: rgba(248,113,113,0.9);
+    }
+
+    .tipo-toggle {
+      display:flex;
+      gap:.4rem;
+      margin-bottom:.4rem;
+    }
+
+    .tipo-toggle button {
+      flex:1;
+      padding:0.3rem 0.4rem;
+      border-radius:0.5rem;
+      border:1px solid rgba(148,163,184,0.7);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.85rem;
+      cursor:pointer;
+    }
+
+    .tipo-toggle button.active {
+      background:#22c55e;
+      color:#020617;
+      border-color:#22c55e;
+      font-weight:600;
+    }
   </style>
 </head>
 
@@ -146,7 +192,7 @@
       <div>
         <h2>Solicitudes</h2>
         <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
-          Crea solicitudes al Tesoro y consulta el estado de las que ya has realizado.
+          Crea solicitudes de compra o venta y consulta el estado de las que ya has realizado.
         </p>
       </div>
       <button type="button"
@@ -163,8 +209,25 @@
         <p id="sol-perms-label" class="help-text" style="margin-bottom:.8rem;"></p>
 
         <form id="sol-form" class="sol-form">
+          <!-- Tipo de solicitud -->
           <div class="field">
-            <label for="item-select">Ítem</label>
+            <label>Tipo de solicitud</label>
+            <div class="tipo-toggle">
+              <button type="button" data-type="compra" class="active">Compra</button>
+              <button type="button" data-type="venta">Venta</button>
+            </div>
+            <input type="hidden" id="request_type" value="compra"/>
+          </div>
+
+          <!-- Solicitante -->
+          <div class="field">
+            <label>Solicitante</label>
+            <input id="solicitante" type="text" readonly />
+          </div>
+
+          <!-- Objeto -->
+          <div class="field">
+            <label for="item-select">Objeto</label>
             <select id="item-select" required>
               <option value="">Selecciona un ítem...</option>
             </select>
@@ -177,7 +240,7 @@
 
           <div class="field">
             <label for="notes">Notas (opcional)</label>
-            <textarea id="notes" placeholder="Describe brevemente el uso o contexto de la solicitud."></textarea>
+            <textarea id="notes" placeholder="Describe brevemente la solicitud."></textarea>
           </div>
 
           <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.5rem;">
@@ -200,6 +263,7 @@
             <thead>
               <tr>
                 <th>ID</th>
+                <th>Tipo</th>
                 <th>Ítem</th>
                 <th>Cant.</th>
                 <th>Estado</th>
@@ -256,7 +320,7 @@
       // 4) Permisos del módulo "solicitudes"
       const { data: meRow, error: meError } = await supa
         .from('users')
-        .select('tesoro_internal_role')
+        .select('tesoro_internal_role, handle_name, discord_username')
         .eq('id', session.user.id)
         .maybeSingle();
 
@@ -305,7 +369,7 @@
       const readOnly = (solLevel === 1);
       if (readOnly) {
         solPermsLabel.textContent = 'Permisos: solo lectura. Puedes consultar tus solicitudes, pero no crear nuevas.';
-        solForm.querySelectorAll('input, select, textarea').forEach(el => {
+        solForm.querySelectorAll('input, select, textarea, button[data-type]').forEach(el => {
           el.disabled = true;
         });
         solSubmitBtn.classList.add('btn-disabled');
@@ -313,7 +377,24 @@
         solPermsLabel.textContent = 'Permisos: puedes crear nuevas solicitudes y consultar tu historial.';
       }
 
-      // 5) Cargar ítems en el select
+      // 5) Mostrar nombre del solicitante
+      const solicitanteInput = document.getElementById('solicitante');
+      const handle = meRow?.handle_name || meRow?.discord_username || session.user.email || session.user.id;
+      solicitanteInput.value = handle;
+
+      // 6) Toggle de tipo
+      const typeHidden = document.getElementById('request_type');
+      const tipoButtons = document.querySelectorAll('.tipo-toggle button');
+      tipoButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (readOnly) return;
+          tipoButtons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          typeHidden.value = btn.dataset.type;
+        });
+      });
+
+      // 7) Cargar ítems
       const itemSelect = document.getElementById('item-select');
       const { data: items, error: itemsError } = await supa
         .from('items')
@@ -331,15 +412,21 @@
         });
       }
 
-      // 6) Listar solicitudes del usuario actual
+      // 8) Listar solicitudes del usuario actual
       const tbody = document.getElementById('sol-tbody');
+
+      function renderTipo(tipo) {
+        if (!tipo) return '-';
+        const label = tipo === 'compra' ? 'Compra' : 'Venta';
+        return label;
+      }
 
       async function loadMyRequests() {
         tbody.innerHTML = '';
 
         const { data: reqs, error: reqError } = await supa
           .from('requests')
-          .select('id, item_id, quantity, status, created_at, items(name)')
+          .select('id, request_type, item_id, quantity, status, created_at, items(name)')
           .eq('requester_discord_id', session.user.id)
           .order('created_at', { ascending: false });
 
@@ -354,6 +441,12 @@
           const tdId = document.createElement('td');
           tdId.textContent = `#${r.id}`;
 
+          const tdTipo = document.createElement('td');
+          const spanTipo = document.createElement('span');
+          spanTipo.className = 'tipo-chip ' + (r.request_type || '');
+          spanTipo.textContent = renderTipo(r.request_type);
+          tdTipo.appendChild(spanTipo);
+
           const tdItem = document.createElement('td');
           tdItem.textContent = r.items?.name || r.item_id || '-';
 
@@ -362,8 +455,9 @@
 
           const tdStatus = document.createElement('td');
           const span = document.createElement('span');
-          span.className = 'badge-status ' + (r.status || 'pendiente');
-          span.textContent = r.status || 'pendiente';
+          const st = r.status || 'pendiente';
+          span.className = 'badge-status ' + st;
+          span.textContent = st;
           tdStatus.appendChild(span);
 
           const tdDate = document.createElement('td');
@@ -372,6 +466,7 @@
             : '-';
 
           tr.appendChild(tdId);
+          tr.appendChild(tdTipo);
           tr.appendChild(tdItem);
           tr.appendChild(tdQty);
           tr.appendChild(tdStatus);
@@ -383,7 +478,7 @@
 
       await loadMyRequests();
 
-      // 7) Envío de formulario (solo nivel 2)
+      // 9) Envío de formulario (solo nivel 2)
       solForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (readOnly) {
@@ -391,6 +486,7 @@
           return;
         }
 
+        const type = typeHidden.value || 'compra';
         const itemId = itemSelect.value;
         const qty = Number(document.getElementById('quantity').value);
         const notes = document.getElementById('notes').value.trim();
@@ -401,14 +497,14 @@
         }
 
         const payload = {
+          request_type: type,
           item_id: itemId,
           quantity: qty,
           requester_discord_id: session.user.id,
           status: 'pendiente'
         };
 
-        // Si más adelante añades columna "notes" en requests,
-        // descomenta esto:
+        // En el futuro, si añadimos columna notes en requests:
         // if (notes) payload.notes = notes;
 
         const { error: insError } = await supa
@@ -422,6 +518,11 @@
         }
 
         solForm.reset();
+        // reset tipo a compra
+        typeHidden.value = 'compra';
+        tipoButtons.forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.type === 'compra');
+        });
         await loadMyRequests();
         alert('Solicitud creada correctamente.');
       });
