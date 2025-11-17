@@ -103,6 +103,28 @@
       border-color: rgba(248,113,113,0.9);
     }
 
+    .badge-status.completada {
+      border-color: rgba(56,189,248,0.9);
+    }
+
+    .tipo-chip {
+      display:inline-block;
+      padding:0.08rem 0.45rem;
+      border-radius:999px;
+      font-size:.7rem;
+      border:1px solid rgba(148,163,184,0.9);
+      margin-left:.25rem;
+      opacity:.85;
+    }
+
+    .tipo-chip.compra {
+      border-color: rgba(34,197,94,0.9);
+    }
+
+    .tipo-chip.venta {
+      border-color: rgba(248,113,113,0.9);
+    }
+
     .rev-detail .field {
       margin-bottom: .7rem;
     }
@@ -115,7 +137,8 @@
     }
 
     .rev-detail input,
-    .rev-detail textarea {
+    .rev-detail textarea,
+    .rev-detail select {
       width: 100%;
       padding: 0.4rem 0.5rem;
       border-radius: 0.4rem;
@@ -197,6 +220,7 @@
               <option value="pendiente">Pendientes</option>
               <option value="aprobada">Aprobadas</option>
               <option value="rechazada">Rechazadas</option>
+              <option value="completada">Completadas</option>
             </select>
             <input type="search" id="buscador" placeholder="Filtrar por ítem o usuario..."/>
           </div>
@@ -210,6 +234,7 @@
             <thead>
               <tr>
                 <th>ID</th>
+                <th>Tipo</th>
                 <th>Ítem</th>
                 <th>Cant.</th>
                 <th>Solicitante</th>
@@ -233,6 +258,11 @@
 
         <div id="rev-detail-panel" style="display:none;">
           <div class="field">
+            <label>Tipo de solicitud</label>
+            <input id="d_type" type="text" readonly/>
+          </div>
+
+          <div class="field">
             <label>Ítem</label>
             <input id="d_item" type="text" readonly/>
           </div>
@@ -254,10 +284,25 @@
           </div>
 
           <div class="field">
-            <label>Comentario interno (no se muestra al usuario final por ahora)</label>
+            <label>Lugar de transacción (almacén)</label>
+            <select id="d_warehouse">
+              <option value="">Selecciona un almacén...</option>
+            </select>
+            <div class="help-text">
+              Se utiliza al aprobar una solicitud. Lista de almacenes gestionada en el módulo Almacenes.
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Plazo máximo de entrega</label>
+            <input id="d_due_date" type="date"/>
+          </div>
+
+          <div class="field">
+            <label>Comentario interno (borrador local)</label>
             <textarea id="d_comment" placeholder="Anota el motivo de aprobación/rechazo o instrucciones internas."></textarea>
             <div class="help-text">
-              Aún no se guarda en BD (futuro campo notes), es solo borrador local por ahora.
+              Aún no se guarda en BD (cuando añadamos columna notes lo enganchamos).
             </div>
           </div>
 
@@ -365,12 +410,12 @@
 
       const permsLabel = document.getElementById('rev-perms-label');
       if (permsLabel) {
-        permsLabel.textContent = revLevel === 1
+        permsLabel.textContent = readOnly
           ? 'Permisos: solo lectura.'
           : 'Permisos: revisión y cambio de estado.';
       }
 
-      // 5) Cargar usuarios para mapear nombres
+      // 5) Usuarios para mapear solicitante
       const { data: users, error: usersError } = await supa
         .from('users')
         .select('id, handle_name, discord_username');
@@ -381,18 +426,35 @@
         usersById[u.id] = u;
       });
 
-      // 6) Cargar solicitudes
+      // 6) Cargar almacenes
+      const { data: warehouses, error: whError } = await supa
+        .from('warehouses')
+        .select('id, name')
+        .order('name', { ascending: true });
+
+      if (whError) console.error('Error leyendo almacenes:', whError);
+
+      const warehouseSelect = document.getElementById('d_warehouse');
+      (warehouses || []).forEach(w => {
+        const opt = document.createElement('option');
+        opt.value = w.id;
+        opt.textContent = w.name;
+        warehouseSelect.appendChild(opt);
+      });
+
       const tbody = document.getElementById('rev-tbody');
       const filtroEstado = document.getElementById('filtro-estado');
       const buscador = document.getElementById('buscador');
       const revEmpty = document.getElementById('rev-empty');
       const revPanel = document.getElementById('rev-detail-panel');
 
+      const dType = document.getElementById('d_type');
       const dItem = document.getElementById('d_item');
       const dQty = document.getElementById('d_quantity');
       const dReq = document.getElementById('d_requester');
       const dStatus = document.getElementById('d_status');
       const dDates = document.getElementById('d_dates');
+      const dDueDate = document.getElementById('d_due_date');
       const dComment = document.getElementById('d_comment');
       const btnApprove = document.getElementById('btn-approve');
       const btnReject = document.getElementById('btn-reject');
@@ -400,15 +462,36 @@
       if (readOnly) {
         btnApprove.classList.add('btn-disabled');
         btnReject.classList.add('btn-disabled');
+        warehouseSelect.disabled = true;
+        dDueDate.disabled = true;
+        dComment.readOnly = true;
       }
 
       let allRequests = [];
       let selectedId = null;
 
+      function renderTipo(tipo) {
+        if (!tipo) return '-';
+        return tipo === 'compra' ? 'Compra' : 'Venta';
+      }
+
       async function loadRequests() {
         const { data: reqs, error: reqError } = await supa
           .from('requests')
-          .select('id, item_id, quantity, status, created_at, requester_discord_id, items(name)')
+          .select(`
+            id,
+            request_type,
+            item_id,
+            quantity,
+            status,
+            created_at,
+            requester_discord_id,
+            warehouse_id,
+            due_date,
+            approver_id,
+            approved_at,
+            items(name)
+          `)
           .order('created_at', { ascending: false });
 
         if (reqError) {
@@ -426,7 +509,8 @@
         const term = (buscador.value || '').toLowerCase();
 
         allRequests.forEach(r => {
-          if (estado !== 'todas' && (r.status || 'pendiente') !== estado) return;
+          const st = r.status || 'pendiente';
+          if (estado !== 'todas' && st !== estado) return;
 
           const itemName = r.items?.name || r.item_id || '';
           const requesterId = r.requester_discord_id;
@@ -444,6 +528,12 @@
           const tdId = document.createElement('td');
           tdId.textContent = `#${r.id}`;
 
+          const tdTipo = document.createElement('td');
+          const spanTipo = document.createElement('span');
+          spanTipo.className = 'tipo-chip ' + (r.request_type || '');
+          spanTipo.textContent = renderTipo(r.request_type);
+          tdTipo.appendChild(spanTipo);
+
           const tdItem = document.createElement('td');
           tdItem.textContent = itemName || '-';
 
@@ -455,7 +545,6 @@
 
           const tdStatus = document.createElement('td');
           const span = document.createElement('span');
-          const st = r.status || 'pendiente';
           span.className = 'badge-status ' + st;
           span.textContent = st;
           tdStatus.appendChild(span);
@@ -466,6 +555,7 @@
             : '-';
 
           tr.appendChild(tdId);
+          tr.appendChild(tdTipo);
           tr.appendChild(tdItem);
           tr.appendChild(tdQty);
           tr.appendChild(tdReq);
@@ -489,16 +579,32 @@
 
         const itemName = r.items?.name || r.item_id || '';
 
+        dType.value = renderTipo(r.request_type);
         dItem.value = itemName;
         dQty.value = r.quantity;
         dReq.value = requesterName || r.requester_discord_id || '';
-        dStatus.value = r.status || 'pendiente';
+        const st = r.status || 'pendiente';
+        dStatus.value = st;
 
         const creado = r.created_at
           ? new Date(r.created_at).toLocaleString()
           : 'desconocido';
+        const aprobado = r.approved_at
+          ? new Date(r.approved_at).toLocaleString()
+          : null;
 
-        dDates.textContent = `Creada: ${creado}`;
+        dDates.textContent = aprobado
+          ? `Creada: ${creado} · Aprobada: ${aprobado}`
+          : `Creada: ${creado}`;
+
+        // Rellenar almacén y fecha si ya existen
+        if (r.warehouse_id && warehouses) {
+          warehouseSelect.value = r.warehouse_id;
+        } else {
+          warehouseSelect.value = '';
+        }
+
+        dDueDate.value = r.due_date || '';
         dComment.value = '';
       }
 
@@ -517,31 +623,57 @@
           return;
         }
 
-        const { error: updError } = await supa
-          .from('requests')
-          .update({
-            status: newStatus
-            // En el futuro se puede añadir reviewer_id, reviewed_at, etc.
-          })
-          .eq('id', selectedId);
+        // Si es aprobación, exigimos almacén + fecha
+        if (newStatus === 'aprobada') {
+          const wh = warehouseSelect.value;
+          const due = dDueDate.value;
+          if (!wh || !due) {
+            alert('Para aprobar una solicitud debes indicar el almacén y el plazo máximo de entrega.');
+            return;
+          }
 
-        if (updError) {
-          console.error('Error actualizando solicitud:', updError);
-          alert('No se ha podido actualizar el estado.');
-          return;
+          const { error: updError } = await supa
+            .from('requests')
+            .update({
+              status: 'aprobada',
+              warehouse_id: wh,
+              due_date: due,
+              approver_id: session.user.id,
+              approved_at: new Date().toISOString()
+            })
+            .eq('id', selectedId);
+
+          if (updError) {
+            console.error('Error actualizando solicitud:', updError);
+            alert('No se ha podido aprobar la solicitud.');
+            return;
+          }
+        } else if (newStatus === 'rechazada') {
+          const { error: updError } = await supa
+            .from('requests')
+            .update({
+              status: 'rechazada'
+            })
+            .eq('id', selectedId);
+
+          if (updError) {
+            console.error('Error actualizando solicitud:', updError);
+            alert('No se ha podido rechazar la solicitud.');
+            return;
+          }
         }
 
-        // Actualizar copia local
-        const idx = allRequests.findIndex(r => r.id === selectedId);
-        if (idx !== -1) {
-          allRequests[idx].status = newStatus;
-          const requesterId = allRequests[idx].requester_discord_id;
+        // Refrescar lista y detalle
+        await loadRequests();
+
+        const r = allRequests.find(x => x.id === selectedId);
+        if (r) {
+          const requesterId = r.requester_discord_id;
           const user = usersById[requesterId];
           const requesterName = user?.handle_name || user?.discord_username || requesterId || '';
-          showDetail(allRequests[idx], requesterName);
+          showDetail(r, requesterName);
         }
 
-        renderTable();
         alert(`Solicitud marcada como ${newStatus}.`);
       }
 
