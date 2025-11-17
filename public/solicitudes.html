@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Departamento del Tesoro — Solicitudes</title>
+  <link rel="stylesheet" href="./style.css"/>
+
+  <!-- Supabase + módulos -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="./config.js" defer></script>
+  <script src="./modules/db.js" defer></script>
+  <script src="./modules/layout.js" defer></script>
+
+  <style>
+    main.solicitudes-main {
+      padding: 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .solicitudes-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr);
+      gap: 1.3rem;
+    }
+
+    @media (max-width: 900px) {
+      .solicitudes-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .sol-form .field {
+      margin-bottom: .8rem;
+    }
+
+    .sol-form label {
+      display: block;
+      font-size: .8rem;
+      opacity: .8;
+      margin-bottom: .2rem;
+    }
+
+    .sol-form select,
+    .sol-form input,
+    .sol-form textarea {
+      width: 100%;
+      padding: 0.4rem 0.5rem;
+      border-radius: 0.4rem;
+      border: 1px solid rgba(148,163,184,0.8);
+      background: #020617;
+      color: #e5e7eb;
+      font-size: .9rem;
+    }
+
+    .sol-form textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .sol-form input[readonly],
+    .sol-form select[disabled],
+    .sol-form textarea[readonly] {
+      opacity: .8;
+    }
+
+    .btn {
+      padding: 0.35rem 0.85rem;
+      border-radius: 0.4rem;
+      border: none;
+      cursor: pointer;
+      font-size: .85rem;
+    }
+
+    .btn-primary {
+      background: #22c55e;
+      color: #020617;
+      font-weight: 600;
+    }
+
+    .btn-secondary {
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid rgba(148,163,184,0.8);
+    }
+
+    .btn-disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .help-text {
+      font-size: .75rem;
+      opacity: .7;
+      margin-top: .2rem;
+    }
+
+    .sol-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .9rem;
+    }
+
+    .sol-table thead {
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      opacity: .8;
+    }
+
+    .sol-table th,
+    .sol-table td {
+      padding: 0.35rem 0.4rem;
+      border-bottom: 1px solid rgba(148,163,184,0.26);
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.1rem 0.55rem;
+      border-radius: 999px;
+      font-size: .75rem;
+      border: 1px solid rgba(148,163,184,0.7);
+    }
+
+    .badge-status.pendiente {
+      border-color: rgba(250,204,21,0.9);
+    }
+
+    .badge-status.aprobada {
+      border-color: rgba(34,197,94,0.9);
+    }
+
+    .badge-status.rechazada {
+      border-color: rgba(248,113,113,0.9);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="site-header"></div>
+
+  <main class="solicitudes-main">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
+      <div>
+        <h2>Solicitudes</h2>
+        <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
+          Crea solicitudes al Tesoro y consulta el estado de las que ya has realizado.
+        </p>
+      </div>
+      <button type="button"
+              class="btn btn-secondary"
+              onclick="window.location.href='./app_ui.html'">
+        ← Volver al panel
+      </button>
+    </div>
+
+    <div class="solicitudes-layout">
+      <!-- FORMULARIO -->
+      <div class="card">
+        <h3 style="margin-top:0;">Nueva solicitud</h3>
+        <p id="sol-perms-label" class="help-text" style="margin-bottom:.8rem;"></p>
+
+        <form id="sol-form" class="sol-form">
+          <div class="field">
+            <label for="item-select">Ítem</label>
+            <select id="item-select" required>
+              <option value="">Selecciona un ítem...</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="quantity">Cantidad</label>
+            <input id="quantity" type="number" min="1" required />
+          </div>
+
+          <div class="field">
+            <label for="notes">Notas (opcional)</label>
+            <textarea id="notes" placeholder="Describe brevemente el uso o contexto de la solicitud."></textarea>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.5rem;">
+            <button type="submit" class="btn btn-primary" id="sol-submit-btn">
+              Enviar solicitud
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- LISTADO -->
+      <div class="card">
+        <h3 style="margin-top:0;">Mis solicitudes</h3>
+        <p class="help-text">
+          Solo se muestran las solicitudes realizadas con tu cuenta actual.
+        </p>
+
+        <div style="max-height:460px;overflow:auto;margin-top:.6rem;">
+          <table class="sol-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Ítem</th>
+                <th>Cant.</th>
+                <th>Estado</th>
+                <th>Creada</th>
+              </tr>
+            </thead>
+            <tbody id="sol-tbody">
+              <!-- Rellenado por JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { getOrgStatus } from './modules/profile.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { supa } = window;
+
+      // 1) Sesión
+      const { data: { session } } = await supa.auth.getSession();
+      if (!session) {
+        window.location.href = './index.html';
+        return;
+      }
+
+      // 2) org_status
+      const orgStatus = await getOrgStatus();
+      if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
+        await supa.auth.signOut();
+        window.location.href = './index.html';
+        return;
+      }
+
+      // 3) Header
+      if (typeof window.loadHeader === 'function') {
+        await window.loadHeader('app');
+      }
+      if (typeof window.initHeaderUserMenu === 'function') {
+        window.initHeaderUserMenu(
+          session,
+          async () => {
+            await supa.auth.signOut();
+            window.location.href = "./index.html";
+          },
+          () => {
+            window.location.href = './perfil.html';
+          }
+        );
+      }
+
+      // 4) Permisos del módulo "solicitudes"
+      const { data: meRow, error: meError } = await supa
+        .from('users')
+        .select('tesoro_internal_role')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (meError) console.error('Error leyendo rol interno:', meError);
+
+      let myRole = meRow?.tesoro_internal_role || null;
+      if (typeof myRole === 'string') myRole = myRole.trim();
+
+      let roleRow = null;
+      if (myRole) {
+        const asNumber = Number(myRole);
+        if (!Number.isNaN(asNumber) && myRole !== '') {
+          const { data, error } = await supa
+            .from('roles_app')
+            .select('*')
+            .eq('id', asNumber)
+            .maybeSingle();
+          if (!error) roleRow = data;
+        }
+
+        if (!roleRow) {
+          const { data, error } = await supa
+            .from('roles_app')
+            .select('*')
+            .ilike('role_name', myRole)
+            .maybeSingle();
+          if (!error) roleRow = data;
+        }
+      }
+
+      let solLevel = 0;
+      if (roleRow && Object.prototype.hasOwnProperty.call(roleRow, 'solicitudes')) {
+        solLevel = roleRow.solicitudes ?? 0;
+      }
+
+      if (!solLevel || solLevel === 0) {
+        alert('No tienes acceso al módulo de Solicitudes.');
+        window.location.href = './app_ui.html';
+        return;
+      }
+
+      const solPermsLabel = document.getElementById('sol-perms-label');
+      const solForm = document.getElementById('sol-form');
+      const solSubmitBtn = document.getElementById('sol-submit-btn');
+
+      const readOnly = (solLevel === 1);
+      if (readOnly) {
+        solPermsLabel.textContent = 'Permisos: solo lectura. Puedes consultar tus solicitudes, pero no crear nuevas.';
+        solForm.querySelectorAll('input, select, textarea').forEach(el => {
+          el.disabled = true;
+        });
+        solSubmitBtn.classList.add('btn-disabled');
+      } else {
+        solPermsLabel.textContent = 'Permisos: puedes crear nuevas solicitudes y consultar tu historial.';
+      }
+
+      // 5) Cargar ítems en el select
+      const itemSelect = document.getElementById('item-select');
+      const { data: items, error: itemsError } = await supa
+        .from('items')
+        .select('id, name, quantity')
+        .order('name', { ascending: true });
+
+      if (itemsError) {
+        console.error('Error cargando items:', itemsError);
+      } else {
+        (items || []).forEach(it => {
+          const opt = document.createElement('option');
+          opt.value = it.id;
+          opt.textContent = `${it.name} (stock: ${it.quantity})`;
+          itemSelect.appendChild(opt);
+        });
+      }
+
+      // 6) Listar solicitudes del usuario actual
+      const tbody = document.getElementById('sol-tbody');
+
+      async function loadMyRequests() {
+        tbody.innerHTML = '';
+
+        const { data: reqs, error: reqError } = await supa
+          .from('requests')
+          .select('id, item_id, quantity, status, created_at, items(name)')
+          .eq('requester_discord_id', session.user.id)
+          .order('created_at', { ascending: false });
+
+        if (reqError) {
+          console.error('Error cargando solicitudes:', reqError);
+          return;
+        }
+
+        (reqs || []).forEach(r => {
+          const tr = document.createElement('tr');
+
+          const tdId = document.createElement('td');
+          tdId.textContent = `#${r.id}`;
+
+          const tdItem = document.createElement('td');
+          tdItem.textContent = r.items?.name || r.item_id || '-';
+
+          const tdQty = document.createElement('td');
+          tdQty.textContent = r.quantity;
+
+          const tdStatus = document.createElement('td');
+          const span = document.createElement('span');
+          span.className = 'badge-status ' + (r.status || 'pendiente');
+          span.textContent = r.status || 'pendiente';
+          tdStatus.appendChild(span);
+
+          const tdDate = document.createElement('td');
+          tdDate.textContent = r.created_at
+            ? new Date(r.created_at).toLocaleString()
+            : '-';
+
+          tr.appendChild(tdId);
+          tr.appendChild(tdItem);
+          tr.appendChild(tdQty);
+          tr.appendChild(tdStatus);
+          tr.appendChild(tdDate);
+
+          tbody.appendChild(tr);
+        });
+      }
+
+      await loadMyRequests();
+
+      // 7) Envío de formulario (solo nivel 2)
+      solForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (readOnly) {
+          alert('Tienes permisos de solo lectura en este módulo.');
+          return;
+        }
+
+        const itemId = itemSelect.value;
+        const qty = Number(document.getElementById('quantity').value);
+        const notes = document.getElementById('notes').value.trim();
+
+        if (!itemId || !qty || qty <= 0) {
+          alert('Debes seleccionar un ítem y una cantidad válida.');
+          return;
+        }
+
+        const payload = {
+          item_id: itemId,
+          quantity: qty,
+          requester_discord_id: session.user.id,
+          status: 'pendiente'
+        };
+
+        // Si más adelante añades columna "notes" en requests,
+        // descomenta esto:
+        // if (notes) payload.notes = notes;
+
+        const { error: insError } = await supa
+          .from('requests')
+          .insert(payload);
+
+        if (insError) {
+          console.error('Error creando solicitud:', insError);
+          alert('No se ha podido crear la solicitud.');
+          return;
+        }
+
+        solForm.reset();
+        await loadMyRequests();
+        alert('Solicitud creada correctamente.');
+      });
+    });
+  </script>
+</body>
+</html>
