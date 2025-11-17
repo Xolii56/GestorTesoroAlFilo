@@ -131,7 +131,7 @@
     </div>
   </main>
 
-  <script type="module">
+<script type="module">
   import { getOrgStatus } from './modules/profile.js';
 
   document.addEventListener('DOMContentLoaded', async () => {
@@ -216,7 +216,7 @@
       }
     }
 
-    // --- 7) Aplicar permisos a las tarjetas de módulos ---
+    // --- 7) Aplicar permisos + navegación a módulos ---
     document.querySelectorAll('.module-card').forEach(card => {
       const mod = card.getAttribute('data-module');
       const normMod = mod.toLowerCase();
@@ -239,7 +239,15 @@
           return;
         }
 
-        // Redirecciones reales por módulo
+        // Rutas reales según módulo
+        if (mod === 'solicitudes') {
+          window.location.href = './solicitudes.html';
+          return;
+        }
+        if (mod === 'revision') {
+          window.location.href = './revision.html';
+          return;
+        }
         if (mod === 'usuarios') {
           window.location.href = './usuarios.html';
           return;
