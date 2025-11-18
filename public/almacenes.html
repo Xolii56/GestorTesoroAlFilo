@@ -21,7 +21,7 @@
 
     .alm-layout {
       display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr);
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.1fr); /* 👈 tabla izquierda, datos derecha */
       gap: 1.3rem;
     }
 
@@ -181,7 +181,7 @@
       <div>
         <h2>Almacenes</h2>
         <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
-          Gestión de almacenes, ubicaciones y stock mínimo/máximo por commodity.
+          Revisión de stock por almacén y estado de cada commodity.
         </p>
       </div>
       <button type="button"
@@ -192,7 +192,39 @@
     </div>
 
     <div class="alm-layout">
-      <!-- PANEL IZQUIERDO: DATOS DEL ALMACÉN -->
+      <!-- PANEL IZQUIERDO: TABS + TABLA STOCK -->
+      <div class="card">
+        <div class="alm-tabs">
+          <div id="alm-tabs-container" style="display:flex;gap:.4rem;flex-wrap:wrap;">
+            <!-- pestañas de almacenes -->
+          </div>
+          <button type="button" class="alm-tab-add" id="alm-add-btn">+ Nuevo almacén</button>
+        </div>
+
+        <p id="alm-stock-empty" class="help-text">
+          No hay almacenes creados todavía. Crea el primero con "Nuevo almacén".
+        </p>
+
+        <div id="alm-stock-wrapper" style="display:none;max-height:480px;overflow:auto;">
+          <table class="alm-table">
+            <thead>
+              <tr>
+                <th>Símbolo</th>
+                <th>Commodity</th>
+                <th>Cantidad</th>
+                <th>Stock mín.</th>
+                <th>Stock máx.</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="alm-stock-tbody">
+              <!-- filas JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PANEL DERECHO: DATOS DEL ALMACÉN -->
       <div class="card">
         <h3 style="margin-top:0;">Datos del almacén</h3>
         <p id="alm-info-empty" class="help-text" style="margin-bottom:.6rem;">
@@ -232,38 +264,6 @@
           </div>
         </form>
       </div>
-
-      <!-- PANEL DERECHO: TABS + TABLA STOCK -->
-      <div class="card">
-        <div class="alm-tabs">
-          <div id="alm-tabs-container" style="display:flex;gap:.4rem;flex-wrap:wrap;">
-            <!-- pestañas de almacenes -->
-          </div>
-          <button type="button" class="alm-tab-add" id="alm-add-btn">+ Nuevo almacén</button>
-        </div>
-
-        <p id="alm-stock-empty" class="help-text">
-          No hay almacenes creados todavía. Crea el primero con "Nuevo almacén".
-        </p>
-
-        <div id="alm-stock-wrapper" style="display:none;max-height:480px;overflow:auto;">
-          <table class="alm-table">
-            <thead>
-              <tr>
-                <th>Símbolo</th>
-                <th>Commodity</th>
-                <th>Cantidad</th>
-                <th>Stock mín.</th>
-                <th>Stock máx.</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody id="alm-stock-tbody">
-              <!-- filas JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   </main>
 
@@ -280,7 +280,7 @@
         return;
       }
 
-      // 2) org_status
+      // 2) org_status permitido
       const orgStatus = await getOrgStatus();
       if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
         await supa.auth.signOut();
@@ -501,6 +501,7 @@
           const tdName = document.createElement('td');
           tdName.textContent = name;
 
+          // Cantidad (editable según permisos)
           const tdQty = document.createElement('td');
           const inpQty = document.createElement('input');
           inpQty.type = 'number';
@@ -509,12 +510,14 @@
           if (readOnly) inpQty.readOnly = true;
           tdQty.appendChild(inpQty);
 
+          // Stock min/max (SIEMPRE solo lectura: vienen de commodities_master)
           const tdMin = document.createElement('td');
           const inpMin = document.createElement('input');
           inpMin.type = 'number';
           inpMin.step = '1';
           inpMin.value = minVal;
-          if (readOnly) inpMin.readOnly = true;
+          inpMin.readOnly = true;
+          inpMin.tabIndex = -1;
           tdMin.appendChild(inpMin);
 
           const tdMax = document.createElement('td');
@@ -522,7 +525,8 @@
           inpMax.type = 'number';
           inpMax.step = '1';
           inpMax.value = maxVal;
-          if (readOnly) inpMax.readOnly = true;
+          inpMax.readOnly = true;
+          inpMax.tabIndex = -1;
           tdMax.appendChild(inpMax);
 
           const tdEstado = document.createElement('td');
@@ -536,7 +540,7 @@
           tdEstado.appendChild(pill);
 
           function updateEstadoVisual() {
-            const est = calcEstado(inpQty.value, inpMin.value, inpMax.value);
+            const est = calcEstado(inpQty.value, minVal, maxVal);
             pill.className = 'estado-pill ' + est;
             pill.textContent =
               est === 'critico' ? 'Crítico' :
@@ -547,16 +551,11 @@
           if (!readOnly) {
             ['input', 'change'].forEach(ev => {
               inpQty.addEventListener(ev, updateEstadoVisual);
-              inpMin.addEventListener(ev, updateEstadoVisual);
-              inpMax.addEventListener(ev, updateEstadoVisual);
             });
 
-            const saveField = async () => {
+            const saveQty = async () => {
               const newQty = Number(inpQty.value || 0);
-              const newMin = Number(inpMin.value || 0);
-              const newMax = Number(inpMax.value || 0);
 
-              // 1) Actualizar cantidad en warehouse_items
               const { error: qtyError } = await supa
                 .from('warehouse_items')
                 .update({
@@ -568,28 +567,10 @@
               if (qtyError) {
                 console.error('Error actualizando cantidad:', qtyError);
                 alert('No se ha podido actualizar la cantidad de ' + name);
-                return;
-              }
-
-              // 2) Actualizar min/max globales en commodities_master
-              const { error: cmError } = await supa
-                .from('commodities_master')
-                .update({
-                  stock_min: newMin,
-                  stock_max: newMax
-                })
-                .eq('id', row.commodity_id);
-
-              if (cmError) {
-                console.error('Error actualizando min/max:', cmError);
-                alert('No se han podido actualizar los valores de stock mínimo/máximo para ' + name);
-                return;
               }
             };
 
-            inpQty.addEventListener('blur', saveField);
-            inpMin.addEventListener('blur', saveField);
-            inpMax.addEventListener('blur', saveField);
+            inpQty.addEventListener('blur', saveQty);
           }
 
           tr.appendChild(tdSym);
@@ -646,7 +627,7 @@
         alert('Datos del almacén actualizados.');
       });
 
-      // 8) Crear nuevo almacén (+ copiar plantilla de commodities)
+      // 8) Crear nuevo almacén (+ copiar plantilla de commodities -> warehouse_items)
       addBtn.addEventListener('click', async () => {
         if (readOnly) {
           alert('No puedes crear almacenes con permisos de solo lectura.');
