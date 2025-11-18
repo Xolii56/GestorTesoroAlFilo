@@ -218,7 +218,7 @@
 
     // --- 7) Aplicar permisos + navegación a módulos ---
     document.querySelectorAll('.module-card').forEach(card => {
-      const mod = card.getAttribute('data-module');
+      const mod = card.getAttribute('data-module'); // ej: "almacenes"
       const normMod = mod.toLowerCase();
 
       const level = permsByModule.hasOwnProperty(normMod)
@@ -252,7 +252,18 @@
           window.location.href = './usuarios.html';
           return;
         }
+        if (mod === 'almacenes') {
+          window.location.href = './almacenes.html';
+          return;
+        }
+
         // Placeholder para el resto hasta que los implementemos
+        if (mod === 'inventario' || mod === 'registro' || mod === 'calendario') {
+          alert(`El módulo "${mod}" todavía no está implementado (nivel ${currentLevel}).`);
+          return;
+        }
+
+        // Fallback por si añades nuevos módulos sin lógica aún
         alert(`Módulo "${mod}" aún no está implementado (nivel ${currentLevel}).`);
       });
     });
