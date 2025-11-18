@@ -19,9 +19,10 @@
       margin: 0 auto;
     }
 
+    /* Tabla izquierda, datos derecha */
     .alm-layout {
       display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(0, 1.1fr); /* 👈 tabla izquierda, datos derecha */
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.1fr);
       gap: 1.3rem;
     }
 
@@ -122,6 +123,11 @@
       font-size:.8rem;
     }
 
+    .alm-table input[readonly] {
+      opacity: .8;
+      cursor: default;
+    }
+
     .estado-pill {
       display:inline-flex;
       align-items:center;
@@ -192,7 +198,7 @@
     </div>
 
     <div class="alm-layout">
-      <!-- PANEL IZQUIERDO: TABS + TABLA STOCK -->
+      <!-- PANEL IZQUIERDO: TABS + TABLA STOCK (solo lectura) -->
       <div class="card">
         <div class="alm-tabs">
           <div id="alm-tabs-container" style="display:flex;gap:.4rem;flex-wrap:wrap;">
@@ -224,7 +230,7 @@
         </div>
       </div>
 
-      <!-- PANEL DERECHO: DATOS DEL ALMACÉN -->
+      <!-- PANEL DERECHO: DATOS DEL ALMACÉN (editable según permisos) -->
       <div class="card">
         <h3 style="margin-top:0;">Datos del almacén</h3>
         <p id="alm-info-empty" class="help-text" style="margin-bottom:.6rem;">
@@ -501,16 +507,17 @@
           const tdName = document.createElement('td');
           tdName.textContent = name;
 
-          // Cantidad (editable según permisos)
+          // Cantidad (SIEMPRE solo lectura: la modifican las solicitudes)
           const tdQty = document.createElement('td');
           const inpQty = document.createElement('input');
           inpQty.type = 'number';
           inpQty.step = '1';
           inpQty.value = row.quantity ?? 0;
-          if (readOnly) inpQty.readOnly = true;
+          inpQty.readOnly = true;
+          inpQty.tabIndex = -1;
           tdQty.appendChild(inpQty);
 
-          // Stock min/max (SIEMPRE solo lectura: vienen de commodities_master)
+          // Stock min/max (solo lectura, vienen de commodities_master)
           const tdMin = document.createElement('td');
           const inpMin = document.createElement('input');
           inpMin.type = 'number';
@@ -539,40 +546,6 @@
             'Seguro';
           tdEstado.appendChild(pill);
 
-          function updateEstadoVisual() {
-            const est = calcEstado(inpQty.value, minVal, maxVal);
-            pill.className = 'estado-pill ' + est;
-            pill.textContent =
-              est === 'critico' ? 'Crítico' :
-              est === 'excedente' ? 'Excedente' :
-              'Seguro';
-          }
-
-          if (!readOnly) {
-            ['input', 'change'].forEach(ev => {
-              inpQty.addEventListener(ev, updateEstadoVisual);
-            });
-
-            const saveQty = async () => {
-              const newQty = Number(inpQty.value || 0);
-
-              const { error: qtyError } = await supa
-                .from('warehouse_items')
-                .update({
-                  quantity: newQty,
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', row.id);
-
-              if (qtyError) {
-                console.error('Error actualizando cantidad:', qtyError);
-                alert('No se ha podido actualizar la cantidad de ' + name);
-              }
-            };
-
-            inpQty.addEventListener('blur', saveQty);
-          }
-
           tr.appendChild(tdSym);
           tr.appendChild(tdName);
           tr.appendChild(tdQty);
@@ -591,7 +564,7 @@
         await loadWarehouseStock(id);
       }
 
-      // 7) Guardar datos del almacén
+      // 7) Guardar datos del almacén (solo meta, no stock)
       almForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (readOnly) {
@@ -627,7 +600,7 @@
         alert('Datos del almacén actualizados.');
       });
 
-      // 8) Crear nuevo almacén (+ copiar plantilla de commodities -> warehouse_items)
+      // 8) Crear nuevo almacén (+ copiar plantilla de commodities -> warehouse_items con qty 0)
       addBtn.addEventListener('click', async () => {
         if (readOnly) {
           alert('No puedes crear almacenes con permisos de solo lectura.');
