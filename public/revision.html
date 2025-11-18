@@ -91,21 +91,10 @@
       border: 1px solid rgba(148,163,184,0.7);
     }
 
-    .badge-status.pendiente {
-      border-color: rgba(250,204,21,0.9);
-    }
-
-    .badge-status.aprobada {
-      border-color: rgba(34,197,94,0.9);
-    }
-
-    .badge-status.rechazada {
-      border-color: rgba(248,113,113,0.9);
-    }
-
-    .badge-status.completada {
-      border-color: rgba(56,189,248,0.9);
-    }
+    .badge-status.pendiente { border-color: rgba(250,204,21,0.9); }
+    .badge-status.aprobada { border-color: rgba(34,197,94,0.9); }
+    .badge-status.rechazada { border-color: rgba(248,113,113,0.9); }
+    .badge-status.completada { border-color: rgba(56,189,248,0.9); }
 
     .tipo-chip {
       display:inline-block;
@@ -117,13 +106,8 @@
       opacity:.85;
     }
 
-    .tipo-chip.compra {
-      border-color: rgba(34,197,94,0.9);
-    }
-
-    .tipo-chip.venta {
-      border-color: rgba(248,113,113,0.9);
-    }
+    .tipo-chip.compra { border-color: rgba(34,197,94,0.9); }
+    .tipo-chip.venta { border-color: rgba(248,113,113,0.9); }
 
     .rev-detail .field {
       margin-bottom: .7rem;
@@ -193,498 +177,417 @@
 </head>
 
 <body>
-  <div id="site-header"></div>
 
-  <main class="rev-main">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
-      <div>
-        <h2>Revisión de solicitudes</h2>
-        <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
-          Revisa, aprueba o rechaza solicitudes realizadas al Departamento del Tesoro.
-        </p>
+<div id="site-header"></div>
+
+<main class="rev-main">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
+    <div>
+      <h2>Revisión de solicitudes</h2>
+      <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
+        Revisa, aprueba o rechaza solicitudes realizadas al Departamento del Tesoro.
+      </p>
+    </div>
+    <button type="button" class="btn btn-secondary" onclick="window.location.href='./app_ui.html'">
+      ← Volver al panel
+    </button>
+  </div>
+
+  <div class="rev-layout">
+
+    <!-- LISTA -->
+    <div class="card">
+      <div class="rev-toolbar">
+        <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;">
+          <select id="filtro-estado">
+            <option value="todas">Todas</option>
+            <option value="pendiente">Pendientes</option>
+            <option value="aprobada">Aprobadas</option>
+            <option value="rechazada">Rechazadas</option>
+            <option value="completada">Completadas</option>
+          </select>
+          <input type="search" id="buscador" placeholder="Filtrar por ítem o usuario..."/>
+        </div>
+        <span class="help-text" id="rev-perms-label"></span>
       </div>
-      <button type="button"
-              class="btn btn-secondary"
-              onclick="window.location.href='./app_ui.html'">
-        ← Volver al panel
-      </button>
+
+      <div style="max-height:460px;overflow:auto;">
+        <table class="rev-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tipo</th>
+              <th>Ítem</th>
+              <th>Cant.</th>
+              <th>Solicitante</th>
+              <th>Estado</th>
+              <th>Creada</th>
+            </tr>
+          </thead>
+          <tbody id="rev-tbody"></tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="rev-layout">
-      <!-- LISTA -->
-      <div class="card">
-        <div class="rev-toolbar">
-          <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;">
-            <select id="filtro-estado">
-              <option value="todas">Todas</option>
-              <option value="pendiente">Pendientes</option>
-              <option value="aprobada">Aprobadas</option>
-              <option value="rechazada">Rechazadas</option>
-              <option value="completada">Completadas</option>
-            </select>
-            <input type="search" id="buscador" placeholder="Filtrar por ítem o usuario..."/>
-          </div>
-          <span class="help-text" id="rev-perms-label">
-            <!-- Permisos -->
-          </span>
+    <!-- DETALLE -->
+    <div class="card rev-detail">
+      <h3 style="margin-top:0;">Detalle de solicitud</h3>
+      <p id="rev-empty" class="help-text">
+        Selecciona una solicitud en la tabla para ver los detalles.
+      </p>
+
+      <div id="rev-detail-panel" style="display:none;">
+        <div class="field">
+          <label>Tipo de solicitud</label>
+          <input id="d_type" type="text" readonly/>
         </div>
 
-        <div style="max-height:460px;overflow:auto;">
-          <table class="rev-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Tipo</th>
-                <th>Ítem</th>
-                <th>Cant.</th>
-                <th>Solicitante</th>
-                <th>Estado</th>
-                <th>Creada</th>
-              </tr>
-            </thead>
-            <tbody id="rev-tbody">
-              <!-- Rellenado por JS -->
-            </tbody>
-          </table>
+        <div class="field">
+          <label>Ítem</label>
+          <input id="d_item" type="text" readonly/>
         </div>
-      </div>
 
-      <!-- DETALLE -->
-      <div class="card rev-detail">
-        <h3 style="margin-top:0;">Detalle de solicitud</h3>
-        <p id="rev-empty" class="help-text">
-          Selecciona una solicitud en la tabla para ver los detalles.
-        </p>
-
-        <div id="rev-detail-panel" style="display:none;">
-          <div class="field">
-            <label>Tipo de solicitud</label>
-            <input id="d_type" type="text" readonly/>
-          </div>
-
-          <div class="field">
-            <label>Ítem</label>
-            <input id="d_item" type="text" readonly/>
-          </div>
-          <div class="field">
-            <label>Cantidad</label>
-            <input id="d_quantity" type="number" readonly/>
-          </div>
-          <div class="field">
-            <label>Solicitante</label>
-            <input id="d_requester" type="text" readonly/>
-          </div>
-          <div class="field">
-            <label>Estado actual</label>
-            <input id="d_status" type="text" readonly/>
-          </div>
-          <div class="field">
-            <label>Fechas</label>
-            <div id="d_dates" class="help-text"></div>
-          </div>
-
-          <div class="field">
-            <label>Lugar de transacción (almacén)</label>
-            <select id="d_warehouse">
-              <option value="">Selecciona un almacén...</option>
-            </select>
-            <div class="help-text">
-              Se utiliza al aprobar una solicitud. Lista de almacenes gestionada en el módulo Almacenes.
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Plazo máximo de entrega</label>
-            <input id="d_due_date" type="date"/>
-          </div>
-
-          <div class="field">
-            <label>Comentario interno (borrador local)</label>
-            <textarea id="d_comment" placeholder="Anota el motivo de aprobación/rechazo o instrucciones internas."></textarea>
-            <div class="help-text">
-              Aún no se guarda en BD (cuando añadamos columna notes lo enganchamos).
-            </div>
-          </div>
-
-          <div style="display:flex;justify-content:flex-end;gap:.5rem;">
-            <button type="button" class="btn btn-secondary"
-                    onclick="document.getElementById('rev-detail-panel').style.display='none';document.getElementById('rev-empty').style.display='block';">
-              Cerrar
-            </button>
-            <button type="button" class="btn btn-reject" id="btn-reject">
-              Rechazar
-            </button>
-            <button type="button" class="btn btn-approve" id="btn-approve">
-              Aprobar
-            </button>
-          </div>
+        <div class="field">
+          <label>Cantidad</label>
+          <input id="d_quantity" type="number" readonly/>
         </div>
+
+        <div class="field">
+          <label>Solicitante</label>
+          <input id="d_requester" type="text" readonly/>
+        </div>
+
+        <div class="field">
+          <label>Estado actual</label>
+          <input id="d_status" type="text" readonly/>
+        </div>
+
+        <div class="field">
+          <label>Fechas</label>
+          <div id="d_dates" class="help-text"></div>
+        </div>
+
+        <div class="field">
+          <label>Lugar de transacción (almacén)</label>
+          <select id="d_warehouse">
+            <option value="">Selecciona un almacén...</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Plazo máximo de entrega</label>
+          <input id="d_due_date" type="date"/>
+        </div>
+
+        <div class="field">
+          <label>Comentario interno (borrador local)</label>
+          <textarea id="d_comment" placeholder="Anota el motivo o detalles internos."></textarea>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:.5rem;">
+          <button type="button" class="btn btn-secondary" onclick="
+            document.getElementById('rev-detail-panel').style.display='none';
+            document.getElementById('rev-empty').style.display='block';
+          ">
+            Cerrar
+          </button>
+          <button type="button" class="btn btn-reject" id="btn-reject">Rechazar</button>
+          <button type="button" class="btn btn-approve" id="btn-approve">Aprobar</button>
+        </div>
+
       </div>
     </div>
-  </main>
 
-  <script type="module">
-    import { getOrgStatus } from './modules/profile.js';
+  </div>
+</main>
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      const { supa } = window;
+<script type="module">
+  import { getOrgStatus } from './modules/profile.js';
 
-      // 1) Sesión
-      const { data: { session } } = await supa.auth.getSession();
-      if (!session) {
-        window.location.href = './index.html';
-        return;
-      }
+  document.addEventListener('DOMContentLoaded', async () => {
+    const { supa } = window;
 
-      // 2) org_status
-      const orgStatus = await getOrgStatus();
-      if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
+    /*
+    ───────────────────────────────────────────────
+      1) VALIDACIÓN DE SESIÓN Y PERMISOS
+    ───────────────────────────────────────────────
+    */
+    const { data: { session } } = await supa.auth.getSession();
+    if (!session) return (window.location.href = './index.html');
+
+    const orgStatus = await getOrgStatus();
+    if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
+      await supa.auth.signOut();
+      return (window.location.href = './index.html');
+    }
+
+    await loadHeader('app');
+    initHeaderUserMenu(
+      session,
+      async () => {
         await supa.auth.signOut();
-        window.location.href = './index.html';
-        return;
-      }
+        window.location.href = "./index.html";
+      },
+      () => window.location.href = './perfil.html'
+    );
 
-      // 3) Header
-      if (typeof window.loadHeader === 'function') {
-        await window.loadHeader('app');
-      }
-      if (typeof window.initHeaderUserMenu === 'function') {
-        window.initHeaderUserMenu(
-          session,
-          async () => {
-            await supa.auth.signOut();
-            window.location.href = "./index.html";
-          },
-          () => {
-            window.location.href = './perfil.html';
-          }
-        );
-      }
+    // Leer rol interno
+    const { data: meRow } = await supa
+      .from('users')
+      .select('tesoro_internal_role')
+      .eq('id', session.user.id)
+      .maybeSingle();
 
-      // 4) Permisos del módulo "revision"
-      const { data: meRow, error: meError } = await supa
-        .from('users')
-        .select('tesoro_internal_role')
-        .eq('id', session.user.id)
+    let myRole = meRow?.tesoro_internal_role || null;
+    if (typeof myRole === 'string') myRole = myRole.trim();
+
+    let roleRow = null;
+
+    // Si es numérico → buscar por ID
+    const asNumber = Number(myRole);
+    if (!Number.isNaN(asNumber)) {
+      const { data } = await supa
+        .from('roles_app')
+        .select('*')
+        .eq('id', asNumber)
         .maybeSingle();
+      roleRow = data;
+    }
 
-      if (meError) console.error('Error leyendo rol interno:', meError);
+    // Si no sirvió → buscar por nombre
+    if (!roleRow) {
+      const { data } = await supa
+        .from('roles_app')
+        .select('*')
+        .ilike('role_name', myRole)
+        .maybeSingle();
+      roleRow = data;
+    }
 
-      let myRole = meRow?.tesoro_internal_role || null;
-      if (typeof myRole === 'string') myRole = myRole.trim();
+    let revLevel = roleRow?.revision ?? 0;
+    const readOnly = (revLevel === 1);
 
-      let roleRow = null;
-      if (myRole) {
-        const asNumber = Number(myRole);
-        if (!Number.isNaN(asNumber) && myRole !== '') {
-          const { data, error } = await supa
-            .from('roles_app')
-            .select('*')
-            .eq('id', asNumber)
-            .maybeSingle();
-          if (!error) roleRow = data;
-        }
+    const permsLabel = document.getElementById('rev-perms-label');
+    if (permsLabel) {
+      permsLabel.textContent = readOnly
+        ? 'Permisos: solo lectura.'
+        : 'Permisos: revisión y cambio de estado.';
+    }
 
-        if (!roleRow) {
-          const { data, error } = await supa
-            .from('roles_app')
-            .select('*')
-            .ilike('role_name', myRole)
-            .maybeSingle();
-          if (!error) roleRow = data;
-        }
-      }
+    /*
+    ───────────────────────────────────────────────
+      2) CARGAR DATOS NECESARIOS: usuarios + almacenes
+    ───────────────────────────────────────────────
+    */
+    const { data: users } = await supa
+      .from('users')
+      .select('id, handle_name, discord_username');
 
-      let revLevel = 0;
-      if (roleRow && Object.prototype.hasOwnProperty.call(roleRow, 'revision')) {
-        revLevel = roleRow.revision ?? 0;
-      }
+    const usersById = {};
+    (users || []).forEach(u => usersById[u.id] = u);
 
-      if (!revLevel || revLevel === 0) {
-        alert('No tienes acceso al módulo de Revisión.');
-        window.location.href = './app_ui.html';
-        return;
-      }
+    const { data: warehouses } = await supa
+      .from('warehouses')
+      .select('id, name')
+      .order('name', { ascending: true });
 
-      const readOnly = (revLevel === 1);
+    const whSelect = document.getElementById('d_warehouse');
+    (warehouses || []).forEach(w => {
+      const opt = document.createElement('option');
+      opt.value = w.id;
+      opt.textContent = w.name;
+      whSelect.appendChild(opt);
+    });
 
-      const permsLabel = document.getElementById('rev-perms-label');
-      if (permsLabel) {
-        permsLabel.textContent = readOnly
-          ? 'Permisos: solo lectura.'
-          : 'Permisos: revisión y cambio de estado.';
-      }
+    /*
+    ───────────────────────────────────────────────
+      3) CARGAR SOLICITUDES
+    ───────────────────────────────────────────────
+    */
+    const tbody = document.getElementById('rev-tbody');
+    const filtroEstado = document.getElementById('filtro-estado');
+    const buscador = document.getElementById('buscador');
 
-      // 5) Usuarios para mapear solicitante
-      const { data: users, error: usersError } = await supa
-        .from('users')
-        .select('id, handle_name, discord_username');
-      if (usersError) console.error('Error leyendo usuarios:', usersError);
+    const revEmpty = document.getElementById('rev-empty');
+    const revPanel = document.getElementById('rev-detail-panel');
 
-      const usersById = {};
-      (users || []).forEach(u => {
-        usersById[u.id] = u;
-      });
+    const dType = document.getElementById('d_type');
+    const dItem = document.getElementById('d_item');
+    const dQty = document.getElementById('d_quantity');
+    const dReq = document.getElementById('d_requester');
+    const dStatus = document.getElementById('d_status');
+    const dDates = document.getElementById('d_dates');
+    const dDueDate = document.getElementById('d_due_date');
+    const dComment = document.getElementById('d_comment');
 
-      // 6) Cargar almacenes
-      const { data: warehouses, error: whError } = await supa
-        .from('warehouses')
-        .select('id, name')
-        .order('name', { ascending: true });
+    const btnApprove = document.getElementById('btn-approve');
+    const btnReject = document.getElementById('btn-reject');
 
-      if (whError) console.error('Error leyendo almacenes:', whError);
+    if (readOnly) {
+      btnApprove.classList.add('btn-disabled');
+      btnReject.classList.add('btn-disabled');
+      whSelect.disabled = true;
+      dDueDate.disabled = true;
+      dComment.disabled = true;
+    }
 
-      const warehouseSelect = document.getElementById('d_warehouse');
-      (warehouses || []).forEach(w => {
-        const opt = document.createElement('option');
-        opt.value = w.id;
-        opt.textContent = w.name;
-        warehouseSelect.appendChild(opt);
-      });
+    let allRequests = [];
+    let selectedId = null;
 
-      const tbody = document.getElementById('rev-tbody');
-      const filtroEstado = document.getElementById('filtro-estado');
-      const buscador = document.getElementById('buscador');
-      const revEmpty = document.getElementById('rev-empty');
-      const revPanel = document.getElementById('rev-detail-panel');
+    async function loadRequests() {
+      const { data: reqs } = await supa
+        .from('requests')
+        .select(`
+          id,
+          request_type,
+          item_id,
+          quantity,
+          status,
+          created_at,
+          requester_discord_id,
+          warehouse_id,
+          due_date,
+          approver_discord_id,
+          approved_at,
+          items(name)
+        `)
+        .order('created_at', { ascending: false });
 
-      const dType = document.getElementById('d_type');
-      const dItem = document.getElementById('d_item');
-      const dQty = document.getElementById('d_quantity');
-      const dReq = document.getElementById('d_requester');
-      const dStatus = document.getElementById('d_status');
-      const dDates = document.getElementById('d_dates');
-      const dDueDate = document.getElementById('d_due_date');
-      const dComment = document.getElementById('d_comment');
-      const btnApprove = document.getElementById('btn-approve');
-      const btnReject = document.getElementById('btn-reject');
+      allRequests = reqs || [];
+      renderTable();
+    }
 
-      if (readOnly) {
-        btnApprove.classList.add('btn-disabled');
-        btnReject.classList.add('btn-disabled');
-        warehouseSelect.disabled = true;
-        dDueDate.disabled = true;
-        dComment.readOnly = true;
-      }
+    function renderTable() {
+      tbody.innerHTML = '';
+      const estado = filtroEstado.value;
+      const term = (buscador.value || '').toLowerCase();
 
-      let allRequests = [];
-      let selectedId = null;
-
-      function renderTipo(tipo) {
-        if (!tipo) return '-';
-        return tipo === 'compra' ? 'Compra' : 'Venta';
-      }
-
-      async function loadRequests() {
-        const { data: reqs, error: reqError } = await supa
-          .from('requests')
-          .select(`
-            id,
-            request_type,
-            item_id,
-            quantity,
-            status,
-            created_at,
-            requester_discord_id,
-            warehouse_id,
-            due_date,
-            approver_id,
-            approved_at,
-            items(name)
-          `)
-          .order('created_at', { ascending: false });
-
-        if (reqError) {
-          console.error('Error cargando solicitudes:', reqError);
-          return;
-        }
-
-        allRequests = reqs || [];
-        renderTable();
-      }
-
-      function renderTable() {
-        tbody.innerHTML = '';
-        const estado = filtroEstado.value;
-        const term = (buscador.value || '').toLowerCase();
-
-        allRequests.forEach(r => {
-          const st = r.status || 'pendiente';
-          if (estado !== 'todas' && st !== estado) return;
-
-          const itemName = r.items?.name || r.item_id || '';
-          const requesterId = r.requester_discord_id;
-          const user = usersById[requesterId];
-          const requesterName = user?.handle_name || user?.discord_username || requesterId || '';
-
-          if (term) {
-            const combo = (itemName + ' ' + requesterName).toLowerCase();
-            if (!combo.includes(term)) return;
-          }
-
-          const tr = document.createElement('tr');
-          tr.dataset.id = r.id;
-
-          const tdId = document.createElement('td');
-          tdId.textContent = `#${r.id}`;
-
-          const tdTipo = document.createElement('td');
-          const spanTipo = document.createElement('span');
-          spanTipo.className = 'tipo-chip ' + (r.request_type || '');
-          spanTipo.textContent = renderTipo(r.request_type);
-          tdTipo.appendChild(spanTipo);
-
-          const tdItem = document.createElement('td');
-          tdItem.textContent = itemName || '-';
-
-          const tdQty = document.createElement('td');
-          tdQty.textContent = r.quantity;
-
-          const tdReq = document.createElement('td');
-          tdReq.textContent = requesterName || '-';
-
-          const tdStatus = document.createElement('td');
-          const span = document.createElement('span');
-          span.className = 'badge-status ' + st;
-          span.textContent = st;
-          tdStatus.appendChild(span);
-
-          const tdDate = document.createElement('td');
-          tdDate.textContent = r.created_at
-            ? new Date(r.created_at).toLocaleString()
-            : '-';
-
-          tr.appendChild(tdId);
-          tr.appendChild(tdTipo);
-          tr.appendChild(tdItem);
-          tr.appendChild(tdQty);
-          tr.appendChild(tdReq);
-          tr.appendChild(tdStatus);
-          tr.appendChild(tdDate);
-
-          tr.addEventListener('click', () => {
-            selectedId = r.id;
-            Array.from(tbody.querySelectorAll('tr')).forEach(row => row.classList.remove('selected'));
-            tr.classList.add('selected');
-            showDetail(r, requesterName);
-          });
-
-          tbody.appendChild(tr);
-        });
-      }
-
-      function showDetail(r, requesterName) {
-        revEmpty.style.display = 'none';
-        revPanel.style.display = 'block';
-
-        const itemName = r.items?.name || r.item_id || '';
-
-        dType.value = renderTipo(r.request_type);
-        dItem.value = itemName;
-        dQty.value = r.quantity;
-        dReq.value = requesterName || r.requester_discord_id || '';
+      allRequests.forEach(r => {
         const st = r.status || 'pendiente';
-        dStatus.value = st;
+        if (estado !== 'todas' && st !== estado) return;
 
-        const creado = r.created_at
-          ? new Date(r.created_at).toLocaleString()
-          : 'desconocido';
-        const aprobado = r.approved_at
-          ? new Date(r.approved_at).toLocaleString()
-          : null;
+        const itemName = r.items?.name || r.item_id;
+        const requester = usersById[r.requester_discord_id];
+        const reqName = requester?.handle_name || requester?.discord_username || r.requester_discord_id;
 
-        dDates.textContent = aprobado
-          ? `Creada: ${creado} · Aprobada: ${aprobado}`
-          : `Creada: ${creado}`;
-
-        // Rellenar almacén y fecha si ya existen
-        if (r.warehouse_id && warehouses) {
-          warehouseSelect.value = r.warehouse_id;
-        } else {
-          warehouseSelect.value = '';
+        if (term) {
+          const search = (itemName + ' ' + reqName).toLowerCase();
+          if (!search.includes(term)) return;
         }
 
-        dDueDate.value = r.due_date || '';
-        dComment.value = '';
+        const tr = document.createElement('tr');
+        tr.dataset.id = r.id;
+
+        tr.innerHTML = `
+          <td>#${r.id}</td>
+          <td><span class="tipo-chip ${r.request_type}">${r.request_type}</span></td>
+          <td>${itemName}</td>
+          <td>${r.quantity}</td>
+          <td>${reqName}</td>
+          <td><span class="badge-status ${st}">${st}</span></td>
+          <td>${new Date(r.created_at).toLocaleString()}</td>
+        `;
+
+        tr.addEventListener('click', () => {
+          selectedId = r.id;
+          [...tbody.querySelectorAll('tr')].forEach(row => row.classList.remove('selected'));
+          tr.classList.add('selected');
+          showDetail(r, reqName);
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function showDetail(r, requesterName) {
+      revEmpty.style.display = 'none';
+      revPanel.style.display = 'block';
+
+      dType.value = r.request_type;
+      dItem.value = r.items?.name || r.item_id;
+      dQty.value = r.quantity;
+      dReq.value = requesterName;
+      dStatus.value = r.status;
+
+      const creado = new Date(r.created_at).toLocaleString();
+      const aprobado = r.approved_at ? new Date(r.approved_at).toLocaleString() : null;
+
+      dDates.textContent = aprobado
+        ? `Creada: ${creado} · Aprobada: ${aprobado}`
+        : `Creada: ${creado}`;
+
+      whSelect.value = r.warehouse_id || '';
+      dDueDate.value = r.due_date || '';
+      dComment.value = '';
+    }
+
+    filtroEstado.addEventListener('change', renderTable);
+    buscador.addEventListener('input', renderTable);
+
+    await loadRequests();
+
+    /*
+    ───────────────────────────────────────────────
+      4) ACTUALIZAR ESTADO DE SOLICITUD (FIX)
+    ───────────────────────────────────────────────
+    */
+
+    async function updateStatus(newStatus) {
+      if (readOnly) return alert('Permisos de solo lectura.');
+      if (!selectedId) return alert('Selecciona una solicitud primero.');
+
+      if (newStatus === 'aprobada') {
+        const wh = whSelect.value;
+        const due = dDueDate.value;
+        if (!wh || !due) return alert('Debes indicar almacén y fecha.');
+
+        const discordId = session.user.user_metadata?.provider_id;
+
+        const { error } = await supa
+          .from('requests')
+          .update({
+            status: 'aprobada',
+            warehouse_id: wh,
+            due_date: due,
+            approver_discord_id: discordId,    /* ✔ FIX CORRECTO */
+            approved_at: new Date().toISOString()
+          })
+          .eq('id', selectedId);
+
+        if (error) {
+          console.error('Error actualizando solicitud:', error);
+          return alert('No se ha podido aprobar la solicitud.');
+        }
       }
 
-      filtroEstado.addEventListener('change', renderTable);
-      buscador.addEventListener('input', renderTable);
+      if (newStatus === 'rechazada') {
+        const { error } = await supa
+          .from('requests')
+          .update({ status: 'rechazada' })
+          .eq('id', selectedId);
+
+        if (error) {
+          console.error('Error rechazando:', error);
+          return alert('No se ha podido rechazar la solicitud.');
+        }
+      }
 
       await loadRequests();
-
-      async function updateStatus(newStatus) {
-        if (readOnly) {
-          alert('Tienes permisos de solo lectura en este módulo.');
-          return;
-        }
-        if (!selectedId) {
-          alert('No hay ninguna solicitud seleccionada.');
-          return;
-        }
-
-        // Si es aprobación, exigimos almacén + fecha
-        if (newStatus === 'aprobada') {
-          const wh = warehouseSelect.value;
-          const due = dDueDate.value;
-          if (!wh || !due) {
-            alert('Para aprobar una solicitud debes indicar el almacén y el plazo máximo de entrega.');
-            return;
-          }
-
-          const { error: updError } = await supa
-            .from('requests')
-            .update({
-              status: 'aprobada',
-              warehouse_id: wh,
-              due_date: due,
-              approver_id: session.user.id,
-              approved_at: new Date().toISOString()
-            })
-            .eq('id', selectedId);
-
-          if (updError) {
-            console.error('Error actualizando solicitud:', updError);
-            alert('No se ha podido aprobar la solicitud.');
-            return;
-          }
-        } else if (newStatus === 'rechazada') {
-          const { error: updError } = await supa
-            .from('requests')
-            .update({
-              status: 'rechazada'
-            })
-            .eq('id', selectedId);
-
-          if (updError) {
-            console.error('Error actualizando solicitud:', updError);
-            alert('No se ha podido rechazar la solicitud.');
-            return;
-          }
-        }
-
-        // Refrescar lista y detalle
-        await loadRequests();
-
-        const r = allRequests.find(x => x.id === selectedId);
-        if (r) {
-          const requesterId = r.requester_discord_id;
-          const user = usersById[requesterId];
-          const requesterName = user?.handle_name || user?.discord_username || requesterId || '';
-          showDetail(r, requesterName);
-        }
-
-        alert(`Solicitud marcada como ${newStatus}.`);
+      const updated = allRequests.find(x => x.id === selectedId);
+      if (updated) {
+        const requester = usersById[updated.requester_discord_id];
+        const reqName = requester?.handle_name || requester?.discord_username || updated.requester_discord_id;
+        showDetail(updated, reqName);
       }
 
-      btnApprove.addEventListener('click', async () => {
-        await updateStatus('aprobada');
-      });
+      alert(`Solicitud marcada como ${newStatus}.`);
+    }
 
-      btnReject.addEventListener('click', async () => {
-        await updateStatus('rechazada');
-      });
-    });
-  </script>
+    btnApprove.addEventListener('click', () => updateStatus('aprobada'));
+    btnReject.addEventListener('click', () => updateStatus('rechazada'));
+  });
+</script>
+
 </body>
 </html>
