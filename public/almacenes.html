@@ -218,8 +218,7 @@
                 <th>Símbolo</th>
                 <th>Commodity</th>
                 <th>Cantidad</th>
-                <th>Stock mín.</th>
-                <th>Stock máx.</th>
+                <th>Rango stock</th>
                 <th>Estado</th>
               </tr>
             </thead>
@@ -507,7 +506,7 @@
           const tdName = document.createElement('td');
           tdName.textContent = name;
 
-          // Cantidad (SIEMPRE solo lectura: la modifican las solicitudes)
+          // Cantidad (solo lectura, la modifican las solicitudes completadas)
           const tdQty = document.createElement('td');
           const inpQty = document.createElement('input');
           inpQty.type = 'number';
@@ -517,25 +516,15 @@
           inpQty.tabIndex = -1;
           tdQty.appendChild(inpQty);
 
-          // Stock min/max (solo lectura, vienen de commodities_master)
-          const tdMin = document.createElement('td');
-          const inpMin = document.createElement('input');
-          inpMin.type = 'number';
-          inpMin.step = '1';
-          inpMin.value = minVal;
-          inpMin.readOnly = true;
-          inpMin.tabIndex = -1;
-          tdMin.appendChild(inpMin);
+          // Rango stock: "min-max" (solo texto)
+          const tdRange = document.createElement('td');
+          let rangeText = '-';
+          if (minVal || maxVal) {
+            rangeText = `${minVal ?? 0}-${maxVal ?? 0}`;
+          }
+          tdRange.textContent = rangeText;
 
-          const tdMax = document.createElement('td');
-          const inpMax = document.createElement('input');
-          inpMax.type = 'number';
-          inpMax.step = '1';
-          inpMax.value = maxVal;
-          inpMax.readOnly = true;
-          inpMax.tabIndex = -1;
-          tdMax.appendChild(inpMax);
-
+          // Estado
           const tdEstado = document.createElement('td');
           const pill = document.createElement('span');
           const estadoInicial = calcEstado(row.quantity, minVal, maxVal);
@@ -549,8 +538,7 @@
           tr.appendChild(tdSym);
           tr.appendChild(tdName);
           tr.appendChild(tdQty);
-          tr.appendChild(tdMin);
-          tr.appendChild(tdMax);
+          tr.appendChild(tdRange);
           tr.appendChild(tdEstado);
 
           stockTbody.appendChild(tr);
