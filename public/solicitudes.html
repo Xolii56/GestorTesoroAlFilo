@@ -124,21 +124,10 @@
       border: 1px solid rgba(148,163,184,0.7);
     }
 
-    .badge-status.pendiente {
-      border-color: rgba(250,204,21,0.9);
-    }
-
-    .badge-status.aprobada {
-      border-color: rgba(34,197,94,0.9);
-    }
-
-    .badge-status.rechazada {
-      border-color: rgba(248,113,113,0.9);
-    }
-
-    .badge-status.completada {
-      border-color: rgba(56,189,248,0.9);
-    }
+    .badge-status.pendiente { border-color: rgba(250,204,21,0.9); }
+    .badge-status.aprobada  { border-color: rgba(34,197,94,0.9); }
+    .badge-status.rechazada { border-color: rgba(248,113,113,0.9); }
+    .badge-status.completada{ border-color: rgba(56,189,248,0.9); }
 
     .tipo-chip {
       display:inline-block;
@@ -150,13 +139,8 @@
       opacity:.85;
     }
 
-    .tipo-chip.compra {
-      border-color: rgba(34,197,94,0.9);
-    }
-
-    .tipo-chip.venta {
-      border-color: rgba(248,113,113,0.9);
-    }
+    .tipo-chip.compra { border-color: rgba(34,197,94,0.9); }
+    .tipo-chip.venta  { border-color: rgba(248,113,113,0.9); }
 
     .tipo-toggle {
       display:flex;
@@ -394,20 +378,22 @@
         });
       });
 
-      // 7) Cargar ítems
+      // 7) Cargar ítems desde commodities_master
       const itemSelect = document.getElementById('item-select');
       const { data: items, error: itemsError } = await supa
-        .from('items')
-        .select('id, name, quantity')
+        .from('commodities_master')
+        .select('id, name, symbol')
         .order('name', { ascending: true });
 
       if (itemsError) {
-        console.error('Error cargando items:', itemsError);
+        console.error('Error cargando commodities:', itemsError);
       } else {
         (items || []).forEach(it => {
           const opt = document.createElement('option');
-          opt.value = it.id;
-          opt.textContent = `${it.name} (stock: ${it.quantity})`;
+          opt.value = it.id;                   // uuid de commodities_master
+          opt.textContent = it.symbol
+            ? `${it.name} (${it.symbol})`
+            : it.name;
           itemSelect.appendChild(opt);
         });
       }
@@ -417,8 +403,7 @@
 
       function renderTipo(tipo) {
         if (!tipo) return '-';
-        const label = tipo === 'compra' ? 'Compra' : 'Venta';
-        return label;
+        return tipo === 'compra' ? 'Compra' : 'Venta';
       }
 
       async function loadMyRequests() {
@@ -426,7 +411,15 @@
 
         const { data: reqs, error: reqError } = await supa
           .from('requests')
-          .select('id, request_type, item_id, quantity, status, created_at, items(name)')
+          .select(`
+            id,
+            request_type,
+            item_id,
+            quantity,
+            status,
+            created_at,
+            commodities_master(name, symbol)
+          `)
           .eq('requester_discord_id', session.user.id)
           .order('created_at', { ascending: false });
 
@@ -448,7 +441,10 @@
           tdTipo.appendChild(spanTipo);
 
           const tdItem = document.createElement('td');
-          tdItem.textContent = r.items?.name || r.item_id || '-';
+          const cm = r.commodities_master;
+          tdItem.textContent = cm
+            ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
+            : r.item_id || '-';
 
           const tdQty = document.createElement('td');
           tdQty.textContent = r.quantity;
@@ -498,18 +494,17 @@
 
         const payload = {
           request_type: type,
-          item_id: itemId,
+          item_id: itemId,                  // uuid de commodities_master
           quantity: qty,
           requester_discord_id: session.user.id,
           status: 'pendiente'
         };
-
         // En el futuro, si añadimos columna notes en requests:
         // if (notes) payload.notes = notes;
 
         const { error: insError } = await supa
-        .from('requests')
-        .insert(payload);
+          .from('requests')
+          .insert(payload);
 
         if (insError) {
           console.error('Error creando solicitud:', insError);
@@ -523,6 +518,7 @@
         tipoButtons.forEach(btn => {
           btn.classList.toggle('active', btn.dataset.type === 'compra');
         });
+
         await loadMyRequests();
         alert('Solicitud creada correctamente.');
       });
