@@ -473,7 +473,10 @@
         const st = r.status || 'pendiente';
         if (estado !== 'todas' && st !== estado) return;
 
-        const itemName = r.items?.name || r.item_id;
+        const cm = r.commodities_master;
+        const itemName = cm
+        ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
+        : (r.item_id || '');
         const requester = usersById[r.requester_discord_id];
         const reqName = requester?.handle_name || requester?.discord_username || r.requester_discord_id;
 
