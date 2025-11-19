@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Departamento del Tesoro — Registro</title>
+  <link rel="stylesheet" href="./style.css"/>
+
+  <!-- Supabase + módulos -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="./config.js" defer></script>
+  <script src="./modules/db.js" defer></script>
+  <script src="./modules/layout.js" defer></script>
+
+  <style>
+    main.reg-main {
+      padding: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .reg-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+      gap: 1.3rem;
+    }
+
+    @media (max-width: 900px) {
+      .reg-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .reg-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: .75rem;
+      flex-wrap: wrap;
+      margin-bottom: .6rem;
+      align-items: center;
+    }
+
+    .reg-toolbar select,
+    .reg-toolbar input[type="search"] {
+      padding: 0.35rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.7);
+      background: #020617;
+      color: #e5e7eb;
+      font-size: .85rem;
+    }
+
+    .reg-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .9rem;
+    }
+
+    .reg-table thead {
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      opacity: .8;
+    }
+
+    .reg-table th,
+    .reg-table td {
+      padding: 0.35rem 0.4rem;
+      border-bottom: 1px solid rgba(148,163,184,0.25);
+    }
+
+    .reg-table tbody tr {
+      cursor: pointer;
+      transition: background .12s ease-out;
+    }
+
+    .reg-table tbody tr:hover {
+      background: rgba(15,23,42,0.9);
+    }
+
+    .reg-table tbody tr.selected {
+      background: rgba(56,189,248,0.18);
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.1rem 0.55rem;
+      border-radius: 999px;
+      font-size: .75rem;
+      border: 1px solid rgba(148,163,184,0.7);
+    }
+
+    .badge-status.pendiente   { border-color: rgba(250,204,21,0.9); }
+    .badge-status.aprobada    { border-color: rgba(34,197,94,0.9); }
+    .badge-status.rechazada   { border-color: rgba(248,113,113,0.9); }
+    .badge-status.completada  { border-color: rgba(56,189,248,0.9); }
+
+    .tipo-chip {
+      display:inline-block;
+      padding:0.08rem 0.45rem;
+      border-radius:999px;
+      font-size:.7rem;
+      border:1px solid rgba(148,163,184,0.9);
+      margin-left:.25rem;
+      opacity:.85;
+    }
+    .tipo-chip.compra { border-color: rgba(34,197,94,0.9); }
+    .tipo-chip.venta  { border-color: rgba(248,113,113,0.9); }
+
+    .reg-detail .field {
+      margin-bottom: .7rem;
+    }
+
+    .reg-detail label {
+      display: block;
+      font-size: .8rem;
+      opacity: .8;
+      margin-bottom: .2rem;
+    }
+
+    .reg-detail input,
+    .reg-detail textarea {
+      width: 100%;
+      padding: 0.4rem 0.5rem;
+      border-radius: 0.4rem;
+      border: 1px solid rgba(148,163,184,0.8);
+      background: #020617;
+      color: #e5e7eb;
+      font-size: .9rem;
+    }
+
+    .reg-detail textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    .reg-detail input[readonly],
+    .reg-detail textarea[readonly] {
+      opacity: .85;
+    }
+
+    .btn {
+      padding: 0.35rem 0.85rem;
+      border-radius: 0.4rem;
+      border: none;
+      cursor: pointer;
+      font-size: .85rem;
+    }
+
+    .btn-secondary {
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid rgba(148,163,184,0.8);
+    }
+
+    .help-text {
+      font-size: .75rem;
+      opacity: .7;
+      margin-top: .2rem;
+    }
+  </style>
+</head>
+
+<body>
+<div id="site-header"></div>
+
+<main class="reg-main">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
+    <div>
+      <h2>Registro de solicitudes</h2>
+      <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
+        Histórico completo de solicitudes del Departamento del Tesoro (abiertas y cerradas).
+      </p>
+    </div>
+    <button type="button" class="btn btn-secondary" onclick="window.location.href='./app_ui.html'">
+      ← Volver al panel
+    </button>
+  </div>
+
+  <div class="reg-layout">
+    <!-- LISTA -->
+    <div class="card">
+      <div class="reg-toolbar">
+        <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;">
+          <select id="filtro-estado">
+            <option value="todas">Todas</option>
+            <option value="pendiente">Pendientes</option>
+            <option value="aprobada">Aprobadas</option>
+            <option value="rechazada">Rechazadas</option>
+            <option value="completada">Completadas</option>
+          </select>
+          <input type="search" id="buscador" placeholder="Filtrar por ítem o usuario..."/>
+        </div>
+        <span class="help-text" id="reg-perms-label"></span>
+      </div>
+
+      <div style="max-height:460px;overflow:auto;">
+        <table class="reg-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tipo</th>
+              <th>Ítem</th>
+              <th>Cant.</th>
+              <th>Solicitante</th>
+              <th>Estado</th>
+              <th>Creada</th>
+            </tr>
+          </thead>
+          <tbody id="reg-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DETALLE -->
+    <div class="card reg-detail">
+      <h3 style="margin-top:0;">Detalle</h3>
+      <p id="reg-empty" class="help-text">
+        Selecciona una solicitud en la tabla para ver el detalle.
+      </p>
+
+      <div id="reg-detail-panel" style="display:none;">
+        <div class="field">
+          <label>Tipo de solicitud</label>
+          <input id="d_type" type="text" readonly/>
+        </div>
+
+        <div class="field">
+          <label>Ítem</label>
+          <input id="d_item" type="text" readonly/>
+        </div>
+
+        <div class="field">
+          <label>Cantidad</label>
+          <input id="d_quantity" type="number" readonly/>
+        </div>
+
+        <div class="field">
+          <label>Solicitante</label>
+          <input id="d_requester" type="text" readonly/>
+        </div>
+
+        <div class="field">
+          <label>Estado</label>
+          <input id="d_status" type="text" readonly/>
+        </div>
+
+        <div class="field">
+          <label>Fechas</label>
+          <textarea id="d_dates" readonly></textarea>
+        </div>
+
+        <div class="field">
+          <label>Almacén / lugar</label>
+          <input id="d_warehouse" type="text" readonly/>
+        </div>
+
+        <div class="field">
+          <label>Aprobador</label>
+          <input id="d_approver" type="text" readonly/>
+        </div>
+
+        <div class="field">
+          <label>Responsable de entrega</label>
+          <input id="d_completed_by" type="text" readonly/>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+  import { getOrgStatus } from './modules/profile.js';
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const { supa } = window;
+
+    // 1) Sesión y org_status
+    const { data: { session } } = await supa.auth.getSession();
+    if (!session) {
+      window.location.href = './index.html';
+      return;
+    }
+
+    const orgStatus = await getOrgStatus();
+    if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
+      await supa.auth.signOut();
+      window.location.href = './index.html';
+      return;
+    }
+
+    // Header
+    await loadHeader('app');
+    initHeaderUserMenu(
+      session,
+      async () => {
+        await supa.auth.signOut();
+        window.location.href = "./index.html";
+      },
+      () => window.location.href = './perfil.html'
+    );
+
+    // 2) Permisos de módulo "registro" (solo lectura siempre)
+    const { data: meRow } = await supa
+      .from('users')
+      .select('tesoro_internal_role')
+      .eq('id', session.user.id)
+      .maybeSingle();
+
+    let myRole = meRow?.tesoro_internal_role || null;
+    if (typeof myRole === 'string') myRole = myRole.trim();
+
+    let roleRow = null;
+    const asNumber = Number(myRole);
+    if (!Number.isNaN(asNumber)) {
+      const { data } = await supa
+        .from('roles_app')
+        .select('*')
+        .eq('id', asNumber)
+        .maybeSingle();
+      roleRow = data;
+    }
+    if (!roleRow && myRole) {
+      const { data } = await supa
+        .from('roles_app')
+        .select('*')
+        .ilike('role_name', myRole)
+        .maybeSingle();
+      roleRow = data;
+    }
+
+    let regLevel = roleRow?.registro ?? 0;
+    if (!regLevel) {
+      alert('No tienes acceso al módulo de Registro.');
+      window.location.href = './app_ui.html';
+      return;
+    }
+
+    const regPerms = document.getElementById('reg-perms-label');
+    if (regPerms) {
+      regPerms.textContent = 'Permisos: solo lectura.';
+    }
+
+    // 3) Mapas de usuarios y almacenes
+    const { data: users } = await supa
+      .from('users')
+      .select('id, handle_name, discord_username, discord_user_id');
+
+    const usersByDiscord = {};
+    (users || []).forEach(u => {
+      if (u.discord_user_id) usersByDiscord[u.discord_user_id] = u;
+    });
+
+    const { data: warehouses } = await supa
+      .from('warehouses')
+      .select('id, name');
+
+    const warehousesById = {};
+    (warehouses || []).forEach(w => { warehousesById[w.id] = w; });
+
+    // 4) DOM refs
+    const tbody      = document.getElementById('reg-tbody');
+    const filtro     = document.getElementById('filtro-estado');
+    const buscador   = document.getElementById('buscador');
+    const regEmpty   = document.getElementById('reg-empty');
+    const regPanel   = document.getElementById('reg-detail-panel');
+
+    const dType        = document.getElementById('d_type');
+    const dItem        = document.getElementById('d_item');
+    const dQty         = document.getElementById('d_quantity');
+    const dReq         = document.getElementById('d_requester');
+    const dStatus      = document.getElementById('d_status');
+    const dDates       = document.getElementById('d_dates');
+    const dWarehouse   = document.getElementById('d_warehouse');
+    const dApprover    = document.getElementById('d_approver');
+    const dCompletedBy = document.getElementById('d_completed_by');
+
+    let allRequests = [];
+    let selectedId = null;
+
+    function renderTipo(tipo) {
+      if (!tipo) return '-';
+      return tipo === 'compra' ? 'Compra' : 'Venta';
+    }
+
+    function userLabelFromDiscord(discordId) {
+      if (!discordId) return '';
+      const u = usersByDiscord[discordId];
+      if (!u) return discordId;
+      return u.handle_name || u.discord_username || discordId;
+    }
+
+    // 5) Cargar todas las requests
+    async function loadRequests() {
+      const { data, error } = await supa
+        .from('requests')
+        .select(`
+          id,
+          request_type,
+          item_id,
+          quantity,
+          status,
+          created_at,
+          requester_discord_id,
+          warehouse_id,
+          due_date,
+          approver_discord_id,
+          approved_at,
+          completed_at,
+          completed_by_discord_id,
+          commodities_master ( name, symbol )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error cargando registro:', error);
+        return;
+      }
+
+      allRequests = data || [];
+      renderTable();
+    }
+
+    function renderTable() {
+      tbody.innerHTML = '';
+      const estado = filtro.value;
+      const term = (buscador.value || '').toLowerCase();
+
+      allRequests.forEach(r => {
+        const st = r.status || 'pendiente';
+        if (estado !== 'todas' && st !== estado) return;
+
+        const cm = r.commodities_master;
+        const itemName = cm
+          ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
+          : (r.item_id || '');
+
+        const reqName = userLabelFromDiscord(r.requester_discord_id);
+
+        if (term) {
+          const combo = (itemName + ' ' + reqName).toLowerCase();
+          if (!combo.includes(term)) return;
+        }
+
+        const tr = document.createElement('tr');
+        tr.dataset.id = r.id;
+
+        tr.innerHTML = `
+          <td>#${r.id}</td>
+          <td><span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span></td>
+          <td>${itemName}</td>
+          <td>${r.quantity}</td>
+          <td>${reqName}</td>
+          <td><span class="badge-status ${st}">${st}</span></td>
+          <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
+        `;
+
+        tr.addEventListener('click', () => {
+          selectedId = r.id;
+          [...tbody.querySelectorAll('tr')].forEach(row => row.classList.remove('selected'));
+          tr.classList.add('selected');
+          showDetail(r, reqName);
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function showDetail(r, requesterName) {
+      regEmpty.style.display = 'none';
+      regPanel.style.display = 'block';
+
+      const cm = r.commodities_master;
+      const itemName = cm
+        ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
+        : (r.item_id || '');
+
+      dType.value   = renderTipo(r.request_type);
+      dItem.value   = itemName;
+      dQty.value    = r.quantity;
+      dReq.value    = requesterName;
+      dStatus.value = r.status || 'pendiente';
+
+      const creado    = r.created_at   ? new Date(r.created_at).toLocaleString()  : null;
+      const aprobado  = r.approved_at  ? new Date(r.approved_at).toLocaleString() : null;
+      const due       = r.due_date     ? new Date(r.due_date).toLocaleDateString() : null;
+      const completado= r.completed_at ? new Date(r.completed_at).toLocaleString() : null;
+
+      const lines = [];
+      if (creado)     lines.push(`Creada: ${creado}`);
+      if (aprobado)   lines.push(`Aprobada: ${aprobado}`);
+      if (due)        lines.push(`Plazo máximo: ${due}`);
+      if (completado) lines.push(`Completada: ${completado}`);
+
+      dDates.value = lines.join('\n');
+
+      const wh = r.warehouse_id ? warehousesById[r.warehouse_id] : null;
+      dWarehouse.value = wh ? wh.name : '';
+
+      dApprover.value    = userLabelFromDiscord(r.approver_discord_id);
+      dCompletedBy.value = userLabelFromDiscord(r.completed_by_discord_id);
+    }
+
+    filtro.addEventListener('change', renderTable);
+    buscador.addEventListener('input', renderTable);
+
+    await loadRequests();
+  });
+</script>
+</body>
+</html>
