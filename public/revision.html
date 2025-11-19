@@ -308,7 +308,7 @@
   document.addEventListener('DOMContentLoaded', async () => {
     const { supa } = window;
 
-    // ── 1) Sesión + org_status ──────────────────────
+    // 1) Sesión + org_status
     const { data: { session } } = await supa.auth.getSession();
     if (!session) {
       window.location.href = './index.html';
@@ -333,7 +333,7 @@
       () => window.location.href = './perfil.html'
     );
 
-    // ── 2) Rol interno y permisos de módulo ─────────
+    // 2) Rol interno y permisos del módulo
     const { data: meRow, error: meError } = await supa
       .from('users')
       .select('tesoro_internal_role')
@@ -346,7 +346,6 @@
 
     let roleRow = null;
 
-    // numérico => ID
     const asNumber = Number(myRole);
     if (!Number.isNaN(asNumber)) {
       const { data, error } = await supa
@@ -357,7 +356,6 @@
       if (!error) roleRow = data;
     }
 
-    // si no, nombre
     if (!roleRow && myRole) {
       const { data, error } = await supa
         .from('roles_app')
@@ -382,7 +380,7 @@
         : 'Permisos: revisión y cambio de estado.';
     }
 
-    // ── 3) Datos auxiliares: usuarios + almacenes ───
+    // 3) Datos auxiliares: usuarios + almacenes
     const { data: users, error: usersError } = await supa
       .from('users')
       .select('id, handle_name, discord_username');
@@ -405,7 +403,7 @@
       whSelect.appendChild(opt);
     });
 
-    // ── 4) Referencias DOM ──────────────────────────
+    // 4) Referencias DOM
     const tbody = document.getElementById('rev-tbody');
     const filtroEstado = document.getElementById('filtro-estado');
     const buscador = document.getElementById('buscador');
@@ -441,7 +439,7 @@
       return tipo === 'compra' ? 'Compra' : 'Venta';
     }
 
-    // ── 5) Cargar solicitudes ───────────────────────
+    // 5) Cargar solicitudes
     async function loadRequests() {
       const { data: reqs, error: reqError } = await supa
         .from('requests')
@@ -548,7 +546,7 @@
 
     await loadRequests();
 
-    // ── 6) Aprobar / Rechazar ───────────────────────
+    // 6) Aprobar / Rechazar (siempre rellenando approver_discord_id)
     async function updateStatus(newStatus) {
       if (readOnly) {
         alert('Permisos de solo lectura.');
@@ -559,6 +557,10 @@
         return;
       }
 
+      const discordId =
+        session.user.user_metadata?.provider_id ||
+        session.user.id; // fallback
+
       if (newStatus === 'aprobada') {
         const wh  = whSelect.value;
         const due = dDueDate.value;
@@ -567,15 +569,13 @@
           return;
         }
 
-        const discordId = session.user.user_metadata?.provider_id;
-
         const { error } = await supa
           .from('requests')
           .update({
             status: 'aprobada',
             warehouse_id: wh,
             due_date: due,
-            approver_discord_id: discordId,   // ✅ usamos la columna correcta
+            approver_discord_id: discordId,
             approved_at: new Date().toISOString()
           })
           .eq('id', selectedId);
@@ -590,7 +590,11 @@
       if (newStatus === 'rechazada') {
         const { error } = await supa
           .from('requests')
-          .update({ status: 'rechazada' })
+          .update({
+            status: 'rechazada',
+            approver_discord_id: discordId,
+            approved_at: new Date().toISOString()
+          })
           .eq('id', selectedId);
 
         if (error) {
