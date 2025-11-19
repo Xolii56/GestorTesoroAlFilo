@@ -444,7 +444,7 @@
           const cm = r.commodities_master;
           tdItem.textContent = cm
             ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
-            : r.item_id || '-';
+            : '-';   // ❌ nunca mostramos el uuid
 
           const tdQty = document.createElement('td');
           tdQty.textContent = r.quantity;
