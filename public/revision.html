@@ -436,7 +436,7 @@
     let selectedId = null;
 
     async function loadRequests() {
-      const { data: reqs } = await supa
+      const { data: reqs, error: reqError } = await supa
         .from('requests')
         .select(`
           id,
@@ -450,13 +450,19 @@
           due_date,
           approver_discord_id,
           approved_at,
-          items(name)
+          commodities_master ( name, symbol )
         `)
         .order('created_at', { ascending: false });
+    
+      if (reqError) {
+        console.error('Error cargando solicitudes (revisión):', reqError);
+        return;
+      }
 
       allRequests = reqs || [];
       renderTable();
     }
+    
 
     function renderTable() {
       tbody.innerHTML = '';
