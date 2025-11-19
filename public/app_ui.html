@@ -256,9 +256,14 @@
           window.location.href = './almacenes.html';
           return;
         }
+        if (mod === 'registro') {
+          window.location.href = './registro.html';
+          return;
+        }
+
 
         // Placeholder para el resto hasta que los implementemos
-        if (mod === 'inventario' || mod === 'registro' || mod === 'calendario') {
+        if (mod === 'inventario' || mod === 'calendario') {
           alert(`El módulo "${mod}" todavía no está implementado (nivel ${currentLevel}).`);
           return;
         }
