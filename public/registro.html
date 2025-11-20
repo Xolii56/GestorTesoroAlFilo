@@ -179,9 +179,10 @@
           </select>
           <input type="search" id="buscador" placeholder="Filtrar por ítem o usuario..."/>
         </div>
-        <span class="help-text" id="reg-perms-label">
-          Solo lectura — log completo.
-        </span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;">
+          <span class="help-text">Solo lectura — log completo.</span>
+          <span class="help-text" id="reg-debug" style="font-style:italic;"></span>
+        </div>
       </div>
 
       <div style="max-height:460px;overflow:auto;">
@@ -257,16 +258,20 @@
   document.addEventListener('DOMContentLoaded', async () => {
     const { supa } = window;
 
-    // 1) Sesión básica
+    const debugEl = document.getElementById('reg-debug');
+
+    // 1) Sesión
     const { data: { session } } = await supa.auth.getSession();
     if (!session) {
+      debugEl.textContent = 'Sin sesión → redirigiendo a login.';
       window.location.href = './index.html';
       return;
     }
 
-    // 2) org_status (solo miembros de la org)
+    // 2) org_status
     const orgStatus = await getOrgStatus();
     if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
+      debugEl.textContent = 'org_status no válido, cerrando sesión.';
       await supa.auth.signOut();
       window.location.href = './index.html';
       return;
@@ -283,10 +288,14 @@
       () => window.location.href = './perfil.html'
     );
 
-    // 4) Datos auxiliares: usuarios y almacenes (para nombres bonitos)
-    const { data: users } = await supa
+    // 4) Datos auxiliares: usuarios y almacenes
+    const { data: users, error: usersError } = await supa
       .from('users')
       .select('id, handle_name, discord_username, discord_user_id');
+
+    if (usersError) {
+      console.error('Error leyendo users en registro:', usersError);
+    }
 
     const usersByDiscordId = {};
     (users || []).forEach(u => {
@@ -294,15 +303,19 @@
       usersByDiscordId[did] = u;
     });
 
-    const { data: warehouses } = await supa
+    const { data: warehouses, error: whError } = await supa
       .from('warehouses')
       .select('id, name')
       .order('name', { ascending: true });
 
+    if (whError) {
+      console.error('Error leyendo warehouses en registro:', whError);
+    }
+
     const warehousesById = {};
     (warehouses || []).forEach(w => { warehousesById[w.id] = w; });
 
-    // 5) Referencias DOM
+    // 5) DOM
     const tbody      = document.getElementById('reg-tbody');
     const filtro     = document.getElementById('filtro-estado');
     const buscador   = document.getElementById('buscador');
@@ -327,7 +340,7 @@
       return tipo === 'compra' ? 'Compra' : 'Venta';
     }
 
-    // 6) Cargar TODAS las solicitudes (RLS ya no limita el select)
+    // 6) Cargar TODAS las solicitudes
     async function loadRequests() {
       const { data: reqs, error: reqError } = await supa
         .from('requests')
@@ -341,20 +354,20 @@
           requester_discord_id,
           warehouse_id,
           due_date,
-          approved_at,
-          completed_at,
           approver_discord_id,
-          completed_by_discord_id,
+          approved_at,
           commodities_master ( name, symbol )
         `)
         .order('created_at', { ascending: false });
 
       if (reqError) {
-        console.error('Error cargando solicitudes en registro:', reqError);
+        console.error('Error cargando requests en registro:', reqError);
+        if (debugEl) debugEl.textContent = 'Error en SELECT de requests: ' + reqError.message;
         return;
       }
 
       allRequests = reqs || [];
+      if (debugEl) debugEl.textContent = `Solicitudes cargadas: ${allRequests.length}`;
       renderTable();
     }
 
@@ -424,13 +437,11 @@
       dReq.value    = requesterName;
       dStatus.value = r.status || 'pendiente';
 
-      const creado    = r.created_at  ? new Date(r.created_at).toLocaleString() : 'desconocido';
-      const aprobado  = r.approved_at ? new Date(r.approved_at).toLocaleString() : null;
-      const completado = r.completed_at ? new Date(r.completed_at).toLocaleString() : null;
+      const creado   = r.created_at  ? new Date(r.created_at).toLocaleString() : 'desconocido';
+      const aprobado = r.approved_at ? new Date(r.approved_at).toLocaleString() : null;
 
       let fechasTxt = `Creada: ${creado}`;
-      if (aprobado)  fechasTxt += ` · Aprobada: ${aprobado}`;
-      if (completado)fechasTxt += ` · Completada: ${completado}`;
+      if (aprobado) fechasTxt += ` · Aprobada: ${aprobado}`;
       dDates.textContent = fechasTxt;
 
       const wh = warehousesById[r.warehouse_id];
@@ -438,22 +449,13 @@
 
       dDueDate.value = r.due_date || '-';
 
-      const approver  = usersByDiscordId[r.approver_discord_id] || null;
-      const completer = usersByDiscordId[r.completed_by_discord_id] || null;
-
+      // solo mostramos quién la aprobó
+      const approver = usersByDiscordId[r.approver_discord_id] || null;
       const approverName = approver
         ? (approver.handle_name || approver.discord_username || approver.discord_user_id)
         : (r.approver_discord_id || '-');
 
-      const completerName = completer
-        ? (completer.handle_name || completer.discord_username || completer.discord_user_id)
-        : (r.completed_by_discord_id || '-');
-
-      let sig = '';
-      sig += `Aprobada por: ${approverName}\n`;
-      sig += `Cerrada por: ${completerName}`;
-
-      dSignatures.value = sig;
+      dSignatures.value = `Aprobada por: ${approverName}`;
     }
 
     filtro.addEventListener('change', renderTable);
