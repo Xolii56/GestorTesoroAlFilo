@@ -91,10 +91,10 @@
       border: 1px solid rgba(148,163,184,0.7);
     }
 
-    .badge-status.pendiente   { border-color: rgba(250,204,21,0.9); }
-    .badge-status.aprobada    { border-color: rgba(34,197,94,0.9); }
-    .badge-status.rechazada   { border-color: rgba(248,113,113,0.9); }
-    .badge-status.completada  { border-color: rgba(56,189,248,0.9); }
+    .badge-status.pendiente { border-color: rgba(250,204,21,0.9); }
+    .badge-status.aprobada { border-color: rgba(34,197,94,0.9); }
+    .badge-status.rechazada { border-color: rgba(248,113,113,0.9); }
+    .badge-status.completada { border-color: rgba(56,189,248,0.9); }
 
     .tipo-chip {
       display:inline-block;
@@ -105,6 +105,7 @@
       margin-left:.25rem;
       opacity:.85;
     }
+
     .tipo-chip.compra { border-color: rgba(34,197,94,0.9); }
     .tipo-chip.venta  { border-color: rgba(248,113,113,0.9); }
 
@@ -120,7 +121,8 @@
     }
 
     .reg-detail input,
-    .reg-detail textarea {
+    .reg-detail textarea,
+    .reg-detail select {
       width: 100%;
       padding: 0.4rem 0.5rem;
       border-radius: 0.4rem;
@@ -137,7 +139,7 @@
 
     .reg-detail input[readonly],
     .reg-detail textarea[readonly] {
-      opacity: .85;
+      opacity:.9;
     }
 
     .btn {
@@ -163,14 +165,16 @@
 </head>
 
 <body>
+
 <div id="site-header"></div>
 
 <main class="reg-main">
+
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
     <div>
       <h2>Registro de solicitudes</h2>
       <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
-        Histórico completo de solicitudes del Departamento del Tesoro (abiertas y cerradas).
+        Historial completo de todas las solicitudes del Departamento del Tesoro.
       </p>
     </div>
     <button type="button" class="btn btn-secondary" onclick="window.location.href='./app_ui.html'">
@@ -179,16 +183,22 @@
   </div>
 
   <div class="reg-layout">
+
     <!-- LISTA -->
     <div class="card">
       <div class="reg-toolbar">
         <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;">
           <select id="filtro-estado">
-            <option value="todas">Todas</option>
+            <option value="todas">Todos los estados</option>
             <option value="pendiente">Pendientes</option>
             <option value="aprobada">Aprobadas</option>
             <option value="rechazada">Rechazadas</option>
             <option value="completada">Completadas</option>
+          </select>
+          <select id="filtro-tipo">
+            <option value="todos">Todos los tipos</option>
+            <option value="compra">Compras</option>
+            <option value="venta">Ventas</option>
           </select>
           <input type="search" id="buscador" placeholder="Filtrar por ítem o usuario..."/>
         </div>
@@ -204,6 +214,7 @@
               <th>Ítem</th>
               <th>Cant.</th>
               <th>Solicitante</th>
+              <th>Almacén</th>
               <th>Estado</th>
               <th>Creada</th>
             </tr>
@@ -215,9 +226,9 @@
 
     <!-- DETALLE -->
     <div class="card reg-detail">
-      <h3 style="margin-top:0;">Detalle</h3>
+      <h3 style="margin-top:0;">Detalle de solicitud</h3>
       <p id="reg-empty" class="help-text">
-        Selecciona una solicitud en la tabla para ver el detalle.
+        Selecciona una solicitud en la tabla para ver los detalles.
       </p>
 
       <div id="reg-detail-panel" style="display:none;">
@@ -242,31 +253,32 @@
         </div>
 
         <div class="field">
-          <label>Estado</label>
+          <label>Estado actual</label>
           <input id="d_status" type="text" readonly/>
         </div>
 
         <div class="field">
-          <label>Fechas</label>
-          <textarea id="d_dates" readonly></textarea>
-        </div>
-
-        <div class="field">
-          <label>Almacén / lugar</label>
+          <label>Almacén asignado</label>
           <input id="d_warehouse" type="text" readonly/>
         </div>
 
         <div class="field">
-          <label>Aprobador</label>
-          <input id="d_approver" type="text" readonly/>
+          <label>Plazo máximo de entrega</label>
+          <input id="d_due_date" type="text" readonly/>
         </div>
 
         <div class="field">
-          <label>Responsable de entrega</label>
-          <input id="d_completed_by" type="text" readonly/>
+          <label>Fechas</label>
+          <div id="d_dates" class="help-text"></div>
+        </div>
+
+        <div class="field">
+          <label>Responsables</label>
+          <div id="d_responsibles" class="help-text"></div>
         </div>
       </div>
     </div>
+
   </div>
 </main>
 
@@ -276,7 +288,7 @@
   document.addEventListener('DOMContentLoaded', async () => {
     const { supa } = window;
 
-    // 1) Sesión y org_status
+    // 1) Sesión + org_status
     const { data: { session } } = await supa.auth.getSession();
     if (!session) {
       window.location.href = './index.html';
@@ -301,12 +313,13 @@
       () => window.location.href = './perfil.html'
     );
 
-    // 2) Permisos de módulo "registro" (solo lectura siempre)
-    const { data: meRow } = await supa
+    // 2) Rol interno y permisos del módulo "registro"
+    const { data: meRow, error: meError } = await supa
       .from('users')
       .select('tesoro_internal_role')
       .eq('id', session.user.id)
       .maybeSingle();
+    if (meError) console.error('Error leyendo rol interno:', meError);
 
     let myRole = meRow?.tesoro_internal_role || null;
     if (typeof myRole === 'string') myRole = myRole.trim();
@@ -314,20 +327,20 @@
     let roleRow = null;
     const asNumber = Number(myRole);
     if (!Number.isNaN(asNumber)) {
-      const { data } = await supa
+      const { data, error } = await supa
         .from('roles_app')
         .select('*')
         .eq('id', asNumber)
         .maybeSingle();
-      roleRow = data;
+      if (!error) roleRow = data;
     }
     if (!roleRow && myRole) {
-      const { data } = await supa
+      const { data, error } = await supa
         .from('roles_app')
         .select('*')
         .ilike('role_name', myRole)
         .maybeSingle();
-      roleRow = data;
+      if (!error) roleRow = data;
     }
 
     let regLevel = roleRow?.registro ?? 0;
@@ -337,44 +350,49 @@
       return;
     }
 
-    const regPerms = document.getElementById('reg-perms-label');
-    if (regPerms) {
-      regPerms.textContent = 'Permisos: solo lectura.';
+    const regPermsLabel = document.getElementById('reg-perms-label');
+    if (regPermsLabel) {
+      regPermsLabel.textContent =
+        regLevel === 1
+          ? 'Permisos: consulta de registro.'
+          : 'Permisos: auditoría completa (solo lectura).';
     }
 
-    // 3) Mapas de usuarios y almacenes
-    const { data: users } = await supa
+    // 3) Datos auxiliares: usuarios + almacenes
+    const { data: users, error: usersError } = await supa
       .from('users')
-      .select('id, handle_name, discord_username, discord_user_id');
+      .select('id, handle_name, discord_username');
+    if (usersError) console.error('Error leyendo usuarios:', usersError);
 
-    const usersByDiscord = {};
-    (users || []).forEach(u => {
-      if (u.discord_user_id) usersByDiscord[u.discord_user_id] = u;
-    });
+    const usersById = {};
+    (users || []).forEach(u => { usersById[u.id] = u; });
 
-    const { data: warehouses } = await supa
+    const { data: warehouses, error: whError } = await supa
       .from('warehouses')
       .select('id, name');
+    if (whError) console.error('Error leyendo almacenes:', whError);
 
     const warehousesById = {};
     (warehouses || []).forEach(w => { warehousesById[w.id] = w; });
 
-    // 4) DOM refs
-    const tbody      = document.getElementById('reg-tbody');
-    const filtro     = document.getElementById('filtro-estado');
-    const buscador   = document.getElementById('buscador');
-    const regEmpty   = document.getElementById('reg-empty');
-    const regPanel   = document.getElementById('reg-detail-panel');
+    // 4) DOM
+    const tbody        = document.getElementById('reg-tbody');
+    const filtroEstado = document.getElementById('filtro-estado');
+    const filtroTipo   = document.getElementById('filtro-tipo');
+    const buscador     = document.getElementById('buscador');
+
+    const regEmpty       = document.getElementById('reg-empty');
+    const regDetailPanel = document.getElementById('reg-detail-panel');
 
     const dType        = document.getElementById('d_type');
     const dItem        = document.getElementById('d_item');
     const dQty         = document.getElementById('d_quantity');
     const dReq         = document.getElementById('d_requester');
     const dStatus      = document.getElementById('d_status');
-    const dDates       = document.getElementById('d_dates');
     const dWarehouse   = document.getElementById('d_warehouse');
-    const dApprover    = document.getElementById('d_approver');
-    const dCompletedBy = document.getElementById('d_completed_by');
+    const dDueDate     = document.getElementById('d_due_date');
+    const dDates       = document.getElementById('d_dates');
+    const dResponsibles= document.getElementById('d_responsibles');
 
     let allRequests = [];
     let selectedId = null;
@@ -384,16 +402,9 @@
       return tipo === 'compra' ? 'Compra' : 'Venta';
     }
 
-    function userLabelFromDiscord(discordId) {
-      if (!discordId) return '';
-      const u = usersByDiscord[discordId];
-      if (!u) return discordId;
-      return u.handle_name || u.discord_username || discordId;
-    }
-
-    // 5) Cargar todas las requests
+    // 5) Cargar solicitudes
     async function loadRequests() {
-      const { data, error } = await supa
+      const { data: reqs, error: reqError } = await supa
         .from('requests')
         .select(`
           id,
@@ -405,42 +416,50 @@
           requester_discord_id,
           warehouse_id,
           due_date,
-          approver_discord_id,
           approved_at,
           completed_at,
+          approver_discord_id,
           completed_by_discord_id,
           commodities_master ( name, symbol )
         `)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error cargando registro:', error);
+      if (reqError) {
+        console.error('Error cargando solicitudes (registro):', reqError);
         return;
       }
 
-      allRequests = data || [];
+      allRequests = reqs || [];
       renderTable();
     }
 
     function renderTable() {
       tbody.innerHTML = '';
-      const estado = filtro.value;
-      const term = (buscador.value || '').toLowerCase();
+      const estado = filtroEstado.value;
+      const tipo   = filtroTipo.value;
+      const term   = (buscador.value || '').toLowerCase();
 
       allRequests.forEach(r => {
         const st = r.status || 'pendiente';
+        const rt = r.request_type || '';
+
         if (estado !== 'todas' && st !== estado) return;
+        if (tipo   !== 'todos' && rt !== tipo)   return;
 
         const cm = r.commodities_master;
         const itemName = cm
           ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
           : (r.item_id || '');
 
-        const reqName = userLabelFromDiscord(r.requester_discord_id);
+        const requester = usersById[r.requester_discord_id];
+        const reqName = requester?.handle_name || requester?.discord_username || r.requester_discord_id;
+
+        const wh = r.warehouse_id ? warehousesById[r.warehouse_id] : null;
+        const whName = wh ? wh.name : '';
 
         if (term) {
-          const combo = (itemName + ' ' + reqName).toLowerCase();
-          if (!combo.includes(term)) return;
+          const search = (itemName + ' ' + reqName + ' ' + whName).toLowerCase();
+          if (!search.includes(term)) return;
         }
 
         const tr = document.createElement('tr');
@@ -448,10 +467,11 @@
 
         tr.innerHTML = `
           <td>#${r.id}</td>
-          <td><span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span></td>
+          <td><span class="tipo-chip ${rt}">${renderTipo(rt)}</span></td>
           <td>${itemName}</td>
           <td>${r.quantity}</td>
           <td>${reqName}</td>
+          <td>${whName || '-'}</td>
           <td><span class="badge-status ${st}">${st}</span></td>
           <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
         `;
@@ -460,16 +480,16 @@
           selectedId = r.id;
           [...tbody.querySelectorAll('tr')].forEach(row => row.classList.remove('selected'));
           tr.classList.add('selected');
-          showDetail(r, reqName);
+          showDetail(r, reqName, whName);
         });
 
         tbody.appendChild(tr);
       });
     }
 
-    function showDetail(r, requesterName) {
+    function showDetail(r, reqName, whName) {
       regEmpty.style.display = 'none';
-      regPanel.style.display = 'block';
+      regDetailPanel.style.display = 'block';
 
       const cm = r.commodities_master;
       const itemName = cm
@@ -479,34 +499,43 @@
       dType.value   = renderTipo(r.request_type);
       dItem.value   = itemName;
       dQty.value    = r.quantity;
-      dReq.value    = requesterName;
+      dReq.value    = reqName;
       dStatus.value = r.status || 'pendiente';
+      dWarehouse.value = whName || 'No asignado';
 
-      const creado    = r.created_at   ? new Date(r.created_at).toLocaleString()  : null;
-      const aprobado  = r.approved_at  ? new Date(r.approved_at).toLocaleString() : null;
-      const due       = r.due_date     ? new Date(r.due_date).toLocaleDateString() : null;
+      dDueDate.value = r.due_date
+        ? new Date(r.due_date).toLocaleDateString()
+        : 'Sin definir';
+
+      const creado    = r.created_at   ? new Date(r.created_at).toLocaleString()   : 'desconocido';
+      const aprobado  = r.approved_at  ? new Date(r.approved_at).toLocaleString()  : null;
       const completado= r.completed_at ? new Date(r.completed_at).toLocaleString() : null;
 
-      const lines = [];
-      if (creado)     lines.push(`Creada: ${creado}`);
-      if (aprobado)   lines.push(`Aprobada: ${aprobado}`);
-      if (due)        lines.push(`Plazo máximo: ${due}`);
-      if (completado) lines.push(`Completada: ${completado}`);
+      let timeline = `Creada: ${creado}`;
+      if (aprobado)   timeline += ` · Aprobada: ${aprobado}`;
+      if (completado) timeline += ` · Completada: ${completado}`;
+      dDates.textContent = timeline;
 
-      dDates.value = lines.join('\n');
-
-      const wh = r.warehouse_id ? warehousesById[r.warehouse_id] : null;
-      dWarehouse.value = wh ? wh.name : '';
-
-      dApprover.value    = userLabelFromDiscord(r.approver_discord_id);
-      dCompletedBy.value = userLabelFromDiscord(r.completed_by_discord_id);
+      // responsables (IDs de momento; si luego guardamos uid en users, se puede mapear)
+      let resp = '';
+      if (r.approver_discord_id) {
+        resp += `Aprobada por: ${r.approver_discord_id}`;
+      }
+      if (r.completed_by_discord_id) {
+        if (resp) resp += ' · ';
+        resp += `Completada por: ${r.completed_by_discord_id}`;
+      }
+      if (!resp) resp = 'Sin responsables registrados aún.';
+      dResponsibles.textContent = resp;
     }
 
-    filtro.addEventListener('change', renderTable);
-    buscador.addEventListener('input', renderTable);
+    filtroEstado.addEventListener('change', renderTable);
+    filtroTipo  .addEventListener('change', renderTable);
+    buscador    .addEventListener('input', renderTable);
 
     await loadRequests();
   });
 </script>
+
 </body>
 </html>
