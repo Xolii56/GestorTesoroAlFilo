@@ -6,140 +6,274 @@
   <title>Departamento del Tesoro — Panel</title>
   <link rel="stylesheet" href="./style.css"/>
 
-  <!-- Supabase -->
+  <!-- Supabase + módulos -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="./config.js" defer></script>
   <script src="./modules/db.js" defer></script>
   <script src="./modules/layout.js" defer></script>
 
   <style>
-    main.app-main {
+    main.tesoro-main {
       padding: 1.5rem;
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
     }
 
-    .grid {
+    .modules-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 1.3rem;
+      gap: 1.2rem;
+      margin-top: 2rem;
     }
 
-    .card-link {
-      display: block;
-      padding: 1.2rem;
-      border-radius: 0.8rem;
-      background: #020617;
-      border: 1px solid rgba(148,163,184,0.3);
-      transition: background .15s, border-color .15s;
+    .module-card {
       cursor: pointer;
-      text-decoration: none;
-      color: #e5e7eb;
+      transition: transform .15s ease-out, box-shadow .15s ease-out, border-color .15s;
+      border-radius: 0.75rem;
+      padding: 1.2rem;
     }
 
-    .card-link:hover {
-      background: #0f172a;
-      border-color: rgba(148,163,184,0.6);
+    .module-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 26px rgba(0,0,0,0.45);
+      border-color: rgba(120,200,255,0.45);
     }
 
-    .card-link h3 {
-      margin: 0 0 .4rem 0;
-      font-size: 1.1rem;
+    .module-chip {
+      font-size: .75rem;
+      padding: .15rem .55rem;
+      border-radius: 999px;
+      opacity: .8;
+      border: 1px solid rgba(255,255,255,0.25);
+      margin-bottom: .4rem;
+      display: inline-block;
     }
 
-    .card-link p {
+    .module-card h3 {
+      margin: 0 0 .4rem;
+    }
+
+    .module-card p {
       margin: 0;
       opacity: .75;
-      font-size: .85rem;
+      font-size: .9rem;
+      line-height: 1.3rem;
+    }
+
+    /* Estado deshabilitado por permisos */
+    .module-card.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      filter: grayscale(0.4);
+      border-color: rgba(248, 113, 113, 0.6); /* rojizo suave */
+    }
+
+    .module-card.disabled:hover {
+      transform: none;
+      box-shadow: none;
     }
   </style>
 </head>
 
 <body>
+
+  <!-- Aquí se inyecta components/header.html -->
   <div id="site-header"></div>
 
-  <main class="app-main">
-    <div style="margin-bottom:1.2rem;">
-      <h2>Panel del Tesoro</h2>
-      <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
-        Acceso a todos los módulos operativos del Departamento del Tesoro.
-      </p>
-    </div>
+  <main class="tesoro-main">
+    <h2>Panel del Departamento del Tesoro</h2>
+    <p style="opacity:.8;margin-top:.25rem">Selecciona un módulo.</p>
 
-    <div class="grid">
+    <div class="modules-grid">
 
-      <a class="card-link" href="./solicitudes.html">
+      <div class="card module-card" data-module="solicitudes">
+        <span class="module-chip">Operaciones</span>
         <h3>Solicitudes</h3>
-        <p>Crear y consultar solicitudes propias.</p>
-      </a>
+        <p>Crear y consultar solicitudes de retirada, préstamo o consumo.</p>
+      </div>
 
-      <a class="card-link" href="./revision.html">
+      <div class="card module-card" data-module="revision">
+        <span class="module-chip">Encargados</span>
         <h3>Revisión</h3>
-        <p>Revisar, aprobar o rechazar solicitudes.</p>
-      </a>
+        <p>Bandeja para aprobar, denegar o modificar solicitudes.</p>
+      </div>
 
-      <a class="card-link" href="./registro.html">
-        <h3>Registro</h3>
-        <p>Historial completo de solicitudes.</p>
-      </a>
+      <div class="card module-card" data-module="inventario">
+        <span class="module-chip">Stock</span>
+        <h3>Inventario</h3>
+        <p>Listado y estado del stock general del Tesoro.</p>
+      </div>
 
-      <a class="card-link" href="./almacenes.html">
+      <div class="card module-card" data-module="almacenes">
+        <span class="module-chip">Logística</span>
         <h3>Almacenes</h3>
-        <p>Gestión y consulta del inventario por almacén.</p>
-      </a>
+        <p>Gestión de ubicaciones, hangares y contenedores.</p>
+      </div>
 
-      <a class="card-link" href="./usuarios.html">
+      <div class="card module-card" data-module="registro">
+        <span class="module-chip">Auditoría</span>
+        <h3>Registro</h3>
+        <p>Histórico de movimientos y trazabilidad completa.</p>
+      </div>
+
+      <div class="card module-card" data-module="calendario">
+        <span class="module-chip">Planificación</span>
+        <h3>Calendario</h3>
+        <p>Vista de calendario con los movimientos distribuidos por el día en que se producen.</p>
+      </div>
+
+      <div class="card module-card" data-module="usuarios">
+        <span class="module-chip">Administración</span>
         <h3>Usuarios</h3>
-        <p>Gestión de usuarios del tesoro.</p>
-      </a>
-
-      <a class="card-link" href="./perfil.html">
-        <h3>Mi perfil</h3>
-        <p>Datos de cuenta y configuración personal.</p>
-      </a>
+        <p>Gestión de usuarios, permisos internos del Tesoro y datos de cada miembro.</p>
+      </div>
 
     </div>
   </main>
 
-  <script type="module">
-    import { getOrgStatus } from './modules/profile.js';
+<script type="module">
+  import { getOrgStatus } from './modules/profile.js';
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      const { supa } = window;
+  document.addEventListener('DOMContentLoaded', async () => {
+    const { supa } = window;
 
-      // 1) Sesión
-      const { data: { session } } = await supa.auth.getSession();
-      if (!session) {
-        window.location.href = './index.html';
-        return;
+    // --- 1) Comprobar sesión ---
+    const { data: { session } } = await supa.auth.getSession();
+    if (!session) {
+      window.location.href = './index.html';
+      return;
+    }
+
+    // --- 2) Comprobar rol de organización permitido ---
+    const status = await getOrgStatus();
+    if (!status || !['miembro','daga','espada','admin'].includes(status)) {
+      await supa.auth.signOut();
+      window.location.href = './index.html';
+      return;
+    }
+
+    // --- 3) Cargar header existente ---
+    await loadHeader('app');
+
+    // --- 4) Inicializar menú usuario del header ---
+    if (typeof window.initHeaderUserMenu === 'function') {
+      window.initHeaderUserMenu(
+        session,
+        async () => {
+          await supa.auth.signOut();
+          window.location.href = "./index.html";
+        },
+        () => {
+          window.location.href = './perfil.html';
+        }
+      );
+    }
+
+    // --- 5) Obtener rol interno del usuario ---
+    const { data: userRow, error: userError } = await supa
+      .from('users')
+      .select('tesoro_internal_role')
+      .eq('id', session.user.id)
+      .maybeSingle();
+
+    if (userError) {
+      console.error('Error leyendo tesoro_internal_role:', userError);
+    }
+
+    let internalRole = userRow?.tesoro_internal_role || null;
+    if (typeof internalRole === 'string') internalRole = internalRole.trim();
+
+    // --- 6) Obtener permisos de ese rol desde roles_app ---
+    let roleRow = null;
+
+    if (internalRole) {
+      const asNumber = Number(internalRole);
+      if (!Number.isNaN(asNumber) && internalRole !== '') {
+        const { data, error } = await supa
+          .from('roles_app')
+          .select('*')
+          .eq('id', asNumber)
+          .maybeSingle();
+        if (!error) roleRow = data;
       }
 
-      // 2) org_status
-      const orgStatus = await getOrgStatus();
+      if (!roleRow) {
+        const { data, error } = await supa
+          .from('roles_app')
+          .select('*')
+          .ilike('role_name', internalRole)
+          .maybeSingle();
+        if (!error) roleRow = data;
+      }
+    }
 
-      if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
-        await supa.auth.signOut();
-        window.location.href = './index.html';
-        return;
+    const permsByModule = {};
+    if (roleRow) {
+      for (const [key, value] of Object.entries(roleRow)) {
+        if (['id', 'role_name', 'created_at', 'updated_at'].includes(key)) continue;
+        const normKey = key.toLowerCase();
+        permsByModule[normKey] = value;
+      }
+    }
+
+    // --- 7) Aplicar permisos + navegación a módulos ---
+    document.querySelectorAll('.module-card').forEach(card => {
+      const mod = card.getAttribute('data-module'); // ej: "almacenes"
+      const normMod = mod.toLowerCase();
+
+      const level = permsByModule.hasOwnProperty(normMod)
+        ? (permsByModule[normMod] ?? 0)
+        : 0;
+
+      if (!level || level === 0) {
+        card.classList.add('disabled');
       }
 
-      // 3) Header
-      if (typeof window.loadHeader === 'function') {
-        await window.loadHeader('app');
-      }
+      card.addEventListener('click', () => {
+        const currentLevel = permsByModule.hasOwnProperty(normMod)
+          ? (permsByModule[normMod] ?? 0)
+          : 0;
 
-      if (typeof window.initHeaderUserMenu === 'function') {
-        window.initHeaderUserMenu(
-          session,
-          async () => {
-            await supa.auth.signOut();
-            window.location.href = "./index.html";
-          },
-          () => window.location.href = './perfil.html'
-        );
-      }
+        if (!currentLevel || currentLevel === 0) {
+          alert('No tienes acceso a este módulo.');
+          return;
+        }
+
+        // Rutas reales según módulo
+        if (mod === 'solicitudes') {
+          window.location.href = './solicitudes.html';
+          return;
+        }
+        if (mod === 'revision') {
+          window.location.href = './revision.html';
+          return;
+        }
+        if (mod === 'usuarios') {
+          window.location.href = './usuarios.html';
+          return;
+        }
+        if (mod === 'almacenes') {
+          window.location.href = './almacenes.html';
+          return;
+        }
+        if (mod === 'registro') {
+          window.location.href = './registro.html';
+          return;
+        }
+
+
+        // Placeholder para el resto hasta que los implementemos
+        if (mod === 'inventario' || mod === 'calendario') {
+          alert(`El módulo "${mod}" todavía no está implementado (nivel ${currentLevel}).`);
+          return;
+        }
+
+        // Fallback por si añades nuevos módulos sin lógica aún
+        alert(`Módulo "${mod}" aún no está implementado (nivel ${currentLevel}).`);
+      });
     });
-  </script>
+  });
+</script>
 
 </body>
 </html>
