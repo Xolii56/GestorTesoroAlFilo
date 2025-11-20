@@ -31,6 +31,13 @@
       }
     }
 
+    /* Columna derecha: lista + detalle en vertical */
+    .sol-right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
     .sol-form .field {
       margin-bottom: .8rem;
     }
@@ -115,6 +122,19 @@
       border-bottom: 1px solid rgba(148,163,184,0.26);
     }
 
+    .sol-table tbody tr {
+      cursor: pointer;
+      transition: background .12s ease-out;
+    }
+
+    .sol-table tbody tr:hover {
+      background: rgba(15,23,42,0.9);
+    }
+
+    .sol-table tbody tr.selected {
+      background: rgba(56,189,248,0.18);
+    }
+
     .badge-status {
       display: inline-flex;
       align-items: center;
@@ -164,6 +184,39 @@
       color:#020617;
       border-color:#22c55e;
       font-weight:600;
+    }
+
+    /* Detalle de solicitud (solo lectura) */
+    .sol-detail .field {
+      margin-bottom: .7rem;
+    }
+
+    .sol-detail label {
+      display:block;
+      font-size:.8rem;
+      opacity:.8;
+      margin-bottom:.2rem;
+    }
+
+    .sol-detail input,
+    .sol-detail textarea {
+      width:100%;
+      padding:0.4rem 0.5rem;
+      border-radius:0.4rem;
+      border:1px solid rgba(148,163,184,0.8);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.9rem;
+    }
+
+    .sol-detail textarea {
+      min-height:60px;
+      resize:vertical;
+    }
+
+    .sol-detail input[readonly],
+    .sol-detail textarea[readonly] {
+      opacity:.9;
     }
   </style>
 </head>
@@ -235,30 +288,84 @@
         </form>
       </div>
 
-      <!-- LISTADO -->
-      <div class="card">
-        <h3 style="margin-top:0;">Mis solicitudes</h3>
-        <p class="help-text">
-          Solo se muestran las solicitudes realizadas con tu cuenta actual.
-        </p>
+      <!-- COLUMNA DERECHA: lista + detalle -->
+      <div class="sol-right-column">
 
-        <div style="max-height:460px;overflow:auto;margin-top:.6rem;">
-          <table class="sol-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Tipo</th>
-                <th>Ítem</th>
-                <th>Cant.</th>
-                <th>Estado</th>
-                <th>Creada</th>
-              </tr>
-            </thead>
-            <tbody id="sol-tbody">
-              <!-- Rellenado por JS -->
-            </tbody>
-          </table>
+        <!-- LISTADO -->
+        <div class="card">
+          <h3 style="margin-top:0;">Mis solicitudes</h3>
+          <p class="help-text">
+            Solo se muestran las solicitudes realizadas con tu cuenta actual.
+          </p>
+
+          <div style="max-height:300px;overflow:auto;margin-top:.6rem;">
+            <table class="sol-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Tipo</th>
+                  <th>Ítem</th>
+                  <th>Cant.</th>
+                  <th>Estado</th>
+                  <th>Creada</th>
+                </tr>
+              </thead>
+              <tbody id="sol-tbody">
+                <!-- Rellenado por JS -->
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        <!-- DETALLE SOLO LECTURA -->
+        <div class="card sol-detail">
+          <h3 style="margin-top:0;">Detalle de la solicitud</h3>
+          <p id="sol-empty" class="help-text">
+            Selecciona una solicitud en la tabla para ver todos los detalles.
+          </p>
+
+          <div id="sol-detail-panel" style="display:none;">
+            <div class="field">
+              <label>Tipo de solicitud</label>
+              <input id="d_type" type="text" readonly>
+            </div>
+
+            <div class="field">
+              <label>Ítem</label>
+              <input id="d_item" type="text" readonly>
+            </div>
+
+            <div class="field">
+              <label>Cantidad</label>
+              <input id="d_quantity" type="number" readonly>
+            </div>
+
+            <div class="field">
+              <label>Estado actual</label>
+              <input id="d_status" type="text" readonly>
+            </div>
+
+            <div class="field">
+              <label>Almacén asignado</label>
+              <input id="d_warehouse" type="text" readonly>
+              <p class="help-text">
+                Si aún no se ha aprobado, este campo aparecerá vacío.
+              </p>
+            </div>
+
+            <div class="field">
+              <label>Plazo máximo de entrega</label>
+              <input id="d_due_date" type="text" readonly>
+            </div>
+
+            <div class="field">
+              <label>Fechas</label>
+              <div id="d_dates" class="help-text"></div>
+            </div>
+
+          </div>
+        </div>
+
       </div>
     </div>
   </main>
@@ -398,12 +505,66 @@
         });
       }
 
+      // 7.1) Cargar almacenes para mostrar nombres en detalle
+      const { data: warehouses, error: whError } = await supa
+        .from('warehouses')
+        .select('id, name');
+      if (whError) console.error('Error cargando almacenes:', whError);
+
+      const warehousesById = {};
+      (warehouses || []).forEach(w => { warehousesById[w.id] = w; });
+
       // 8) Listar solicitudes del usuario actual
       const tbody = document.getElementById('sol-tbody');
+
+      const solEmpty = document.getElementById('sol-empty');
+      const solDetailPanel = document.getElementById('sol-detail-panel');
+
+      const dType      = document.getElementById('d_type');
+      const dItem      = document.getElementById('d_item');
+      const dQty       = document.getElementById('d_quantity');
+      const dStatus    = document.getElementById('d_status');
+      const dWarehouse = document.getElementById('d_warehouse');
+      const dDueDate   = document.getElementById('d_due_date');
+      const dDates     = document.getElementById('d_dates');
+
+      let myRequests = [];
+      let selectedId = null;
 
       function renderTipo(tipo) {
         if (!tipo) return '-';
         return tipo === 'compra' ? 'Compra' : 'Venta';
+      }
+
+      function showDetail(r) {
+        solEmpty.style.display = 'none';
+        solDetailPanel.style.display = 'block';
+
+        const cm = r.commodities_master;
+        const itemName = cm
+          ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
+          : (r.item_id || '');
+
+        dType.value   = renderTipo(r.request_type);
+        dItem.value   = itemName;
+        dQty.value    = r.quantity;
+        dStatus.value = r.status || 'pendiente';
+
+        const wh = r.warehouse_id ? warehousesById[r.warehouse_id] : null;
+        dWarehouse.value = wh ? wh.name : 'No asignado';
+
+        dDueDate.value = r.due_date
+          ? new Date(r.due_date).toLocaleDateString()
+          : 'Sin definir';
+
+        const creado    = r.created_at   ? new Date(r.created_at).toLocaleString()   : 'desconocido';
+        const aprobado  = r.approved_at  ? new Date(r.approved_at).toLocaleString()  : null;
+        const completado= r.completed_at ? new Date(r.completed_at).toLocaleString() : null;
+
+        let timeline = `Creada: ${creado}`;
+        if (aprobado)   timeline += ` · Aprobada: ${aprobado}`;
+        if (completado) timeline += ` · Completada: ${completado}`;
+        dDates.textContent = timeline;
       }
 
       async function loadMyRequests() {
@@ -418,6 +579,11 @@
             quantity,
             status,
             created_at,
+            warehouse_id,
+            due_date,
+            approved_at,
+            completed_at,
+            requester_discord_id,
             commodities_master(name, symbol)
           `)
           .eq('requester_discord_id', session.user.id)
@@ -428,45 +594,33 @@
           return;
         }
 
-        (reqs || []).forEach(r => {
+        myRequests = reqs || [];
+
+        myRequests.forEach(r => {
           const tr = document.createElement('tr');
 
-          const tdId = document.createElement('td');
-          tdId.textContent = `#${r.id}`;
-
-          const tdTipo = document.createElement('td');
-          const spanTipo = document.createElement('span');
-          spanTipo.className = 'tipo-chip ' + (r.request_type || '');
-          spanTipo.textContent = renderTipo(r.request_type);
-          tdTipo.appendChild(spanTipo);
-
-          const tdItem = document.createElement('td');
           const cm = r.commodities_master;
-          tdItem.textContent = cm
+          const itemName = cm
             ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
-            : '-';   // ❌ nunca mostramos el uuid
+            : r.item_id || '-';
 
-          const tdQty = document.createElement('td');
-          tdQty.textContent = r.quantity;
-
-          const tdStatus = document.createElement('td');
-          const span = document.createElement('span');
           const st = r.status || 'pendiente';
-          span.className = 'badge-status ' + st;
-          span.textContent = st;
-          tdStatus.appendChild(span);
 
-          const tdDate = document.createElement('td');
-          tdDate.textContent = r.created_at
-            ? new Date(r.created_at).toLocaleString()
-            : '-';
+          tr.innerHTML = `
+            <td>#${r.id}</td>
+            <td><span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span></td>
+            <td>${itemName}</td>
+            <td>${r.quantity}</td>
+            <td><span class="badge-status ${st}">${st}</span></td>
+            <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
+          `;
 
-          tr.appendChild(tdId);
-          tr.appendChild(tdTipo);
-          tr.appendChild(tdItem);
-          tr.appendChild(tdQty);
-          tr.appendChild(tdStatus);
-          tr.appendChild(tdDate);
+          tr.addEventListener('click', () => {
+            selectedId = r.id;
+            [...tbody.querySelectorAll('tr')].forEach(row => row.classList.remove('selected'));
+            tr.classList.add('selected');
+            showDetail(r);
+          });
 
           tbody.appendChild(tr);
         });
