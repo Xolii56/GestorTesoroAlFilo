@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Departamento del Tesoro — Panel</title>
+  <title>Departamento del Tesoro — Registro</title>
   <link rel="stylesheet" href="./style.css"/>
 
   <!-- Supabase + módulos -->
@@ -13,123 +13,244 @@
   <script src="./modules/layout.js" defer></script>
 
   <style>
-    main.tesoro-main {
+    main.reg-main {
       padding: 1.5rem;
       max-width: 1200px;
       margin: 0 auto;
     }
 
-    .modules-grid {
+    .reg-layout {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 1.2rem;
-      margin-top: 2rem;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+      gap: 1.3rem;
     }
 
-    .module-card {
-      cursor: pointer;
-      transition: transform .15s ease-out, box-shadow .15s ease-out, border-color .15s;
-      border-radius: 0.75rem;
-      padding: 1.2rem;
+    @media (max-width: 900px) {
+      .reg-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
 
-    .module-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 26px rgba(0,0,0,0.45);
-      border-color: rgba(120,200,255,0.45);
+    .reg-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: .75rem;
+      flex-wrap: wrap;
+      margin-bottom: .6rem;
+      align-items: center;
     }
 
-    .module-chip {
-      font-size: .75rem;
-      padding: .15rem .55rem;
+    .reg-toolbar select,
+    .reg-toolbar input[type="search"] {
+      padding: 0.35rem 0.5rem;
       border-radius: 999px;
-      opacity: .8;
-      border: 1px solid rgba(255,255,255,0.25);
-      margin-bottom: .4rem;
-      display: inline-block;
+      border: 1px solid rgba(148,163,184,0.7);
+      background: #020617;
+      color: #e5e7eb;
+      font-size: .85rem;
     }
 
-    .module-card h3 {
-      margin: 0 0 .4rem;
-    }
-
-    .module-card p {
-      margin: 0;
-      opacity: .75;
+    .reg-table {
+      width: 100%;
+      border-collapse: collapse;
       font-size: .9rem;
-      line-height: 1.3rem;
     }
 
-    /* Estado deshabilitado por permisos */
-    .module-card.disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-      filter: grayscale(0.4);
-      border-color: rgba(248, 113, 113, 0.6); /* rojizo suave */
+    .reg-table thead {
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      opacity: .8;
     }
 
-    .module-card.disabled:hover {
-      transform: none;
-      box-shadow: none;
+    .reg-table th,
+    .reg-table td {
+      padding: 0.35rem 0.4rem;
+      border-bottom: 1px solid rgba(148,163,184,0.25);
+    }
+
+    .reg-table tbody tr {
+      cursor: pointer;
+      transition: background .12s ease-out;
+    }
+
+    .reg-table tbody tr:hover {
+      background: rgba(15,23,42,0.9);
+    }
+
+    .reg-table tbody tr.selected {
+      background: rgba(56,189,248,0.18);
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.1rem 0.55rem;
+      border-radius: 999px;
+      font-size: .75rem;
+      border: 1px solid rgba(148,163,184,0.7);
+    }
+
+    .badge-status.pendiente { border-color: rgba(250,204,21,0.9); }
+    .badge-status.aprobada  { border-color: rgba(34,197,94,0.9); }
+    .badge-status.rechazada { border-color: rgba(248,113,113,0.9); }
+    .badge-status.completada{ border-color: rgba(56,189,248,0.9); }
+
+    .tipo-chip {
+      display:inline-block;
+      padding:0.08rem 0.45rem;
+      border-radius:999px;
+      font-size:.7rem;
+      border:1px solid rgba(148,163,184,0.9);
+      margin-left:.25rem;
+      opacity:.85;
+    }
+
+    .tipo-chip.compra { border-color: rgba(34,197,94,0.9); }
+    .tipo-chip.venta  { border-color: rgba(248,113,113,0.9); }
+
+    .reg-detail .field {
+      margin-bottom: .7rem;
+    }
+
+    .reg-detail label {
+      display: block;
+      font-size: .8rem;
+      opacity: .8;
+      margin-bottom: .2rem;
+    }
+
+    .reg-detail input,
+    .reg-detail textarea {
+      width: 100%;
+      padding: 0.4rem 0.5rem;
+      border-radius: 0.4rem;
+      border: 1px solid rgba(148,163,184,0.8);
+      background: #020617;
+      color: #e5e7eb;
+      font-size: .9rem;
+    }
+
+    .reg-detail textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    .reg-detail input[readonly],
+    .reg-detail textarea[readonly] {
+      opacity:.85;
+    }
+
+    .help-text {
+      font-size: .75rem;
+      opacity: .7;
+      margin-top: .2rem;
     }
   </style>
 </head>
 
 <body>
+<div id="site-header"></div>
 
-  <!-- Aquí se inyecta components/header.html -->
-  <div id="site-header"></div>
-
-  <main class="tesoro-main">
-    <h2>Panel del Departamento del Tesoro</h2>
-    <p style="opacity:.8;margin-top:.25rem">Selecciona un módulo.</p>
-
-    <div class="modules-grid">
-
-      <div class="card module-card" data-module="solicitudes">
-        <span class="module-chip">Operaciones</span>
-        <h3>Solicitudes</h3>
-        <p>Crear y consultar solicitudes de retirada, préstamo o consumo.</p>
-      </div>
-
-      <div class="card module-card" data-module="revision">
-        <span class="module-chip">Encargados</span>
-        <h3>Revisión</h3>
-        <p>Bandeja para aprobar, denegar o modificar solicitudes.</p>
-      </div>
-
-      <div class="card module-card" data-module="inventario">
-        <span class="module-chip">Stock</span>
-        <h3>Inventario</h3>
-        <p>Listado y estado del stock general del Tesoro.</p>
-      </div>
-
-      <div class="card module-card" data-module="almacenes">
-        <span class="module-chip">Logística</span>
-        <h3>Almacenes</h3>
-        <p>Gestión de ubicaciones, hangares y contenedores.</p>
-      </div>
-
-      <div class="card module-card" data-module="registro">
-        <span class="module-chip">Auditoría</span>
-        <h3>Registro</h3>
-        <p>Histórico de movimientos y trazabilidad completa.</p>
-      </div>
-
-      <div class="card module-card" data-module="calendario">
-        <span class="module-chip">Planificación</span>
-        <h3>Calendario</h3>
-        <p>Vista de calendario con los movimientos distribuidos por el día en que se producen.</p>
-      </div>
-
-      <div class="card module-card" data-module="usuarios">
-        <span class="module-chip">Administración</span>
-        <h3>Usuarios</h3>
-        <p>Gestión de usuarios, permisos internos del Tesoro y datos de cada miembro.</p>
-      </div>
-
+<main class="reg-main">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
+    <div>
+      <h2>Registro de solicitudes</h2>
+      <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
+        Log histórico de todas las solicitudes del Tesoro (abiertas y cerradas). Solo lectura.
+      </p>
     </div>
-  </main>
+    <button type="button" class="btn btn-secondary" onclick="window.location.href='./app_ui.html'">
+      ← Volver al panel
+    </button>
+  </div>
+
+  <div class="reg-layout">
+    <!-- LISTA -->
+    <div class="card">
+      <div class="reg-toolbar">
+        <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;">
+          <select id="filtro-estado">
+            <option value="todas">Todas</option>
+            <option value="pendiente">Pendientes</option>
+            <option value="aprobada">Aprobadas</option>
+            <option value="rechazada">Rechazadas</option>
+            <option value="completada">Completadas</option>
+          </select>
+          <input type="search" id="buscador" placeholder="Filtrar por ítem o usuario..."/>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;">
+          <span class="help-text">Solo lectura — log completo.</span>
+          <span class="help-text" id="reg-debug" style="font-style:italic;"></span>
+        </div>
+      </div>
+
+      <div style="max-height:460px;overflow:auto;">
+        <table class="reg-table">
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>Tipo</th>
+            <th>Ítem</th>
+            <th>Cant.</th>
+            <th>Solicitante</th>
+            <th>Estado</th>
+            <th>Creada</th>
+          </tr>
+          </thead>
+          <tbody id="reg-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DETALLE (solo lectura) -->
+    <div class="card reg-detail">
+      <h3 style="margin-top:0;">Detalle de solicitud</h3>
+      <p id="reg-empty" class="help-text">
+        Selecciona una solicitud en la tabla para ver los detalles.
+      </p>
+
+      <div id="reg-detail-panel" style="display:none;">
+        <div class="field">
+          <label>Tipo de solicitud</label>
+          <input id="d_type" type="text" readonly/>
+        </div>
+        <div class="field">
+          <label>Ítem</label>
+          <input id="d_item" type="text" readonly/>
+        </div>
+        <div class="field">
+          <label>Cantidad</label>
+          <input id="d_quantity" type="number" readonly/>
+        </div>
+        <div class="field">
+          <label>Solicitante</label>
+          <input id="d_requester" type="text" readonly/>
+        </div>
+        <div class="field">
+          <label>Estado actual</label>
+          <input id="d_status" type="text" readonly/>
+        </div>
+        <div class="field">
+          <label>Fechas</label>
+          <div id="d_dates" class="help-text"></div>
+        </div>
+        <div class="field">
+          <label>Almacén / Lugar de transacción</label>
+          <input id="d_warehouse" type="text" readonly/>
+        </div>
+        <div class="field">
+          <label>Plazo máximo de entrega</label>
+          <input id="d_due_date" type="text" readonly/>
+        </div>
+        <div class="field">
+          <label>Firmas</label>
+          <textarea id="d_signatures" readonly></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
 
 <script type="module">
   import { getOrgStatus } from './modules/profile.js';
@@ -137,141 +258,210 @@
   document.addEventListener('DOMContentLoaded', async () => {
     const { supa } = window;
 
-    // --- 1) Comprobar sesión ---
+    const debugEl = document.getElementById('reg-debug');
+
+    // 1) Sesión
     const { data: { session } } = await supa.auth.getSession();
     if (!session) {
+      debugEl.textContent = 'Sin sesión → redirigiendo a login.';
       window.location.href = './index.html';
       return;
     }
 
-    // --- 2) Comprobar rol de organización permitido ---
-    const status = await getOrgStatus();
-    if (!status || !['miembro','daga','espada','admin'].includes(status)) {
+    // 2) org_status
+    const orgStatus = await getOrgStatus();
+    if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
+      debugEl.textContent = 'org_status no válido, cerrando sesión.';
       await supa.auth.signOut();
       window.location.href = './index.html';
       return;
     }
 
-    // --- 3) Cargar header existente ---
+    // 3) Header
     await loadHeader('app');
+    initHeaderUserMenu(
+      session,
+      async () => {
+        await supa.auth.signOut();
+        window.location.href = "./index.html";
+      },
+      () => window.location.href = './perfil.html'
+    );
 
-    // --- 4) Inicializar menú usuario del header ---
-    if (typeof window.initHeaderUserMenu === 'function') {
-      window.initHeaderUserMenu(
-        session,
-        async () => {
-          await supa.auth.signOut();
-          window.location.href = "./index.html";
-        },
-        () => {
-          window.location.href = './perfil.html';
-        }
-      );
-    }
-
-    // --- 5) Obtener rol interno del usuario ---
-    const { data: userRow, error: userError } = await supa
+    // 4) Datos auxiliares: usuarios y almacenes
+    const { data: users, error: usersError } = await supa
       .from('users')
-      .select('tesoro_internal_role')
-      .eq('id', session.user.id)
-      .maybeSingle();
+      .select('id, handle_name, discord_username, discord_user_id');
 
-    if (userError) {
-      console.error('Error leyendo tesoro_internal_role:', userError);
+    if (usersError) {
+      console.error('Error leyendo users en registro:', usersError);
     }
 
-    let internalRole = userRow?.tesoro_internal_role || null;
-    if (typeof internalRole === 'string') internalRole = internalRole.trim();
-
-    // --- 6) Obtener permisos de ese rol desde roles_app ---
-    let roleRow = null;
-
-    if (internalRole) {
-      const asNumber = Number(internalRole);
-      if (!Number.isNaN(asNumber) && internalRole !== '') {
-        const { data, error } = await supa
-          .from('roles_app')
-          .select('*')
-          .eq('id', asNumber)
-          .maybeSingle();
-        if (!error) roleRow = data;
-      }
-
-      if (!roleRow) {
-        const { data, error } = await supa
-          .from('roles_app')
-          .select('*')
-          .ilike('role_name', internalRole)
-          .maybeSingle();
-        if (!error) roleRow = data;
-      }
-    }
-
-    const permsByModule = {};
-    if (roleRow) {
-      for (const [key, value] of Object.entries(roleRow)) {
-        if (['id', 'role_name', 'created_at', 'updated_at'].includes(key)) continue;
-        const normKey = key.toLowerCase();
-        permsByModule[normKey] = value;
-      }
-    }
-
-    // --- 7) Aplicar permisos + navegación a módulos ---
-    document.querySelectorAll('.module-card').forEach(card => {
-      const mod = card.getAttribute('data-module'); // ej: "almacenes"
-      const normMod = mod.toLowerCase();
-
-      const level = permsByModule.hasOwnProperty(normMod)
-        ? (permsByModule[normMod] ?? 0)
-        : 0;
-
-      if (!level || level === 0) {
-        card.classList.add('disabled');
-      }
-
-      card.addEventListener('click', () => {
-        const currentLevel = permsByModule.hasOwnProperty(normMod)
-          ? (permsByModule[normMod] ?? 0)
-          : 0;
-
-        if (!currentLevel || currentLevel === 0) {
-          alert('No tienes acceso a este módulo.');
-          return;
-        }
-
-        // Rutas reales según módulo
-        if (mod === 'solicitudes') {
-          window.location.href = './solicitudes.html';
-          return;
-        }
-        if (mod === 'revision') {
-          window.location.href = './revision.html';
-          return;
-        }
-        if (mod === 'usuarios') {
-          window.location.href = './usuarios.html';
-          return;
-        }
-        if (mod === 'almacenes') {
-          window.location.href = './almacenes.html';
-          return;
-        }
-        if (mod === 'registro') {
-          window.location.href = './registro.html';
-          return;
-        }
-
-
-        // Placeholder para el resto hasta que los implementemos
-        if (mod === 'inventario' || mod === 'calendario') {
-          alert(`El módulo "${mod}" todavía no está implementado (nivel ${currentLevel}).`);
-          return;
-        }
-
-        // Fallback por si añades nuevos módulos sin lógica aún
-        alert(`Módulo "${mod}" aún no está implementado (nivel ${currentLevel}).`);
-      });
+    const usersByDiscordId = {};
+    (users || []).forEach(u => {
+      const did = u.discord_user_id || u.id;
+      usersByDiscordId[did] = u;
     });
+
+    const { data: warehouses, error: whError } = await supa
+      .from('warehouses')
+      .select('id, name')
+      .order('name', { ascending: true });
+
+    if (whError) {
+      console.error('Error leyendo warehouses en registro:', whError);
+    }
+
+    const warehousesById = {};
+    (warehouses || []).forEach(w => { warehousesById[w.id] = w; });
+
+    // 5) DOM
+    const tbody      = document.getElementById('reg-tbody');
+    const filtro     = document.getElementById('filtro-estado');
+    const buscador   = document.getElementById('buscador');
+    const emptyMsg   = document.getElementById('reg-empty');
+    const detailPane = document.getElementById('reg-detail-panel');
+
+    const dType       = document.getElementById('d_type');
+    const dItem       = document.getElementById('d_item');
+    const dQty        = document.getElementById('d_quantity');
+    const dReq        = document.getElementById('d_requester');
+    const dStatus     = document.getElementById('d_status');
+    const dDates      = document.getElementById('d_dates');
+    const dWarehouse  = document.getElementById('d_warehouse');
+    const dDueDate    = document.getElementById('d_due_date');
+    const dSignatures = document.getElementById('d_signatures');
+
+    let allRequests = [];
+    let selectedId  = null;
+
+    function renderTipo(tipo) {
+      if (!tipo) return '-';
+      return tipo === 'compra' ? 'Compra' : 'Venta';
+    }
+
+    // 6) Cargar TODAS las solicitudes
+    async function loadRequests() {
+      const { data: reqs, error: reqError } = await supa
+        .from('requests')
+        .select(`
+          id,
+          request_type,
+          item_id,
+          quantity,
+          status,
+          created_at,
+          requester_discord_id,
+          warehouse_id,
+          due_date,
+          approver_discord_id,
+          approved_at,
+          commodities_master ( name, symbol )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (reqError) {
+        console.error('Error cargando requests en registro:', reqError);
+        if (debugEl) debugEl.textContent = 'Error en SELECT de requests: ' + reqError.message;
+        return;
+      }
+
+      allRequests = reqs || [];
+      if (debugEl) debugEl.textContent = `Solicitudes cargadas: ${allRequests.length}`;
+      renderTable();
+    }
+
+    function renderTable() {
+      tbody.innerHTML = '';
+
+      const estado = filtro.value;
+      const term   = (buscador.value || '').toLowerCase();
+
+      allRequests.forEach(r => {
+        const st = r.status || 'pendiente';
+        if (estado !== 'todas' && st !== estado) return;
+
+        const cm = r.commodities_master;
+        const itemName = cm
+          ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
+          : (r.item_id || '');
+
+        const requester = usersByDiscordId[r.requester_discord_id] || {};
+        const reqName   =
+          requester.handle_name ||
+          requester.discord_username ||
+          r.requester_discord_id ||
+          '';
+
+        if (term) {
+          const search = (itemName + ' ' + reqName).toLowerCase();
+          if (!search.includes(term)) return;
+        }
+
+        const tr = document.createElement('tr');
+        tr.dataset.id = r.id;
+
+        tr.innerHTML = `
+          <td>#${r.id}</td>
+          <td><span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span></td>
+          <td>${itemName}</td>
+          <td>${r.quantity}</td>
+          <td>${reqName}</td>
+          <td><span class="badge-status ${st}">${st}</span></td>
+          <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
+        `;
+
+        tr.addEventListener('click', () => {
+          selectedId = r.id;
+          [...tbody.querySelectorAll('tr')].forEach(row => row.classList.remove('selected'));
+          tr.classList.add('selected');
+          showDetail(r, reqName);
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function showDetail(r, requesterName) {
+      emptyMsg.style.display   = 'none';
+      detailPane.style.display = 'block';
+
+      const cm = r.commodities_master;
+      const itemName = cm
+        ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
+        : (r.item_id || '');
+
+      dType.value   = renderTipo(r.request_type);
+      dItem.value   = itemName;
+      dQty.value    = r.quantity;
+      dReq.value    = requesterName;
+      dStatus.value = r.status || 'pendiente';
+
+      const creado   = r.created_at  ? new Date(r.created_at).toLocaleString() : 'desconocido';
+      const aprobado = r.approved_at ? new Date(r.approved_at).toLocaleString() : null;
+
+      let fechasTxt = `Creada: ${creado}`;
+      if (aprobado) fechasTxt += ` · Aprobada: ${aprobado}`;
+      dDates.textContent = fechasTxt;
+
+      const wh = warehousesById[r.warehouse_id];
+      dWarehouse.value = wh ? wh.name : (r.warehouse_id || '-');
+
+      dDueDate.value = r.due_date || '-';
+
+      // solo mostramos quién la aprobó
+      const approver = usersByDiscordId[r.approver_discord_id] || null;
+      const approverName = approver
+        ? (approver.handle_name || approver.discord_username || approver.discord_user_id)
+        : (r.approver_discord_id || '-');
+
+      dSignatures.value = `Aprobada por: ${approverName}`;
+    }
+
+    filtro.addEventListener('change', renderTable);
+    buscador.addEventListener('input', renderTable);
+
+    await loadRequests();
   });
 </script>
 
