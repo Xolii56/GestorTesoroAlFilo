@@ -546,7 +546,7 @@
 
     await loadRequests();
 
-    // 6) Aprobar / Rechazar (siempre rellenando approver_discord_id)
+    // ── 6) Aprobar / Rechazar ───────────────────────
     async function updateStatus(newStatus) {
       if (readOnly) {
         alert('Permisos de solo lectura.');
@@ -556,11 +556,10 @@
         alert('Selecciona una solicitud primero.');
         return;
       }
-
-      const discordId =
-        session.user.user_metadata?.provider_id ||
-        session.user.id; // fallback
-
+    
+      // Usamos SIEMPRE el UID de Supabase (auth.uid()), no el provider_id de Discord
+      const approverUid = session.user.id;
+    
       if (newStatus === 'aprobada') {
         const wh  = whSelect.value;
         const due = dDueDate.value;
@@ -568,42 +567,42 @@
           alert('Debes indicar almacén y plazo máximo de entrega.');
           return;
         }
-
+    
         const { error } = await supa
           .from('requests')
           .update({
             status: 'aprobada',
             warehouse_id: wh,
             due_date: due,
-            approver_discord_id: discordId,
+            approver_discord_id: approverUid,    // aquí guardamos el UID de Supabase
             approved_at: new Date().toISOString()
           })
           .eq('id', selectedId);
-
+    
         if (error) {
-          console.error('Error actualizando solicitud:', error);
-          alert('No se ha podido aprobar la solicitud.');
+          console.error('Error actualizando solicitud (aprobar):', error);
+          alert('No se ha podido aprobar la solicitud.\n\n' + error.message);
           return;
         }
       }
-
+    
       if (newStatus === 'rechazada') {
         const { error } = await supa
           .from('requests')
           .update({
             status: 'rechazada',
-            approver_discord_id: discordId,
+            approver_discord_id: approverUid,    // también guardamos quién la rechazó
             approved_at: new Date().toISOString()
           })
           .eq('id', selectedId);
-
+    
         if (error) {
-          console.error('Error rechazando solicitud:', error);
-          alert('No se ha podido rechazar la solicitud.');
+          console.error('Error actualizando solicitud (rechazar):', error);
+          alert('No se ha podido rechazar la solicitud.\n\n' + error.message);
           return;
         }
       }
-
+    
       await loadRequests();
       const updated = allRequests.find(x => x.id === selectedId);
       if (updated) {
@@ -611,9 +610,10 @@
         const reqName = requester?.handle_name || requester?.discord_username || updated.requester_discord_id;
         showDetail(updated, reqName);
       }
-
+    
       alert(`Solicitud marcada como ${newStatus}.`);
     }
+
 
     btnApprove.addEventListener('click', () => updateStatus('aprobada'));
     btnReject .addEventListener('click', () => updateStatus('rechazada'));
