@@ -485,55 +485,55 @@
     let modalMode = 'create'; // 'create' | 'edit'
 
     // 5) Cargar almacenes
+        // 5) Cargar almacenes (versión tolerante con nombres de columnas)
     async function loadWarehouses() {
       const { data, error } = await supa
         .from('warehouses')
-        .select('id, name, system, location, manager')
+        .select('*')           // 👈 en vez de 'id, name, system, location, manager'
         .order('name', { ascending: true });
 
       if (error) {
         console.error('Error cargando almacenes:', error);
         allWarehouses = [];
       } else {
-        allWarehouses = data || [];
+        // Normalizamos aquí por si tus columnas se llaman distinto
+        allWarehouses = (data || []).map(w => ({
+          id: w.id,
+          // nombre del almacén
+          name:
+            w.name ||
+            w.nombre ||
+            w.alias ||
+            `Almacén ${w.id}`,
+
+          // sistema / zona
+          system:
+            w.system ||
+            w.sistema ||
+            w.system_name ||
+            w.star_system ||
+            '',
+
+          // ubicación concreta
+          location:
+            w.location ||
+            w.ubicacion ||
+            w.place ||
+            w.zone ||
+            '',
+
+          // encargado / responsable
+          manager:
+            w.manager ||
+            w.encargado ||
+            w.responsable ||
+            w.encargado_nombre ||
+            ''
+        }));
       }
+
       renderWarehouseList();
       updateDetailVisibility();
-    }
-
-    function renderWarehouseList() {
-      whListEl.innerHTML = '';
-
-      if (!allWarehouses.length) {
-        whEmptyHintEl.style.display = 'block';
-        selectedWarehouseId = null;
-        updateDetailVisibility();
-        return;
-      }
-
-      whEmptyHintEl.style.display = 'none';
-
-      allWarehouses.forEach(wh => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        const isActive = wh.id === selectedWarehouseId;
-        btn.className = 'almacen-pill' + (isActive ? ' active' : '');
-        btn.textContent = wh.name;
-        btn.addEventListener('click', () => {
-          // Toggle: si estaba activo, lo desactivamos; si no, lo activamos
-          if (selectedWarehouseId === wh.id) {
-            selectedWarehouseId = null;
-            updateDetailVisibility();
-            renderWarehouseList();
-            return;
-          }
-          selectedWarehouseId = wh.id;
-          renderWarehouseList();
-          updateDetailVisibility();
-          loadWarehouseDetail();
-        });
-        whListEl.appendChild(btn);
-      });
     }
 
     function updateDetailVisibility() {
