@@ -334,7 +334,6 @@
 
     const usersByDiscordId = {};
     const usersById = {};
-
     (users || []).forEach(u => {
       usersById[u.id] = u;
       if (u.discord_user_id) {
@@ -445,9 +444,10 @@
 
         const reqName = resolveUserNameFromRequesterId(r.requester_discord_id);
 
+        // nombre de almacén solo para búsqueda (no como columna)
         const whName = r.warehouse_id
           ? (warehousesById[r.warehouse_id]?.name || r.warehouse_id)
-          : '-';
+          : '';
 
         if (term) {
           const search = (itemName + ' ' + reqName + ' ' + whName).toLowerCase();
@@ -457,6 +457,8 @@
         const tr = document.createElement('tr');
         tr.dataset.id = r.id;
 
+        // 👇 AHORA 7 COLUMNAS, CUADRANDO CON TU THEAD:
+        // ID · Tipo · Ítem · Cant. · Solicitante · Estado · Creada
         tr.innerHTML = `
           <td>#${r.id}</td>
           <td><span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span></td>
@@ -464,7 +466,6 @@
           <td>${r.quantity}</td>
           <td>${reqName}</td>
           <td><span class="badge-status ${st}">${st}</span></td>
-          <td>${whName}</td>
           <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
         `;
 
@@ -472,14 +473,14 @@
           selectedId = r.id;
           [...tbody.querySelectorAll('tr')].forEach(row => row.classList.remove('selected'));
           tr.classList.add('selected');
-          showDetail(r, reqName, whName);
+          showDetail(r);
         });
 
         tbody.appendChild(tr);
       });
     }
 
-    function showDetail(r, reqName, whName) {
+    function showDetail(r) {
       regEmpty.style.display = 'none';
       regPanel.style.display = 'block';
 
@@ -488,21 +489,26 @@
         ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
         : (r.item_id || '');
 
+      const reqName = resolveUserNameFromRequesterId(r.requester_discord_id);
+      const whName = r.warehouse_id
+        ? (warehousesById[r.warehouse_id]?.name || r.warehouse_id)
+        : '-';
+
       dType.value   = renderTipo(r.request_type);
       dItem.value   = itemName;
       dQty.value    = r.quantity;
       dReq.value    = reqName;
       dStatus.value = r.status || 'pendiente';
-      dWh.value     = whName || '-';
+      dWh.value     = whName;
 
       const creado   = r.created_at  ? new Date(r.created_at).toLocaleString()  : 'desconocido';
       const aprobado = r.approved_at ? new Date(r.approved_at).toLocaleString() : null;
+
       dDates.textContent = aprobado
         ? `Creada: ${creado} · Aprobada: ${aprobado}`
         : `Creada: ${creado}`;
 
-      dDueDate.value = r.due_date || '-';
-
+      dDueDate.value = r.due_date || '';
       dApprover.value = resolveUserNameFromApproverId(r.approver_discord_id);
     }
 
