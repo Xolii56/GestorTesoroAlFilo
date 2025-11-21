@@ -1,4 +1,4 @@
-<!doctype html>
+<!doctype html> 
 <html lang="es">
 <head>
   <meta charset="utf-8"/>
@@ -230,6 +230,12 @@
   <script type="module">
     import { getOrgStatus } from './modules/profile.js';
 
+    // Helper para limpiar el #0 final de los usuarios de Discord
+    function cleanDiscordUsername(raw) {
+      if (!raw) return '';
+      return raw.endsWith('#0') ? raw.slice(0, -2) : raw;
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
       const { supa } = window;
 
@@ -297,15 +303,16 @@
       const metaFechasEl    = document.getElementById('perfil-meta-fechas');
 
       const avatar = userRow.discord_avatar_url || './assets/logo.png';
-      const handle = userRow.handle_name || userRow.discord_username || '(sin nombre)';
+      const discordUsernameClean = cleanDiscordUsername(userRow.discord_username || '');
+      const handle = userRow.handle_name || discordUsernameClean || '(sin nombre)';
       const org    = userRow.org_status || 'afiliado';
 
       avatarEl.src = avatar;
       handleEl.textContent = handle;
       orgEl.textContent = org;
 
-      handleInp.value       = handle;
-      discordUserInp.value  = userRow.discord_username || '';
+      handleInp.value       = userRow.handle_name || '';
+      discordUserInp.value  = discordUsernameClean;
       rolTesoroInp.value    = userRow.tesoro_internal_role || '';
       gremiosInp.value      = (userRow.gremios && userRow.gremios.length > 0)
         ? userRow.gremios.join(', ')
