@@ -556,10 +556,8 @@
         alert('Selecciona una solicitud primero.');
         return;
       }
-    
-      // Usamos SIEMPRE el UID de Supabase (auth.uid()), no el provider_id de Discord
-      const approverUid = session.user.id;
-    
+
+      // Aprobación: requiere almacén + fecha
       if (newStatus === 'aprobada') {
         const wh  = whSelect.value;
         const due = dDueDate.value;
@@ -567,50 +565,55 @@
           alert('Debes indicar almacén y plazo máximo de entrega.');
           return;
         }
-    
+
         const { error } = await supa
           .from('requests')
           .update({
             status: 'aprobada',
             warehouse_id: wh,
             due_date: due,
-            approver_discord_id: approverUid,    // aquí guardamos el UID de Supabase
             approved_at: new Date().toISOString()
+            // 👆 Nada de discord_id, ni approver_discord_id, ni gaitas
           })
           .eq('id', selectedId);
-    
+
         if (error) {
-          console.error('Error actualizando solicitud (aprobar):', error);
-          alert('No se ha podido aprobar la solicitud.\n\n' + error.message);
+          console.error('Error actualizando solicitud:', error);
+          alert('No se ha podido aprobar la solicitud.\n\nDetalle: ' + error.message);
           return;
         }
       }
-    
+
+      // Rechazo
       if (newStatus === 'rechazada') {
         const { error } = await supa
           .from('requests')
           .update({
             status: 'rechazada',
-            approver_discord_id: approverUid,    // también guardamos quién la rechazó
             approved_at: new Date().toISOString()
           })
           .eq('id', selectedId);
-    
+
         if (error) {
-          console.error('Error actualizando solicitud (rechazar):', error);
-          alert('No se ha podido rechazar la solicitud.\n\n' + error.message);
+          console.error('Error rechazando solicitud:', error);
+          alert('No se ha podido rechazar la solicitud.\n\nDetalle: ' + error.message);
           return;
         }
       }
-    
+
+      // Recargar lista y detalle
       await loadRequests();
       const updated = allRequests.find(x => x.id === selectedId);
       if (updated) {
         const requester = usersById[updated.requester_discord_id];
-        const reqName = requester?.handle_name || requester?.discord_username || updated.requester_discord_id;
+        const reqName =
+          requester?.handle_name ||
+          requester?.discord_username ||
+          updated.requester_discord_id;
+
         showDetail(updated, reqName);
       }
-    
+
       alert(`Solicitud marcada como ${newStatus}.`);
     }
 
