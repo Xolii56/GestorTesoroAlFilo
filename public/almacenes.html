@@ -251,13 +251,12 @@
                   title="Añadir almacén">
             +
           </button>
-          <span id="wh-perms-label" class="help-text"></span>
         </div>
       </div>
     </div>
 
-    <!-- Bloque inferior: detalle del almacén -->
-    <div class="almacenes-layout" style="margin-top:1.2rem;">
+    <!-- Bloque inferior: detalle del almacén (se oculta si no hay selección) -->
+    <div id="wh-detail-block" class="almacenes-layout" style="margin-top:1.2rem;display:none;">
       <!-- Inventario -->
       <div class="card">
         <div class="block-header">
@@ -331,9 +330,24 @@
         </div>
 
         <div class="modal-field">
-          <label for="wh-notes-input">Notas internas (no guardadas por ahora)</label>
+          <label for="wh-system-input">Sistema</label>
+          <input id="wh-system-input" type="text" />
+        </div>
+
+        <div class="modal-field">
+          <label for="wh-location-input">Ubicación</label>
+          <input id="wh-location-input" type="text" />
+        </div>
+
+        <div class="modal-field">
+          <label for="wh-manager-input">Encargado</label>
+          <input id="wh-manager-input" type="text" />
+        </div>
+
+        <div class="modal-field">
+          <label for="wh-notes-input">Notas internas (local, de momento no se guardan)</label>
           <textarea id="wh-notes-input"
-                    placeholder="Espacio para anotar detalles operativos. (Solo local por ahora)"></textarea>
+                    placeholder="Espacio para anotar detalles operativos."></textarea>
         </div>
 
         <div class="modal-actions">
@@ -351,7 +365,6 @@
 <script type="module">
   import { getOrgStatus } from './modules/profile.js';
 
-  // Helper: limpia el #0 de los usuarios de Discord, por coherencia con el resto de la app
   function cleanDiscordUsername(raw) {
     if (!raw) return '';
     return raw.endsWith('#0') ? raw.slice(0, -2) : raw;
@@ -426,13 +439,6 @@
     }
     const readOnly = (whLevel === 1);
 
-    const permsLabel = document.getElementById('wh-perms-label');
-    if (permsLabel) {
-      permsLabel.textContent = readOnly
-        ? 'Permisos: solo lectura.'
-        : 'Permisos: gestión de almacenes habilitada.';
-    }
-
     // 3) Cache de usuarios para mostrar solicitante
     const { data: users, error: usersError } = await supa
       .from('users')
@@ -445,6 +451,7 @@
     // 4) Referencias DOM
     const whListEl           = document.getElementById('wh-list');
     const whEmptyHintEl      = document.getElementById('wh-empty-hint');
+    const whDetailBlockEl    = document.getElementById('wh-detail-block');
     const whSelectedNameEl   = document.getElementById('wh-selected-name');
     const whInvEmptyEl       = document.getElementById('wh-inventory-empty');
     const whInvWrapperEl     = document.getElementById('wh-inventory-wrapper');
@@ -467,6 +474,9 @@
     const modalTitleEl    = document.getElementById('warehouse-modal-title');
     const modalForm       = document.getElementById('warehouse-form');
     const whNameInput     = document.getElementById('wh-name-input');
+    const whSystemInput   = document.getElementById('wh-system-input');
+    const whLocationInput = document.getElementById('wh-location-input');
+    const whManagerInput  = document.getElementById('wh-manager-input');
     const whNotesInput    = document.getElementById('wh-notes-input');
     const modalCancelBtn  = document.getElementById('btn-modal-cancel');
 
@@ -478,7 +488,7 @@
     async function loadWarehouses() {
       const { data, error } = await supa
         .from('warehouses')
-        .select('id, name')
+        .select('id, name, system, location, manager')
         .order('name', { ascending: true });
 
       if (error) {
@@ -488,6 +498,7 @@
         allWarehouses = data || [];
       }
       renderWarehouseList();
+      updateDetailVisibility();
     }
 
     function renderWarehouseList() {
@@ -496,8 +507,7 @@
       if (!allWarehouses.length) {
         whEmptyHintEl.style.display = 'block';
         selectedWarehouseId = null;
-        whSelectedNameEl.textContent = '(ningún almacén seleccionado)';
-        resetDetailViews();
+        updateDetailVisibility();
         return;
       }
 
@@ -506,25 +516,38 @@
       allWarehouses.forEach(wh => {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'almacen-pill' + (wh.id === selectedWarehouseId ? ' active' : '');
+        const isActive = wh.id === selectedWarehouseId;
+        btn.className = 'almacen-pill' + (isActive ? ' active' : '');
         btn.textContent = wh.name;
         btn.addEventListener('click', () => {
+          // Toggle: si estaba activo, lo desactivamos; si no, lo activamos
+          if (selectedWarehouseId === wh.id) {
+            selectedWarehouseId = null;
+            updateDetailVisibility();
+            renderWarehouseList();
+            return;
+          }
           selectedWarehouseId = wh.id;
           renderWarehouseList();
+          updateDetailVisibility();
           loadWarehouseDetail();
         });
         whListEl.appendChild(btn);
       });
+    }
 
-      // Si no hay seleccionado, coge el primero
-      if (!selectedWarehouseId && allWarehouses.length > 0) {
-        selectedWarehouseId = allWarehouses[0].id;
-        renderWarehouseList();
-        loadWarehouseDetail();
+    function updateDetailVisibility() {
+      if (!selectedWarehouseId) {
+        whDetailBlockEl.style.display = 'none';
+        resetDetailViews();
+      } else {
+        whDetailBlockEl.style.display = 'grid';
       }
     }
 
     function resetDetailViews() {
+      whSelectedNameEl.textContent = '(ningún almacén seleccionado)';
+
       whInvEmptyEl.style.display   = 'block';
       whInvWrapperEl.style.display = 'none';
       whInvEmptyEl.textContent     = 'Selecciona un almacén para ver su inventario.';
@@ -532,18 +555,23 @@
       whReqEmptyEl.style.display   = 'block';
       whReqWrapperEl.style.display = 'none';
       whReqEmptyEl.textContent     = 'Selecciona un almacén para ver sus solicitudes.';
+
+      whInvBodyEl.innerHTML = '';
+      whReqBodyEl.innerHTML = '';
     }
 
     // 6) Cargar detalle de un almacén
     async function loadWarehouseDetail() {
       const wh = allWarehouses.find(w => w.id === selectedWarehouseId);
       if (!wh) {
-        whSelectedNameEl.textContent = '(ningún almacén seleccionado)';
         resetDetailViews();
         return;
       }
 
-      whSelectedNameEl.textContent = wh.name;
+      const extraInfo = [wh.system, wh.location].filter(Boolean).join(' · ');
+      whSelectedNameEl.textContent = extraInfo
+        ? `${wh.name} — ${extraInfo}`
+        : wh.name;
 
       // Inventario
       await loadWarehouseInventory(wh.id);
@@ -558,8 +586,7 @@
       whInvWrapperEl.style.display = 'none';
       whInvEmptyEl.textContent = 'Cargando inventario...';
 
-      // NOTA: ajusta esta consulta al esquema real de inventario por almacén.
-      // He supuesto una tabla warehouse_inventory con relación a commodities_master.
+      // Ajusta esta consulta a tu esquema real:
       const { data, error } = await supa
         .from('warehouse_inventory')
         .select('id, warehouse_id, quantity, commodities_master(name, symbol)')
@@ -667,13 +694,19 @@
 
       if (mode === 'create') {
         modalTitleEl.textContent = 'Nuevo almacén';
-        whNameInput.value = '';
-        whNotesInput.value = '';
+        whNameInput.value     = '';
+        whSystemInput.value   = '';
+        whLocationInput.value = '';
+        whManagerInput.value  = '';
+        whNotesInput.value    = '';
       } else {
         modalTitleEl.textContent = 'Editar almacén';
         const wh = allWarehouses.find(w => w.id === selectedWarehouseId);
-        whNameInput.value = wh ? wh.name : '';
-        whNotesInput.value = '';
+        whNameInput.value     = wh ? (wh.name || '')     : '';
+        whSystemInput.value   = wh ? (wh.system || '')   : '';
+        whLocationInput.value = wh ? (wh.location || '') : '';
+        whManagerInput.value  = wh ? (wh.manager || '')  : '';
+        whNotesInput.value    = '';
       }
 
       modalBackdrop.classList.add('open');
@@ -711,7 +744,11 @@
       e.preventDefault();
       if (readOnly) return;
 
-      const name = whNameInput.value.trim();
+      const name     = whNameInput.value.trim();
+      const system   = whSystemInput.value.trim()   || null;
+      const location = whLocationInput.value.trim() || null;
+      const manager  = whManagerInput.value.trim()  || null;
+
       if (!name) {
         alert('El nombre del almacén no puede estar vacío.');
         return;
@@ -720,7 +757,7 @@
       if (modalMode === 'create') {
         const { error } = await supa
           .from('warehouses')
-          .insert({ name });
+          .insert({ name, system, location, manager });
         if (error) {
           console.error('Error creando almacén:', error);
           alert('No se ha podido crear el almacén.');
@@ -733,7 +770,7 @@
         }
         const { error } = await supa
           .from('warehouses')
-          .update({ name })
+          .update({ name, system, location, manager })
           .eq('id', selectedWarehouseId);
         if (error) {
           console.error('Error actualizando almacén:', error);
