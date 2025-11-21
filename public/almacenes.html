@@ -13,23 +13,100 @@
   <script src="./modules/layout.js" defer></script>
 
   <style>
-    main.ware-main {
+    main.alm-main {
       padding: 1.5rem;
       max-width: 1200px;
       margin: 0 auto;
     }
 
-    .ware-header-line {
+    .card-inline {
+      padding: 1rem 1.2rem;
+      border-radius: 0.75rem;
+    }
+
+    /* Bloque 1: lista de almacenes */
+    .alm-header-row {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:1rem;
+      gap:.75rem;
+      flex-wrap:wrap;
+    }
+
+    .alm-tabs-row {
       display:flex;
       justify-content:space-between;
       align-items:center;
       gap:.75rem;
       flex-wrap:wrap;
-      margin-bottom:1rem;
+    }
+
+    .alm-tabs-list {
+      display:flex;
+      gap:.4rem;
+      flex-wrap:wrap;
+    }
+
+    .alm-tab-btn {
+      padding:0.32rem 0.8rem;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.7);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.85rem;
+      cursor:pointer;
+    }
+
+    .alm-tab-btn.active {
+      background:#38bdf8;
+      color:#0f172a;
+      border-color:#38bdf8;
+      font-weight:600;
+    }
+
+    .alm-add-btn {
+      width:32px;
+      height:32px;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      background:#22c55e;
+      color:#020617;
+      font-size:1.2rem;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-shrink:0;
+    }
+
+    .alm-add-btn:disabled {
+      opacity:.6;
+      cursor:not-allowed;
+    }
+
+    /* Bloque 2: detalle almacén */
+    #warehouse-panel {
+      margin-top:1.2rem;
+    }
+
+    .alm-detail-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:.75rem;
+      flex-wrap:wrap;
+      margin-bottom:.6rem;
+    }
+
+    .alm-detail-meta {
+      font-size:.8rem;
+      opacity:.8;
+      margin-top:.15rem;
     }
 
     .btn {
-      padding:0.35rem 0.9rem;
+      padding:0.35rem 0.85rem;
       border-radius:0.4rem;
       border:none;
       cursor:pointer;
@@ -45,191 +122,140 @@
       color:#020617;
       font-weight:600;
     }
-    .btn-danger {
-      background:#ef4444;
-      color:#f9fafb;
-      font-weight:600;
-    }
-    .btn-icon {
-      border-radius:999px;
-      width:32px;
-      height:32px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:1.2rem;
-      padding:0;
+    .btn-disabled {
+      opacity:.6;
+      cursor:not-allowed;
     }
 
-    /* Bloque 1: lista de almacenes */
-    .ware-list-card {
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:.75rem;
-    }
-
-    .ware-buttons {
-      display:flex;
-      flex-wrap:wrap;
-      gap:.45rem;
-      align-items:center;
-    }
-
-    .ware-btn {
-      padding:0.25rem 0.75rem;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,0.8);
-      background:#020617;
-      color:#e5e7eb;
-      font-size:.85rem;
-      cursor:pointer;
-      opacity:.85;
-      transition:background .12s ease-out, border-color .12s, opacity .12s;
-    }
-
-    .ware-btn:hover {
-      opacity:1;
-      border-color:rgba(56,189,248,0.85);
-    }
-
-    .ware-btn.active {
-      background:rgba(56,189,248,0.15);
-      border-color:rgba(56,189,248,0.95);
-      opacity:1;
-    }
-
-    .ware-subtitle {
-      font-size:.85rem;
-      opacity:.8;
-      margin-bottom:.35rem;
-    }
-
-    /* Bloque 2 */
-    #warehouse-panel {
-      margin-top:1.3rem;
-      display:none; /* oculto hasta que haya almacén seleccionado */
-    }
-
-    .ware-meta {
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:1rem;
-      flex-wrap:wrap;
-      margin-bottom:.8rem;
-    }
-
-    .ware-meta-left {
-      font-size:.85rem;
-      opacity:.9;
-      line-height:1.3rem;
-    }
-
-    .ware-meta-left strong {
-      opacity:1;
-    }
-
-    .ware-tabs {
+    /* Subpestañas (Inventario / Solicitudes) */
+    .alm-subtabs {
       display:flex;
       gap:.5rem;
-      border-bottom:1px solid rgba(30,64,175,0.7);
-      margin-bottom:.6rem;
+      border-bottom:1px solid rgba(148,163,184,0.35);
+      margin-bottom:.4rem;
     }
 
-    .ware-tab {
-      padding:0.3rem 0.8rem;
+    .alm-subtab-btn {
+      padding:0.3rem 0.65rem;
       border:none;
-      cursor:pointer;
-      font-size:.85rem;
       background:transparent;
-      color:#e5e7eb;
-      opacity:.7;
+      color:#9ca3af;
+      font-size:.85rem;
+      cursor:pointer;
       border-bottom:2px solid transparent;
     }
 
-    .ware-tab.active {
-      opacity:1;
-      border-bottom-color:#22c55e;
+    .alm-subtab-btn.active {
+      color:#e5e7eb;
+      border-bottom-color:#38bdf8;
+      font-weight:600;
     }
 
-    .ware-section {
-      display:none;
-    }
-
-    .ware-section.active {
-      display:block;
-    }
-
-    /* Tabla inventario */
-    .ware-table {
+    /* Tabla de inventario (la tuya, solo lectura) */
+    .alm-table {
       width:100%;
       border-collapse:collapse;
       font-size:.9rem;
     }
-    .ware-table thead {
+    .alm-table thead {
       font-size:.8rem;
       text-transform:uppercase;
       letter-spacing:.04em;
       opacity:.8;
     }
-    .ware-table th,
-    .ware-table td {
+    .alm-table th,
+    .alm-table td {
       padding:0.35rem 0.45rem;
-      border-bottom:1px solid rgba(148,163,184,0.26);
+      border-bottom:1px solid rgba(148,163,184,0.3);
     }
 
-    .badge-stock {
+    .estado-pill {
       display:inline-flex;
-      padding:0.08rem 0.45rem;
+      align-items:center;
+      padding:0.1rem 0.55rem;
       border-radius:999px;
       font-size:.75rem;
       border:1px solid rgba(148,163,184,0.8);
     }
-    .badge-stock.critico   { border-color:rgba(248,113,113,0.9); }
-    .badge-stock.seguro    { border-color:rgba(34,197,94,0.9); }
-    .badge-stock.excedente { border-color:rgba(56,189,248,0.9); }
+    .estado-pill.critico {
+      border-color:#ef4444;
+      color:#fecaca;
+    }
+    .estado-pill.seguro {
+      border-color:#22c55e;
+      color:#bbf7d0;
+    }
+    .estado-pill.excedente {
+      border-color:#eab308;
+      color:#fef9c3;
+    }
+
+    /* Tabla solicitudes */
+    .alm-req-table {
+      width:100%;
+      border-collapse:collapse;
+      font-size:.9rem;
+    }
+    .alm-req-table thead {
+      font-size:.8rem;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      opacity:.8;
+    }
+    .alm-req-table th,
+    .alm-req-table td {
+      padding:0.35rem 0.45rem;
+      border-bottom:1px solid rgba(148,163,184,0.3);
+    }
+
+    .badge-status {
+      display:inline-flex;
+      align-items:center;
+      padding:0.1rem 0.55rem;
+      border-radius:999px;
+      font-size:.75rem;
+      border:1px solid rgba(148,163,184,0.7);
+    }
+    .badge-status.pendiente { border-color:rgba(250,204,21,0.9); }
+    .badge-status.aprobada { border-color:rgba(34,197,94,0.9); }
+    .badge-status.rechazada { border-color:rgba(248,113,113,0.9); }
+    .badge-status.completada { border-color:rgba(56,189,248,0.9); }
 
     .help-text {
       font-size:.75rem;
-      opacity:.7;
-      margin-top:.2rem;
+      opacity:.75;
+      margin-top:.15rem;
     }
 
-    /* Modal almacén */
-    .modal-backdrop {
+    /* Modal edición almacén */
+    .alm-modal-backdrop {
       position:fixed;
       inset:0;
-      background:rgba(15,23,42,0.85);
+      background:rgba(15,23,42,0.8);
       display:flex;
       align-items:center;
       justify-content:center;
       z-index:50;
     }
-    .modal {
+    .alm-modal {
       background:#020617;
       border-radius:0.75rem;
       padding:1rem 1.2rem;
       max-width:420px;
       width:100%;
-      box-shadow:0 20px 45px rgba(0,0,0,0.8);
+      box-shadow:0 18px 40px rgba(0,0,0,0.75);
     }
-    .modal-header {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:.6rem;
-    }
-    .modal-fields .field {
+    .alm-form .field {
       margin-bottom:.7rem;
     }
-    .modal-fields label {
+    .alm-form label {
       display:block;
       font-size:.8rem;
       opacity:.8;
       margin-bottom:.2rem;
     }
-    .modal-fields input {
+    .alm-form input,
+    .alm-form textarea {
       width:100%;
       padding:0.4rem 0.5rem;
       border-radius:0.4rem;
@@ -238,16 +264,15 @@
       color:#e5e7eb;
       font-size:.9rem;
     }
-
-    .modal-actions {
+    .alm-form textarea {
+      min-height:60px;
+      resize:vertical;
+    }
+    .alm-modal-actions {
       display:flex;
       justify-content:flex-end;
       gap:.5rem;
-      margin-top:.4rem;
-    }
-
-    .hidden {
-      display:none !important;
+      margin-top:.5rem;
     }
   </style>
 </head>
@@ -255,83 +280,76 @@
 <body>
   <div id="site-header"></div>
 
-  <main class="ware-main">
-    <div class="ware-header-line">
+  <main class="alm-main">
+    <div class="alm-header-row">
       <div>
         <h2>Almacenes</h2>
         <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
           Selecciona un almacén para ver su inventario y las solicitudes asignadas.
         </p>
       </div>
-      <button type="button" class="btn btn-secondary" onclick="window.location.href='./app_ui.html'">
+      <button type="button"
+              class="btn btn-secondary"
+              onclick="window.location.href='./app_ui.html'">
         ← Volver al panel
       </button>
     </div>
 
     <!-- BLOQUE 1: lista de almacenes -->
-    <div class="card">
-      <div class="ware-list-card">
+    <div class="card card-inline">
+      <div class="alm-tabs-row">
         <div>
-          <div class="ware-subtitle">Almacenes disponibles</div>
-          <div id="warehouse-buttons" class="ware-buttons">
-            <!-- Botones de almacén aquí -->
-          </div>
+          <div style="font-size:.8rem;opacity:.8;margin-bottom:.25rem;">Almacenes disponibles</div>
+          <div id="alm-tabs-container" class="alm-tabs-list"></div>
         </div>
-        <button type="button" id="btn-new-warehouse" class="btn btn-primary btn-icon" title="Añadir almacén">
-          +
-        </button>
+        <button type="button" id="alm-add-btn" class="alm-add-btn">+</button>
       </div>
-      <div id="ware-no-warehouses" class="help-text" style="margin-top:.4rem;display:none;">
-        No hay ningún almacén configurado todavía.
-      </div>
+      <p id="alm-no-warehouses" class="help-text" style="margin-top:.5rem;display:none;">
+        No hay almacenes creados todavía.
+      </p>
     </div>
 
-    <!-- BLOQUE 2: contenido del almacén seleccionado -->
-    <div id="warehouse-panel" class="card" style="margin-top:1.2rem;">
-      <div class="ware-meta">
-        <div class="ware-meta-left">
-          <div><strong id="meta-name">Almacén</strong></div>
-          <div id="meta-system"></div>
-          <div id="meta-location"></div>
-          <div id="meta-manager"></div>
+    <!-- BLOQUE 2: detalle almacén (oculto si no hay selección) -->
+    <div id="warehouse-panel" class="card card-inline" style="margin-top:1.2rem;display:none;">
+      <div class="alm-detail-header">
+        <div>
+          <h3 id="alm-detail-title" style="margin:0;">Almacén</h3>
+          <div id="alm-detail-meta" class="alm-detail-meta"></div>
         </div>
-        <div style="display:flex;gap:.5rem;align-items:center;">
-          <button type="button" id="btn-edit-warehouse" class="btn btn-secondary">
-            Editar almacén
-          </button>
-        </div>
+        <button type="button" id="alm-edit-btn" class="btn btn-secondary">
+          Editar almacén
+        </button>
       </div>
 
-      <div class="ware-tabs">
-        <button type="button" class="ware-tab active" data-tab="inventario">Inventario</button>
-        <button type="button" class="ware-tab" data-tab="solicitudes">Solicitudes asignadas</button>
+      <div class="alm-subtabs">
+        <button type="button" id="tab-inv" class="alm-subtab-btn active">Inventario</button>
+        <button type="button" id="tab-req" class="alm-subtab-btn">Solicitudes asignadas</button>
       </div>
 
-      <!-- Sección inventario -->
-      <div id="section-inventario" class="ware-section active">
+      <!-- CONTENIDO: INVENTARIO -->
+      <div id="section-inv">
         <div style="max-height:420px;overflow:auto;">
-          <table class="ware-table">
+          <table class="alm-table">
             <thead>
               <tr>
-                <th>Commodity</th>
-                <th>Símbolo</th>
-                <th>Cant.</th>
-                <th>Rango stock</th>
-                <th>Estado</th>
+                <th>COMMODITY</th>
+                <th>SÍMBOLO</th>
+                <th>CANT.</th>
+                <th>RANGO STOCK</th>
+                <th>ESTADO</th>
               </tr>
             </thead>
-            <tbody id="tbody-inventario"></tbody>
+            <tbody id="alm-stock-tbody">
+              <!-- filas JS -->
+            </tbody>
           </table>
-        </div>
-        <div id="inventario-empty" class="help-text" style="display:none;margin-top:.4rem;">
-          Este almacén todavía no tiene inventario registrado.
         </div>
       </div>
 
-      <!-- Sección solicitudes -->
-      <div id="section-solicitudes" class="ware-section">
+      <!-- CONTENIDO: SOLICITUDES -->
+      <div id="section-req" style="display:none;">
         <div style="max-height:420px;overflow:auto;">
-          <table class="ware-table">
+          <table class="alm-req-table">
             <thead>
               <tr>
                 <th>ID</th>
@@ -339,49 +357,54 @@
                 <th>Ítem</th>
                 <th>Cant.</th>
                 <th>Solicitante</th>
+                <th>Plazo máx.</th>
                 <th>Estado</th>
-                <th>Creada</th>
               </tr>
             </thead>
-            <tbody id="tbody-solicitudes"></tbody>
+            <tbody id="alm-req-tbody">
+              <!-- filas JS -->
+            </tbody>
           </table>
-        </div>
-        <div id="solicitudes-empty" class="help-text" style="display:none;margin-top:.4rem;">
-          No hay solicitudes asignadas a este almacén.
         </div>
       </div>
     </div>
   </main>
 
-  <!-- MODAL CREAR / EDITAR ALMACÉN -->
-  <div id="warehouse-modal-backdrop" class="modal-backdrop hidden">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 id="warehouse-modal-title" style="margin:0;font-size:1rem;">Nuevo almacén</h3>
-        <button type="button" id="warehouse-modal-close" class="btn btn-secondary btn-icon">×</button>
-      </div>
-      <div class="modal-fields">
+  <!-- MODAL EDICIÓN / CREACIÓN DE ALMACÉN -->
+  <div id="alm-modal-backdrop" class="alm-modal-backdrop" style="display:none;">
+    <div class="alm-modal">
+      <h3 id="alm-modal-title" style="margin-top:0;margin-bottom:.6rem;">Nuevo almacén</h3>
+      <form id="alm-form" class="alm-form">
         <div class="field">
           <label>Nombre del almacén</label>
-          <input id="wm-name" type="text" />
+          <input id="w_name" type="text" required/>
         </div>
         <div class="field">
           <label>Sistema</label>
-          <input id="wm-system" type="text" />
+          <input id="w_system" type="text" placeholder="Ej: Stanton, Pyro..."/>
         </div>
         <div class="field">
           <label>Ubicación</label>
-          <input id="wm-location" type="text" />
+          <input id="w_location" type="text" placeholder="Ej: Orison, Lorville, ARK L1..."/>
         </div>
         <div class="field">
           <label>Encargado</label>
-          <input id="wm-manager" type="text" />
+          <input id="w_manager" type="text" placeholder="Handle del encargado"/>
         </div>
-      </div>
-      <div class="modal-actions">
-        <button type="button" id="warehouse-modal-cancel" class="btn btn-secondary">Cancelar</button>
-        <button type="button" id="warehouse-modal-save" class="btn btn-primary">Guardar</button>
-      </div>
+        <div class="field">
+          <label>Notas</label>
+          <textarea id="w_notes" placeholder="Notas internas del almacén..."></textarea>
+        </div>
+
+        <div class="alm-modal-actions">
+          <button type="button" id="alm-modal-cancel" class="btn btn-secondary">
+            Cancelar
+          </button>
+          <button type="submit" id="alm-modal-save" class="btn btn-primary">
+            Guardar
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -391,7 +414,9 @@
     document.addEventListener('DOMContentLoaded', async () => {
       const { supa } = window;
 
-      // 1) Sesión + org_status
+      /* ───────────────────────────────
+         1) Sesión + org_status
+      ─────────────────────────────── */
       const { data: { session } } = await supa.auth.getSession();
       if (!session) {
         window.location.href = './index.html';
@@ -405,410 +430,503 @@
         return;
       }
 
-      // Header
-      await loadHeader('app');
-      initHeaderUserMenu(
-        session,
-        async () => {
-          await supa.auth.signOut();
-          window.location.href = "./index.html";
-        },
-        () => window.location.href = './perfil.html'
-      );
+      if (typeof window.loadHeader === 'function') {
+        await window.loadHeader('app');
+      }
+      if (typeof window.initHeaderUserMenu === 'function') {
+        window.initHeaderUserMenu(
+          session,
+          async () => {
+            await supa.auth.signOut();
+            window.location.href = "./index.html";
+          },
+          () => window.location.href = './perfil.html'
+        );
+      }
 
-      // 2) Permisos módulo "almacenes"
-      const { data: meRow } = await supa
+      /* ───────────────────────────────
+         2) Permisos módulo "almacenes"
+      ─────────────────────────────── */
+      const { data: meRow, error: meError } = await supa
         .from('users')
         .select('tesoro_internal_role')
         .eq('id', session.user.id)
         .maybeSingle();
+      if (meError) console.error('Error leyendo rol interno:', meError);
 
       let myRole = meRow?.tesoro_internal_role || null;
       if (typeof myRole === 'string') myRole = myRole.trim();
 
-      let appRoleRow = null;
+      let roleRow = null;
       if (myRole) {
         const asNumber = Number(myRole);
-        if (!Number.isNaN(asNumber)) {
+        if (!Number.isNaN(asNumber) && myRole !== '') {
           const { data, error } = await supa
             .from('roles_app')
             .select('*')
             .eq('id', asNumber)
             .maybeSingle();
-          if (!error) appRoleRow = data;
+          if (!error) roleRow = data;
         }
-        if (!appRoleRow) {
+
+        if (!roleRow) {
           const { data, error } = await supa
             .from('roles_app')
             .select('*')
             .ilike('role_name', myRole)
             .maybeSingle();
-          if (!error) appRoleRow = data;
+          if (!error) roleRow = data;
         }
       }
 
-      const almacLevel = appRoleRow?.almacenes ?? 0;
-      if (!almacLevel || almacLevel === 0) {
+      let almacenesLevel = roleRow?.almacenes ?? 0;
+      if (!almacenesLevel || almacenesLevel === 0) {
         alert('No tienes acceso al módulo de Almacenes.');
         window.location.href = './app_ui.html';
         return;
       }
-      const readOnly = (almacLevel === 1);
+      const readOnly = (almacenesLevel === 1);
 
-      // 3) Referencias DOM
-      const btnNewWarehouse = document.getElementById('btn-new-warehouse');
-      const wareButtonsWrap = document.getElementById('warehouse-buttons');
-      const noWareMsg       = document.getElementById('ware-no-warehouses');
+      /* ───────────────────────────────
+         3) Referencias DOM
+      ─────────────────────────────── */
+      const tabsContainer = document.getElementById('alm-tabs-container');
+      const addBtn        = document.getElementById('alm-add-btn');
+      const noWarehouses  = document.getElementById('alm-no-warehouses');
+      const panel         = document.getElementById('warehouse-panel');
+      const titleEl       = document.getElementById('alm-detail-title');
+      const metaEl        = document.getElementById('alm-detail-meta');
+      const editBtn       = document.getElementById('alm-edit-btn');
 
-      const panel        = document.getElementById('warehouse-panel');
-      const metaName     = document.getElementById('meta-name');
-      const metaSystem   = document.getElementById('meta-system');
-      const metaLocation = document.getElementById('meta-location');
-      const metaManager  = document.getElementById('meta-manager');
+      const tabInvBtn     = document.getElementById('tab-inv');
+      const tabReqBtn     = document.getElementById('tab-req');
+      const sectionInv    = document.getElementById('section-inv');
+      const sectionReq    = document.getElementById('section-req');
 
-      const tabButtons   = document.querySelectorAll('.ware-tab');
-      const sectionInv   = document.getElementById('section-inventario');
-      const sectionSol   = document.getElementById('section-solicitudes');
+      const stockTbody    = document.getElementById('alm-stock-tbody');
+      const reqTbody      = document.getElementById('alm-req-tbody');
 
-      const tbodyInv     = document.getElementById('tbody-inventario');
-      const tbodySol     = document.getElementById('tbody-solicitudes');
-      const invEmpty     = document.getElementById('inventario-empty');
-      const solEmpty     = document.getElementById('solicitudes-empty');
+      // Modal
+      const modalBackdrop = document.getElementById('alm-modal-backdrop');
+      const modalTitle    = document.getElementById('alm-modal-title');
+      const modalForm     = document.getElementById('alm-form');
+      const modalCancel   = document.getElementById('alm-modal-cancel');
 
-      const btnEditWarehouse = document.getElementById('btn-edit-warehouse');
-
-      // Modal refs
-      const modalBackdrop  = document.getElementById('warehouse-modal-backdrop');
-      const modalTitle     = document.getElementById('warehouse-modal-title');
-      const wmName         = document.getElementById('wm-name');
-      const wmSystem       = document.getElementById('wm-system');
-      const wmLocation     = document.getElementById('wm-location');
-      const wmManager      = document.getElementById('wm-manager');
-      const modalBtnClose  = document.getElementById('warehouse-modal-close');
-      const modalBtnCancel = document.getElementById('warehouse-modal-cancel');
-      const modalBtnSave   = document.getElementById('warehouse-modal-save');
+      const wName     = document.getElementById('w_name');
+      const wSystem   = document.getElementById('w_system');
+      const wLocation = document.getElementById('w_location');
+      const wManager  = document.getElementById('w_manager');
+      const wNotes    = document.getElementById('w_notes');
 
       if (readOnly) {
-        btnNewWarehouse.classList.add('btn-disabled');
-        btnNewWarehouse.disabled = true;
-        btnEditWarehouse.classList.add('btn-disabled');
-        btnEditWarehouse.disabled = true;
+        addBtn.disabled = true;
+        addBtn.classList.add('btn-disabled');
+        editBtn.classList.add('btn-disabled');
       }
 
-      let allWarehouses = [];
-      let selectedWarehouse = null; // objeto almacén actual
-      let modalMode = 'new'; // 'new' | 'edit'
+      /* ───────────────────────────────
+         4) Datos en memoria
+      ─────────────────────────────── */
+      let warehouses = [];
+      let currentWarehouseId = null;
 
-      // 4) Cargar almacenes (AQUÍ estaba el problema, ahora es un select directo a public.warehouses)
+      // Cache de usuarios para mostrar solicitantes
+      const usersById = {};
+      const { data: users, error: usersError } = await supa
+        .from('users')
+        .select('id, handle_name, discord_username');
+      if (!usersError && users) {
+        users.forEach(u => { usersById[u.id] = u; });
+      }
+
+      /* ───────────────────────────────
+         5) Cargar almacenes
+      ─────────────────────────────── */
       async function loadWarehouses() {
         const { data, error } = await supa
-          .from('warehouses')      // ← asegúrate de que la tabla se llama así
-          .select('*');            // sin filtros raros ni order que pueda petar
+          .from('warehouses')
+          .select('id, name, system, location, manager_name, notes')
+          .order('name', { ascending: true });
 
         if (error) {
           console.error('Error cargando almacenes:', error);
-          alert('No se han podido cargar los almacenes.\n\n' + error.message);
-          allWarehouses = [];
-        } else {
-          allWarehouses = data || [];
-        }
-
-        renderWarehouseButtons();
-      }
-
-      function renderWarehouseButtons() {
-        wareButtonsWrap.innerHTML = '';
-
-        if (!allWarehouses.length) {
-          noWareMsg.style.display = 'block';
-          panel.style.display = 'none';
           return;
         }
-        noWareMsg.style.display = 'none';
 
-        allWarehouses.forEach(w => {
-          const btn = document.createElement('button');
-          btn.className = 'ware-btn';
-          btn.textContent = w.name || w.warehouse_name || 'Almacén';
-          btn.dataset.id = w.id;
+        warehouses = data || [];
+        renderTabs();
 
-          if (selectedWarehouse && selectedWarehouse.id === w.id) {
-            btn.classList.add('active');
+        if (!warehouses.length) {
+          currentWarehouseId = null;
+          panel.style.display = 'none';
+          noWarehouses.style.display = 'block';
+        } else {
+          noWarehouses.style.display = 'none';
+          if (!currentWarehouseId || !warehouses.find(w => w.id === currentWarehouseId)) {
+            currentWarehouseId = warehouses[0].id;
           }
+          await selectWarehouse(currentWarehouseId);
+        }
+      }
 
-          btn.addEventListener('click', () => {
-            // toggle único
-            if (!selectedWarehouse || selectedWarehouse.id !== w.id) {
-              selectedWarehouse = w;
-              [...wareButtonsWrap.querySelectorAll('.ware-btn')]
-                .forEach(b => b.classList.remove('active'));
-              btn.classList.add('active');
-              showWarehousePanel();
-            }
+      function renderTabs() {
+        tabsContainer.innerHTML = '';
+        warehouses.forEach(w => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'alm-tab-btn' + (w.id === currentWarehouseId ? ' active' : '');
+          btn.textContent = w.name || 'Almacén';
+          btn.dataset.id = w.id;
+          btn.addEventListener('click', async () => {
+            if (currentWarehouseId === w.id) return;
+            currentWarehouseId = w.id;
+            await selectWarehouse(currentWarehouseId);
           });
-
-          wareButtonsWrap.appendChild(btn);
+          tabsContainer.appendChild(btn);
         });
       }
 
-      function showWarehousePanel() {
-        if (!selectedWarehouse) {
+      async function selectWarehouse(id) {
+        const w = warehouses.find(x => x.id === id);
+        renderTabs();
+
+        if (!w) {
           panel.style.display = 'none';
           return;
         }
 
         panel.style.display = 'block';
+        titleEl.textContent = w.name || 'Almacén';
+        const parts = [];
+        if (w.system)   parts.push(w.system);
+        if (w.location) parts.push(w.location);
+        if (w.manager_name) parts.push('Encargado: ' + w.manager_name);
+        metaEl.textContent = parts.join(' · ');
 
-        const w = selectedWarehouse;
-        const name = w.name || w.warehouse_name || 'Almacén';
-        const system = w.system || w.system_name || '';
-        const loc = w.location || w.place || '';
-        const manager = w.manager_handle || w.encargado || '';
-
-        metaName.textContent = name;
-        metaSystem.textContent   = system ? `Sistema: ${system}` : '';
-        metaLocation.textContent = loc    ? `Ubicación: ${loc}`  : '';
-        metaManager.textContent  = manager? `Encargado: ${manager}` : '';
-
-        // Por defecto pestaña inventario
-        setActiveTab('inventario');
-
-        loadInventarioForWarehouse(w.id);
-        loadSolicitudesForWarehouse(w.id);
+        await loadInventory(id);
+        await loadRequests(id);
       }
 
-      function setActiveTab(tab) {
-        tabButtons.forEach(btn => {
-          const t = btn.dataset.tab;
-          btn.classList.toggle('active', t === tab);
-        });
-        sectionInv.classList.toggle('active', tab === 'inventario');
-        sectionSol.classList.toggle('active', tab === 'solicitudes');
+      /* ───────────────────────────────
+         6) Inventario
+      ─────────────────────────────── */
+      function calcEstado(qty, min, max) {
+        const q = Number(qty || 0);
+        const sMin = Number(min || 0);
+        const sMax = Number(max || 0);
+
+        if (sMin > 0 && q < sMin) return 'critico';
+        if (sMax > 0 && q > sMax) return 'excedente';
+        return 'seguro';
       }
 
-      tabButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          setActiveTab(btn.dataset.tab);
-        });
-      });
+      async function loadInventory(warehouseId) {
+        stockTbody.innerHTML = '<tr><td colspan="5">Cargando inventario...</td></tr>';
 
-      // 5) Inventario del almacén
-      function computeStockStatus(qty, min, max) {
-        if (min == null || max == null) return { label: 'N/D', cls: '' };
-        if (qty < min)  return { label: 'Crítico',   cls: 'critico' };
-        if (qty > max)  return { label: 'Excedente', cls: 'excedente' };
-        return { label: 'Seguro', cls: 'seguro' };
-      }
-
-      async function loadInventarioForWarehouse(warehouseId) {
-        tbodyInv.innerHTML = '';
-        invEmpty.style.display = 'none';
-
-        // Ajusta nombres de tabla / columnas si los tuyos son otros
         const { data, error } = await supa
-          .from('warehouse_stock') // tabla de stock por almacén que montamos en su día
+          .from('warehouse_items')
           .select(`
+            id,
             quantity,
             commodity_id,
-            commodities_master (
-              name,
-              symbol,
-              stock_min,
-              stock_max
-            )
+            commodities_master(symbol, name, stock_min, stock_max)
           `)
-          .eq('warehouse_id', warehouseId);
+          .eq('warehouse_id', warehouseId)
+          .order('commodities_master(name)', { ascending: true });
 
         if (error) {
-          console.error('Error cargando inventario:', error);
-          invEmpty.textContent = 'No se ha podido cargar el inventario de este almacén.';
-          invEmpty.style.display = 'block';
+          console.error('Error cargando stock de almacén:', error);
+          stockTbody.innerHTML = '<tr><td colspan="5">No se ha podido cargar el inventario de este almacén.</td></tr>';
           return;
         }
 
         const rows = data || [];
         if (!rows.length) {
-          invEmpty.textContent = 'Este almacén todavía no tiene inventario registrado.';
-          invEmpty.style.display = 'block';
+          stockTbody.innerHTML = '<tr><td colspan="5">Este almacén no tiene aún commodities asignados.</td></tr>';
           return;
         }
 
-        rows.forEach(r => {
-          const cm = r.commodities_master;
-          const name = cm?.name || '';
-          const symbol = cm?.symbol || '';
-          const qty = r.quantity ?? 0;
-          const min = cm?.stock_min ?? null;
-          const max = cm?.stock_max ?? null;
-
-          const st = computeStockStatus(qty, min, max);
+        stockTbody.innerHTML = '';
+        rows.forEach(row => {
+          const cm = row.commodities_master || {};
+          const minVal = cm.stock_min ?? 0;
+          const maxVal = cm.stock_max ?? 0;
 
           const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${name}</td>
-            <td>${symbol}</td>
-            <td>${qty}</td>
-            <td>${(min ?? '-') + ' - ' + (max ?? '-')}</td>
-            <td><span class="badge-stock ${st.cls}">${st.label}</span></td>
-          `;
-          tbodyInv.appendChild(tr);
+
+          const tdComm = document.createElement('td');
+          tdComm.textContent = cm.name || '-';
+
+          const tdSym = document.createElement('td');
+          tdSym.textContent = cm.symbol || '-';
+
+          const tdQty = document.createElement('td');
+          tdQty.textContent = row.quantity ?? 0;
+
+          const tdRange = document.createElement('td');
+          let rangeText = '-';
+          if (minVal || maxVal) rangeText = `${minVal || 0}-${maxVal || 0}`;
+          tdRange.textContent = rangeText;
+
+          const tdEstado = document.createElement('td');
+          const pill = document.createElement('span');
+          const estado = calcEstado(row.quantity, minVal, maxVal);
+          pill.className = 'estado-pill ' + estado;
+          pill.textContent =
+            estado === 'critico'   ? 'Crítico' :
+            estado === 'excedente' ? 'Excedente' :
+                                      'Seguro';
+          tdEstado.appendChild(pill);
+
+          tr.appendChild(tdComm);
+          tr.appendChild(tdSym);
+          tr.appendChild(tdQty);
+          tr.appendChild(tdRange);
+          tr.appendChild(tdEstado);
+
+          stockTbody.appendChild(tr);
         });
       }
 
-      // 6) Solicitudes asignadas al almacén
-      async function loadSolicitudesForWarehouse(warehouseId) {
-        tbodySol.innerHTML = '';
-        solEmpty.style.display = 'none';
+      /* ───────────────────────────────
+         7) Solicitudes asignadas
+      ─────────────────────────────── */
+      async function loadRequests(warehouseId) {
+        reqTbody.innerHTML = '<tr><td colspan="7">Cargando solicitudes...</td></tr>';
 
         const { data, error } = await supa
           .from('requests')
           .select(`
             id,
             request_type,
+            item_id,
             quantity,
             status,
-            created_at,
-            requester_handle,
-            commodities_master ( name, symbol )
+            due_date,
+            requester_discord_id,
+            commodities_master(name, symbol)
           `)
           .eq('warehouse_id', warehouseId)
-          .in('status', ['aprobada','completada'])
           .order('created_at', { ascending: false });
 
         if (error) {
           console.error('Error cargando solicitudes de almacén:', error);
-          solEmpty.textContent = 'No se ha podido cargar las solicitudes de este almacén.';
-          solEmpty.style.display = 'block';
+          reqTbody.innerHTML = '<tr><td colspan="7">No se han podido cargar las solicitudes de este almacén.</td></tr>';
           return;
         }
 
-        const rows = (data || []);
+        const rows = (data || []).filter(r => (r.status || 'pendiente') === 'aprobada');
+
         if (!rows.length) {
-          solEmpty.textContent = 'No hay solicitudes asignadas a este almacén.';
-          solEmpty.style.display = 'block';
+          reqTbody.innerHTML = '<tr><td colspan="7">No hay solicitudes aprobadas asignadas a este almacén.</td></tr>';
           return;
         }
 
+        reqTbody.innerHTML = '';
         rows.forEach(r => {
+          const tr = document.createElement('tr');
+
           const cm = r.commodities_master;
           const itemName = cm
             ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
-            : '';
+            : (r.item_id || '');
 
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>#${r.id}</td>
-            <td>${r.request_type === 'compra' ? 'Compra' : 'Venta'}</td>
-            <td>${itemName}</td>
-            <td>${r.quantity}</td>
-            <td>${r.requester_handle || ''}</td>
-            <td>${r.status}</td>
-            <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
-          `;
-          tbodySol.appendChild(tr);
+          const requester = usersById[r.requester_discord_id];
+          const reqName = requester?.handle_name || requester?.discord_username || r.requester_discord_id;
+
+          const tdId = document.createElement('td');
+          tdId.textContent = `#${r.id}`;
+
+          const tdTipo = document.createElement('td');
+          tdTipo.textContent = r.request_type === 'venta' ? 'Venta' : 'Compra';
+
+          const tdItem = document.createElement('td');
+          tdItem.textContent = itemName;
+
+          const tdQty = document.createElement('td');
+          tdQty.textContent = r.quantity;
+
+          const tdReq = document.createElement('td');
+          tdReq.textContent = reqName;
+
+          const tdDue = document.createElement('td');
+          tdDue.textContent = r.due_date || '-';
+
+          const tdStatus = document.createElement('td');
+          const span = document.createElement('span');
+          const st = r.status || 'pendiente';
+          span.className = 'badge-status ' + st;
+          span.textContent = st;
+          tdStatus.appendChild(span);
+
+          tr.appendChild(tdId);
+          tr.appendChild(tdTipo);
+          tr.appendChild(tdItem);
+          tr.appendChild(tdQty);
+          tr.appendChild(tdReq);
+          tr.appendChild(tdDue);
+          tr.appendChild(tdStatus);
+
+          reqTbody.appendChild(tr);
         });
       }
 
-      // 7) Modal crear / editar almacén
-      function openWarehouseModal(mode) {
-        modalMode = mode;
-        if (mode === 'new') {
-          modalTitle.textContent = 'Nuevo almacén';
-          wmName.value = '';
-          wmSystem.value = '';
-          wmLocation.value = '';
-          wmManager.value = '';
-        } else if (mode === 'edit' && selectedWarehouse) {
-          modalTitle.textContent = 'Editar almacén';
-          wmName.value     = selectedWarehouse.name || selectedWarehouse.warehouse_name || '';
-          wmSystem.value   = selectedWarehouse.system || selectedWarehouse.system_name || '';
-          wmLocation.value = selectedWarehouse.location || selectedWarehouse.place || '';
-          wmManager.value  = selectedWarehouse.manager_handle || selectedWarehouse.encargado || '';
+      /* ───────────────────────────────
+         8) Subpestañas
+      ─────────────────────────────── */
+      function activateTab(which) {
+        if (which === 'inv') {
+          tabInvBtn.classList.add('active');
+          tabReqBtn.classList.remove('active');
+          sectionInv.style.display = 'block';
+          sectionReq.style.display = 'none';
+        } else {
+          tabReqBtn.classList.add('active');
+          tabInvBtn.classList.remove('active');
+          sectionInv.style.display = 'none';
+          sectionReq.style.display = 'block';
         }
-        modalBackdrop.classList.remove('hidden');
       }
 
-      function closeWarehouseModal() {
-        modalBackdrop.classList.add('hidden');
+      tabInvBtn.addEventListener('click', () => activateTab('inv'));
+      tabReqBtn.addEventListener('click', () => activateTab('req'));
+
+      /* ───────────────────────────────
+         9) Modal crear/editar almacén
+      ─────────────────────────────── */
+      let editingWarehouseId = null;
+
+      function openModalForCreate() {
+        editingWarehouseId = null;
+        modalTitle.textContent = 'Nuevo almacén';
+        wName.value = '';
+        wSystem.value = '';
+        wLocation.value = '';
+        wManager.value = '';
+        wNotes.value = '';
+        modalBackdrop.style.display = 'flex';
       }
 
-      if (!readOnly) {
-        btnNewWarehouse.addEventListener('click', () => openWarehouseModal('new'));
-        btnEditWarehouse.addEventListener('click', () => {
-          if (!selectedWarehouse) {
-            alert('Selecciona un almacén primero.');
-            return;
-          }
-          openWarehouseModal('edit');
-        });
+      function openModalForEdit() {
+        if (!currentWarehouseId) return;
+        const w = warehouses.find(x => x.id === currentWarehouseId);
+        if (!w) return;
+
+        editingWarehouseId = w.id;
+        modalTitle.textContent = 'Editar almacén';
+
+        wName.value     = w.name || '';
+        wSystem.value   = w.system || '';
+        wLocation.value = w.location || '';
+        wManager.value  = w.manager_name || '';
+        wNotes.value    = w.notes || '';
+
+        modalBackdrop.style.display = 'flex';
       }
 
-      [modalBtnClose, modalBtnCancel].forEach(btn => {
-        btn.addEventListener('click', closeWarehouseModal);
+      function closeModal() {
+        modalBackdrop.style.display = 'none';
+      }
+
+      addBtn.addEventListener('click', () => {
+        if (readOnly) return;
+        openModalForCreate();
       });
 
-      modalBtnSave.addEventListener('click', async () => {
+      editBtn.addEventListener('click', () => {
         if (readOnly) return;
+        openModalForEdit();
+      });
 
-        const name = wmName.value.trim();
-        const system = wmSystem.value.trim();
-        const location = wmLocation.value.trim();
-        const manager = wmManager.value.trim();
+      modalCancel.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeModal();
+      });
 
-        if (!name) {
-          alert('El almacén necesita un nombre.');
+      modalBackdrop.addEventListener('click', (e) => {
+        if (e.target === modalBackdrop) {
+          closeModal();
+        }
+      });
+
+      modalForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (readOnly) {
+          alert('Permisos de solo lectura.');
           return;
         }
 
-        if (modalMode === 'new') {
-          const { error } = await supa
+        const payload = {
+          name: wName.value.trim() || 'Almacén',
+          system: wSystem.value.trim() || null,
+          location: wLocation.value.trim() || null,
+          manager_name: wManager.value.trim() || null,
+          notes: wNotes.value.trim() || null
+        };
+
+        if (!editingWarehouseId) {
+          // Crear almacén nuevo
+          const { data: inserted, error: insError } = await supa
             .from('warehouses')
-            .insert({
-              name,
-              system,
-              location,
-              manager_handle: manager
-            });
-          if (error) {
-            console.error('Error creando almacén:', error);
-            alert('No se ha podido crear el almacén.\n\n' + error.message);
+            .insert(payload)
+            .select()
+            .maybeSingle();
+
+          if (insError || !inserted) {
+            console.error('Error creando almacén:', insError);
+            alert('No se ha podido crear el almacén.');
             return;
           }
-        } else if (modalMode === 'edit' && selectedWarehouse) {
+
+          const newWarehouseId = inserted.id;
+
+          // Copiar plantilla de commodities_master -> warehouse_items
+          const { data: comms, error: commError } = await supa
+            .from('commodities_master')
+            .select('id');
+          if (!commError && comms && comms.length) {
+            const rows = comms.map(c => ({
+              warehouse_id: newWarehouseId,
+              commodity_id: c.id,
+              quantity: 0
+            }));
+            const { error: wiError } = await supa
+              .from('warehouse_items')
+              .insert(rows);
+            if (wiError) {
+              console.error('Error creando plantilla de warehouse_items:', wiError);
+            }
+          }
+
+          await loadWarehouses();
+          currentWarehouseId = newWarehouseId;
+          await selectWarehouse(newWarehouseId);
+        } else {
+          // Editar existente
           const { error } = await supa
             .from('warehouses')
-            .update({
-              name,
-              system,
-              location,
-              manager_handle: manager
-            })
-            .eq('id', selectedWarehouse.id);
+            .update(payload)
+            .eq('id', editingWarehouseId);
+
           if (error) {
             console.error('Error actualizando almacén:', error);
-            alert('No se ha podido actualizar el almacén.\n\n' + error.message);
+            alert('No se han podido guardar los datos del almacén.');
             return;
           }
-        }
 
-        closeWarehouseModal();
-        await loadWarehouses();
-
-        // si estábamos editando, re-seleccionamos el almacén actualizado
-        if (modalMode === 'edit') {
-          const again = allWarehouses.find(w => w.name === name);
-          if (again) {
-            selectedWarehouse = again;
-            showWarehousePanel();
-            // marcar botón activo
-            [...wareButtonsWrap.querySelectorAll('.ware-btn')].forEach(btn => {
-              btn.classList.toggle('active', btn.dataset.id === again.id);
-            });
+          const idx = warehouses.findIndex(w => w.id === editingWarehouseId);
+          if (idx !== -1) {
+            warehouses[idx] = { ...warehouses[idx], ...payload };
           }
+          await selectWarehouse(editingWarehouseId);
         }
+
+        closeModal();
       });
 
-      // 8) Arranque
+      /* ───────────────────────────────
+         10) Carga inicial
+      ─────────────────────────────── */
       await loadWarehouses();
     });
   </script>
