@@ -24,7 +24,6 @@
       border-radius: 0.75rem;
     }
 
-    /* Bloque 1: lista de almacenes */
     .alm-header-row {
       display:flex;
       justify-content:space-between;
@@ -34,6 +33,7 @@
       flex-wrap:wrap;
     }
 
+    /* Bloque 1: lista de almacenes */
     .alm-tabs-row {
       display:flex;
       justify-content:space-between;
@@ -85,26 +85,6 @@
       cursor:not-allowed;
     }
 
-    /* Bloque 2: detalle almacén */
-    #warehouse-panel {
-      margin-top:1.2rem;
-    }
-
-    .alm-detail-header {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:.75rem;
-      flex-wrap:wrap;
-      margin-bottom:.6rem;
-    }
-
-    .alm-detail-meta {
-      font-size:.8rem;
-      opacity:.8;
-      margin-top:.15rem;
-    }
-
     .btn {
       padding:0.35rem 0.85rem;
       border-radius:0.4rem;
@@ -127,31 +107,53 @@
       cursor:not-allowed;
     }
 
-    /* Subpestañas (Inventario / Solicitudes) */
-    .alm-subtabs {
+    .help-text {
+      font-size:.75rem;
+      opacity:.75;
+      margin-top:.15rem;
+    }
+
+    /* Bloque 2: cuerpo con dos columnas */
+    #warehouse-panel {
+      margin-top:1.2rem;
+    }
+
+    .alm-detail-header {
       display:flex;
-      gap:.5rem;
-      border-bottom:1px solid rgba(148,163,184,0.35);
-      margin-bottom:.4rem;
+      justify-content:space-between;
+      align-items:center;
+      gap:.75rem;
+      flex-wrap:wrap;
+      margin-bottom:.6rem;
     }
 
-    .alm-subtab-btn {
-      padding:0.3rem 0.65rem;
-      border:none;
-      background:transparent;
-      color:#9ca3af;
+    .alm-detail-meta {
+      font-size:.8rem;
+      opacity:.8;
+      margin-top:.15rem;
+    }
+
+    .alm-detail-body {
+      display:grid;
+      grid-template-columns:minmax(0,1.2fr) minmax(0,1.4fr);
+      gap:1rem;
+    }
+
+    @media (max-width: 900px) {
+      .alm-detail-body {
+        grid-template-columns:minmax(0,1fr);
+      }
+    }
+
+    .alm-section-title {
       font-size:.85rem;
-      cursor:pointer;
-      border-bottom:2px solid transparent;
+      opacity:.8;
+      margin-bottom:.35rem;
+      text-transform:uppercase;
+      letter-spacing:.06em;
     }
 
-    .alm-subtab-btn.active {
-      color:#e5e7eb;
-      border-bottom-color:#38bdf8;
-      font-weight:600;
-    }
-
-    /* Tabla de inventario (la tuya, solo lectura) */
+    /* Tabla inventario */
     .alm-table {
       width:100%;
       border-collapse:collapse;
@@ -220,12 +222,6 @@
     .badge-status.aprobada { border-color:rgba(34,197,94,0.9); }
     .badge-status.rechazada { border-color:rgba(248,113,113,0.9); }
     .badge-status.completada { border-color:rgba(56,189,248,0.9); }
-
-    .help-text {
-      font-size:.75rem;
-      opacity:.75;
-      margin-top:.15rem;
-    }
 
     /* Modal edición almacén */
     .alm-modal-backdrop {
@@ -321,50 +317,49 @@
         </button>
       </div>
 
-      <div class="alm-subtabs">
-        <button type="button" id="tab-inv" class="alm-subtab-btn active">Inventario</button>
-        <button type="button" id="tab-req" class="alm-subtab-btn">Solicitudes asignadas</button>
-      </div>
-
-      <!-- CONTENIDO: INVENTARIO -->
-      <div id="section-inv">
-        <div style="max-height:420px;overflow:auto;">
-          <table class="alm-table">
-            <thead>
-              <tr>
-                <th>COMMODITY</th>
-                <th>SÍMBOLO</th>
-                <th>CANT.</th>
-                <th>RANGO STOCK</th>
-                <th>ESTADO</th>
-              </tr>
-            </thead>
-            <tbody id="alm-stock-tbody">
-              <!-- filas JS -->
-            </tbody>
-          </table>
+      <div class="alm-detail-body">
+        <!-- Columna izquierda: inventario -->
+        <div>
+          <div class="alm-section-title">Inventario</div>
+          <div style="max-height:420px;overflow:auto;">
+            <table class="alm-table">
+              <thead>
+                <tr>
+                  <th>COMMODITY</th>
+                  <th>SÍMBOLO</th>
+                  <th>CANT.</th>
+                  <th>RANGO STOCK</th>
+                  <th>ESTADO</th>
+                </tr>
+              </thead>
+              <tbody id="alm-stock-tbody">
+                <!-- filas JS -->
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
 
-      <!-- CONTENIDO: SOLICITUDES -->
-      <div id="section-req" style="display:none;">
-        <div style="max-height:420px;overflow:auto;">
-          <table class="alm-req-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Tipo</th>
-                <th>Ítem</th>
-                <th>Cant.</th>
-                <th>Solicitante</th>
-                <th>Plazo máx.</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody id="alm-req-tbody">
-              <!-- filas JS -->
-            </tbody>
-          </table>
+        <!-- Columna derecha: solicitudes -->
+        <div>
+          <div class="alm-section-title">Solicitudes asignadas</div>
+          <div style="max-height:420px;overflow:auto;">
+            <table class="alm-req-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Tipo</th>
+                  <th>Ítem</th>
+                  <th>Cant.</th>
+                  <th>Solicitante</th>
+                  <th>Plazo máx.</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="alm-req-tbody">
+                <!-- filas JS -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -414,9 +409,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       const { supa } = window;
 
-      /* ───────────────────────────────
-         1) Sesión + org_status
-      ─────────────────────────────── */
+      /* ───────────── 1) Sesión + org_status ───────────── */
       const { data: { session } } = await supa.auth.getSession();
       if (!session) {
         window.location.href = './index.html';
@@ -444,9 +437,7 @@
         );
       }
 
-      /* ───────────────────────────────
-         2) Permisos módulo "almacenes"
-      ─────────────────────────────── */
+      /* ───────────── 2) Permisos módulo almacenes ───────────── */
       const { data: meRow, error: meError } = await supa
         .from('users')
         .select('tesoro_internal_role')
@@ -487,9 +478,7 @@
       }
       const readOnly = (almacenesLevel === 1);
 
-      /* ───────────────────────────────
-         3) Referencias DOM
-      ─────────────────────────────── */
+      /* ───────────── 3) DOM ───────────── */
       const tabsContainer = document.getElementById('alm-tabs-container');
       const addBtn        = document.getElementById('alm-add-btn');
       const noWarehouses  = document.getElementById('alm-no-warehouses');
@@ -497,11 +486,6 @@
       const titleEl       = document.getElementById('alm-detail-title');
       const metaEl        = document.getElementById('alm-detail-meta');
       const editBtn       = document.getElementById('alm-edit-btn');
-
-      const tabInvBtn     = document.getElementById('tab-inv');
-      const tabReqBtn     = document.getElementById('tab-req');
-      const sectionInv    = document.getElementById('section-inv');
-      const sectionReq    = document.getElementById('section-req');
 
       const stockTbody    = document.getElementById('alm-stock-tbody');
       const reqTbody      = document.getElementById('alm-req-tbody');
@@ -524,13 +508,12 @@
         editBtn.classList.add('btn-disabled');
       }
 
-      /* ───────────────────────────────
-         4) Datos en memoria
-      ─────────────────────────────── */
+      /* ───────────── 4) Estado en memoria ───────────── */
       let warehouses = [];
-      let currentWarehouseId = null;
+      let currentWarehouseId = null; // <--- importante: nada seleccionado al principio
+      let editingWarehouseId = null;
 
-      // Cache de usuarios para mostrar solicitantes
+      // Cache usuarios para mostrar solicitante
       const usersById = {};
       const { data: users, error: usersError } = await supa
         .from('users')
@@ -539,9 +522,7 @@
         users.forEach(u => { usersById[u.id] = u; });
       }
 
-      /* ───────────────────────────────
-         5) Cargar almacenes
-      ─────────────────────────────── */
+      /* ───────────── 5) Cargar almacenes ───────────── */
       async function loadWarehouses() {
         const { data, error } = await supa
           .from('warehouses')
@@ -557,15 +538,20 @@
         renderTabs();
 
         if (!warehouses.length) {
-          currentWarehouseId = null;
-          panel.style.display = 'none';
           noWarehouses.style.display = 'block';
+          panel.style.display = 'none';
+          currentWarehouseId = null;
         } else {
           noWarehouses.style.display = 'none';
-          if (!currentWarehouseId || !warehouses.find(w => w.id === currentWarehouseId)) {
-            currentWarehouseId = warehouses[0].id;
+
+          // Si había uno seleccionado y sigue existiendo, recargo datos.
+          if (currentWarehouseId && warehouses.some(w => w.id === currentWarehouseId)) {
+            await selectWarehouse(currentWarehouseId);
+          } else {
+            // Ninguno seleccionado => bloque 2 vacío.
+            currentWarehouseId = null;
+            panel.style.display = 'none';
           }
-          await selectWarehouse(currentWarehouseId);
         }
       }
 
@@ -578,7 +564,14 @@
           btn.textContent = w.name || 'Almacén';
           btn.dataset.id = w.id;
           btn.addEventListener('click', async () => {
-            if (currentWarehouseId === w.id) return;
+            // Toggle: si ya está activo, se desactiva y vaciamos bloque 2.
+            if (currentWarehouseId === w.id) {
+              currentWarehouseId = null;
+              panel.style.display = 'none';
+              renderTabs();
+              return;
+            }
+
             currentWarehouseId = w.id;
             await selectWarehouse(currentWarehouseId);
           });
@@ -597,8 +590,9 @@
 
         panel.style.display = 'block';
         titleEl.textContent = w.name || 'Almacén';
+
         const parts = [];
-        if (w.system)   parts.push(w.system);
+        if (w.system) parts.push(w.system);
         if (w.location) parts.push(w.location);
         if (w.manager_name) parts.push('Encargado: ' + w.manager_name);
         metaEl.textContent = parts.join(' · ');
@@ -607,9 +601,7 @@
         await loadRequests(id);
       }
 
-      /* ───────────────────────────────
-         6) Inventario
-      ─────────────────────────────── */
+      /* ───────────── 6) Inventario ───────────── */
       function calcEstado(qty, min, max) {
         const q = Number(qty || 0);
         const sMin = Number(min || 0);
@@ -688,9 +680,7 @@
         });
       }
 
-      /* ───────────────────────────────
-         7) Solicitudes asignadas
-      ─────────────────────────────── */
+      /* ───────────── 7) Solicitudes asignadas ───────────── */
       async function loadRequests(warehouseId) {
         reqTbody.innerHTML = '<tr><td colspan="7">Cargando solicitudes...</td></tr>';
 
@@ -715,6 +705,7 @@
           return;
         }
 
+        // Mostramos las aprobadas (asignadas al almacén)
         const rows = (data || []).filter(r => (r.status || 'pendiente') === 'aprobada');
 
         if (!rows.length) {
@@ -724,8 +715,6 @@
 
         reqTbody.innerHTML = '';
         rows.forEach(r => {
-          const tr = document.createElement('tr');
-
           const cm = r.commodities_master;
           const itemName = cm
             ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
@@ -733,6 +722,8 @@
 
           const requester = usersById[r.requester_discord_id];
           const reqName = requester?.handle_name || requester?.discord_username || r.requester_discord_id;
+
+          const tr = document.createElement('tr');
 
           const tdId = document.createElement('td');
           tdId.textContent = `#${r.id}`;
@@ -771,31 +762,7 @@
         });
       }
 
-      /* ───────────────────────────────
-         8) Subpestañas
-      ─────────────────────────────── */
-      function activateTab(which) {
-        if (which === 'inv') {
-          tabInvBtn.classList.add('active');
-          tabReqBtn.classList.remove('active');
-          sectionInv.style.display = 'block';
-          sectionReq.style.display = 'none';
-        } else {
-          tabReqBtn.classList.add('active');
-          tabInvBtn.classList.remove('active');
-          sectionInv.style.display = 'none';
-          sectionReq.style.display = 'block';
-        }
-      }
-
-      tabInvBtn.addEventListener('click', () => activateTab('inv'));
-      tabReqBtn.addEventListener('click', () => activateTab('req'));
-
-      /* ───────────────────────────────
-         9) Modal crear/editar almacén
-      ─────────────────────────────── */
-      let editingWarehouseId = null;
-
+      /* ───────────── 8) Modal crear / editar ───────────── */
       function openModalForCreate() {
         editingWarehouseId = null;
         modalTitle.textContent = 'Nuevo almacén';
@@ -865,7 +832,7 @@
         };
 
         if (!editingWarehouseId) {
-          // Crear almacén nuevo
+          // Crear almacén
           const { data: inserted, error: insError } = await supa
             .from('warehouses')
             .insert(payload)
@@ -880,7 +847,7 @@
 
           const newWarehouseId = inserted.id;
 
-          // Copiar plantilla de commodities_master -> warehouse_items
+          // Plantilla de commodities
           const { data: comms, error: commError } = await supa
             .from('commodities_master')
             .select('id');
@@ -894,7 +861,7 @@
               .from('warehouse_items')
               .insert(rows);
             if (wiError) {
-              console.error('Error creando plantilla de warehouse_items:', wiError);
+              console.error('Error creando plantilla warehouse_items:', wiError);
             }
           }
 
@@ -924,9 +891,7 @@
         closeModal();
       });
 
-      /* ───────────────────────────────
-         10) Carga inicial
-      ─────────────────────────────── */
+      /* ───────────── 9) Carga inicial ───────────── */
       await loadWarehouses();
     });
   </script>
