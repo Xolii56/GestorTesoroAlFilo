@@ -210,6 +210,14 @@
       border-bottom:1px solid rgba(148,163,184,0.3);
     }
 
+    .alm-req-table tbody tr {
+      cursor:pointer;
+      transition:background .12s ease-out;
+    }
+    .alm-req-table tbody tr:hover {
+      background:rgba(15,23,42,0.9);
+    }
+
     .badge-status {
       display:inline-flex;
       align-items:center;
@@ -223,7 +231,7 @@
     .badge-status.rechazada { border-color:rgba(248,113,113,0.9); }
     .badge-status.completada { border-color:rgba(56,189,248,0.9); }
 
-    /* Modal edición almacén */
+    /* Modal genérico (almacén y solicitud reutilizan estilos) */
     .alm-modal-backdrop {
       position:fixed;
       inset:0;
@@ -360,6 +368,9 @@
               </tbody>
             </table>
           </div>
+          <p class="help-text" style="margin-top:.4rem;">
+            Pulsa sobre una solicitud para ver el detalle y firmar la entrega.
+          </p>
         </div>
       </div>
     </div>
@@ -400,6 +411,51 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- MODAL DETALLE / FIRMA DE SOLICITUD -->
+  <div id="req-modal-backdrop" class="alm-modal-backdrop" style="display:none;">
+    <div class="alm-modal">
+      <h3 style="margin-top:0;margin-bottom:.6rem;">Detalle de solicitud</h3>
+      <div class="alm-form">
+        <div class="field">
+          <label>Tipo</label>
+          <input id="r_tipo" type="text" readonly/>
+        </div>
+        <div class="field">
+          <label>Ítem</label>
+          <input id="r_item" type="text" readonly/>
+        </div>
+        <div class="field">
+          <label>Cantidad</label>
+          <input id="r_qty" type="text" readonly/>
+        </div>
+        <div class="field">
+          <label>Solicitante</label>
+          <input id="r_req" type="text" readonly/>
+        </div>
+        <div class="field">
+          <label>Plazo máximo de entrega</label>
+          <input id="r_due" type="text" readonly/>
+        </div>
+        <div class="field">
+          <label>Estado actual</label>
+          <input id="r_status" type="text" readonly/>
+        </div>
+      </div>
+
+      <div class="alm-modal-actions">
+        <button type="button" id="req-modal-cancel" class="btn btn-secondary">
+          Cerrar
+        </button>
+        <button type="button" id="req-complete-btn" class="btn btn-primary">
+          Marcar como completada
+        </button>
+      </div>
+      <p class="help-text">
+        Al marcar como completada se ajustará el stock del almacén y la solicitud pasará a estado "completada".
+      </p>
     </div>
   </div>
 
@@ -490,7 +546,7 @@
       const stockTbody    = document.getElementById('alm-stock-tbody');
       const reqTbody      = document.getElementById('alm-req-tbody');
 
-      // Modal
+      // Modal almacén
       const modalBackdrop = document.getElementById('alm-modal-backdrop');
       const modalTitle    = document.getElementById('alm-modal-title');
       const modalForm     = document.getElementById('alm-form');
@@ -502,16 +558,30 @@
       const wManager  = document.getElementById('w_manager');
       const wNotes    = document.getElementById('w_notes');
 
+      // Modal solicitud
+      const reqModalBackdrop = document.getElementById('req-modal-backdrop');
+      const reqModalCancel   = document.getElementById('req-modal-cancel');
+      const reqCompleteBtn   = document.getElementById('req-complete-btn');
+
+      const rTipo  = document.getElementById('r_tipo');
+      const rItem  = document.getElementById('r_item');
+      const rQty   = document.getElementById('r_qty');
+      const rReq   = document.getElementById('r_req');
+      const rDue   = document.getElementById('r_due');
+      const rStatus= document.getElementById('r_status');
+
       if (readOnly) {
         addBtn.disabled = true;
         addBtn.classList.add('btn-disabled');
         editBtn.classList.add('btn-disabled');
+        reqCompleteBtn.classList.add('btn-disabled');
       }
 
       /* ───────────── 4) Estado en memoria ───────────── */
       let warehouses = [];
-      let currentWarehouseId = null; // <--- importante: nada seleccionado al principio
+      let currentWarehouseId = null; // nada seleccionado al principio
       let editingWarehouseId = null;
+      let currentRequest = null;     // solicitud abierta en modal
 
       // Cache usuarios para mostrar solicitante
       const usersById = {};
@@ -544,11 +614,9 @@
         } else {
           noWarehouses.style.display = 'none';
 
-          // Si había uno seleccionado y sigue existiendo, recargo datos.
           if (currentWarehouseId && warehouses.some(w => w.id === currentWarehouseId)) {
             await selectWarehouse(currentWarehouseId);
           } else {
-            // Ninguno seleccionado => bloque 2 vacío.
             currentWarehouseId = null;
             panel.style.display = 'none';
           }
@@ -564,14 +632,13 @@
           btn.textContent = w.name || 'Almacén';
           btn.dataset.id = w.id;
           btn.addEventListener('click', async () => {
-            // Toggle: si ya está activo, se desactiva y vaciamos bloque 2.
+            // toggle
             if (currentWarehouseId === w.id) {
               currentWarehouseId = null;
               panel.style.display = 'none';
               renderTabs();
               return;
             }
-
             currentWarehouseId = w.id;
             await selectWarehouse(currentWarehouseId);
           });
@@ -705,11 +772,11 @@
           return;
         }
 
-        // Mostramos las aprobadas (asignadas al almacén)
-        const rows = (data || []).filter(r => (r.status || 'pendiente') === 'aprobada');
+        // Aquí mostramos tanto aprobadas como completadas (las pendientes de firmar y las ya firmadas)
+        const rows = data || [];
 
         if (!rows.length) {
-          reqTbody.innerHTML = '<tr><td colspan="7">No hay solicitudes aprobadas asignadas a este almacén.</td></tr>';
+          reqTbody.innerHTML = '<tr><td colspan="7">No hay solicitudes asignadas a este almacén.</td></tr>';
           return;
         }
 
@@ -758,11 +825,20 @@
           tr.appendChild(tdDue);
           tr.appendChild(tdStatus);
 
+          // Abrir modal de detalle / firma
+          tr.addEventListener('click', () => {
+            openRequestModal({
+              ...r,
+              itemName,
+              requesterName: reqName
+            });
+          });
+
           reqTbody.appendChild(tr);
         });
       }
 
-      /* ───────────── 8) Modal crear / editar ───────────── */
+      /* ───────────── 8) Modal crear / editar almacén ───────────── */
       function openModalForCreate() {
         editingWarehouseId = null;
         modalTitle.textContent = 'Nuevo almacén';
@@ -811,9 +887,7 @@
       });
 
       modalBackdrop.addEventListener('click', (e) => {
-        if (e.target === modalBackdrop) {
-          closeModal();
-        }
+        if (e.target === modalBackdrop) closeModal();
       });
 
       modalForm.addEventListener('submit', async (e) => {
@@ -891,7 +965,122 @@
         closeModal();
       });
 
-      /* ───────────── 9) Carga inicial ───────────── */
+      /* ───────────── 9) Modal de solicitud (firma final) ───────────── */
+      function openRequestModal(req) {
+        currentRequest = req;
+
+        rTipo.value   = req.request_type === 'venta' ? 'Venta' : 'Compra';
+        rItem.value   = req.itemName || '';
+        rQty.value    = String(req.quantity ?? '');
+        rReq.value    = req.requesterName || '';
+        rDue.value    = req.due_date || '-';
+        rStatus.value = req.status || 'pendiente';
+
+        // Si ya está completada o estamos en solo lectura, desactivar botón
+        const cannotComplete = readOnly || (req.status === 'completada');
+        reqCompleteBtn.disabled = cannotComplete;
+        reqCompleteBtn.classList.toggle('btn-disabled', cannotComplete);
+
+        reqModalBackdrop.style.display = 'flex';
+      }
+
+      function closeRequestModal() {
+        reqModalBackdrop.style.display = 'none';
+        currentRequest = null;
+      }
+
+      reqModalCancel.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeRequestModal();
+      });
+
+      reqModalBackdrop.addEventListener('click', (e) => {
+        if (e.target === reqModalBackdrop) closeRequestModal();
+      });
+
+      reqCompleteBtn.addEventListener('click', async () => {
+        if (readOnly) return;
+        if (!currentRequest) return;
+
+        if (currentRequest.status === 'completada') {
+          alert('Esta solicitud ya está marcada como completada.');
+          return;
+        }
+
+        if (!currentWarehouseId) {
+          alert('No hay almacén seleccionado.');
+          return;
+        }
+
+        // Seguridad: sólo permitir completar si está aprobada
+        if ((currentRequest.status || 'pendiente') !== 'aprobada') {
+          if (!confirm('La solicitud no está en estado "aprobada". ¿Seguro que quieres marcarla como completada igualmente?')) {
+            return;
+          }
+        }
+
+        // 1) Leer la fila de warehouse_items para ese almacén + commodity
+        const { data: wiRow, error: wiError } = await supa
+          .from('warehouse_items')
+          .select('id, quantity')
+          .eq('warehouse_id', currentWarehouseId)
+          .eq('commodity_id', currentRequest.item_id)
+          .maybeSingle();
+
+        if (wiError) {
+          console.error('Error leyendo warehouse_items:', wiError);
+          alert('No se ha podido ajustar el stock (error en lectura).');
+          return;
+        }
+
+        if (!wiRow) {
+          alert('No existe registro de stock para este ítem en el almacén.');
+          return;
+        }
+
+        const currentQty = Number(wiRow.quantity || 0);
+        const delta = currentRequest.request_type === 'venta'
+          ? -Number(currentRequest.quantity || 0)
+          :  Number(currentRequest.quantity || 0);
+        const newQty = currentQty + delta;
+
+        // 2) Actualizar stock
+        const { error: updStockError } = await supa
+          .from('warehouse_items')
+          .update({ quantity: newQty })
+          .eq('id', wiRow.id);
+
+        if (updStockError) {
+          console.error('Error actualizando stock:', updStockError);
+          alert('No se ha podido ajustar el stock de este almacén.');
+          return;
+        }
+
+        // 3) Marcar solicitud como completada (firma lado almacén)
+        const { error: updReqError } = await supa
+          .from('requests')
+          .update({
+            status: 'completada',
+            completed_at: new Date().toISOString(),
+            completed_by_discord_id: session.user.id   // usamos id del usuario autenticado
+          })
+          .eq('id', currentRequest.id);
+
+        if (updReqError) {
+          console.error('Error marcando solicitud como completada:', updReqError);
+          alert('El stock se ha ajustado, pero no se ha podido actualizar el estado de la solicitud.');
+          return;
+        }
+
+        alert('Solicitud marcada como completada y stock actualizado.');
+
+        closeRequestModal();
+        // Refrescamos inventario y solicitudes para el almacén actual
+        await loadInventory(currentWarehouseId);
+        await loadRequests(currentWarehouseId);
+      });
+
+      /* ───────────── 10) Carga inicial ───────────── */
       await loadWarehouses();
     });
   </script>
