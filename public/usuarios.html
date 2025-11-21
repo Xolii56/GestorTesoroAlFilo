@@ -243,6 +243,12 @@
 <script type="module">
   import { getOrgStatus } from './modules/profile.js';
 
+  // Helper para limpiar el #0 final
+  function cleanDiscordUsername(raw) {
+    if (!raw) return '';
+    return raw.endsWith('#0') ? raw.slice(0, -2) : raw;
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
     const { supa } = window;
 
@@ -344,7 +350,7 @@
       document.getElementById('users-save-btn').classList.add('btn-disabled');
     }
 
-    // 4) Cargar usuarios (AQUÍ ES DONDE QUITAMOS EL .eq(id, session.user.id))
+    // 4) Cargar usuarios
     let allUsers = [];
     let selectedId = null;
 
@@ -353,9 +359,6 @@
         .from('users')
         .select('id, handle_name, discord_username, org_status, tesoro_internal_role, created_at, last_login_at')
         .order('handle_name', { ascending: true });
-
-      // 👆 Sin .eq('id', session.user.id)
-      // RLS se encargará de devolver todas las filas solo a Admin / RRHH.
 
       if (error) {
         console.error('Error cargando usuarios:', error);
@@ -385,7 +388,7 @@
 
       allUsers.forEach(u => {
         const handle = u.handle_name || '(sin nombre)';
-        const disc   = u.discord_username || '-';
+        const disc   = cleanDiscordUsername(u.discord_username || '-');
         const rol    = u.tesoro_internal_role || '';
         const combo  = (handle + ' ' + disc + ' ' + rol).toLowerCase();
 
@@ -421,7 +424,7 @@
       detailPane.style.display = 'block';
 
       document.getElementById('u_handle').value      = u.handle_name || '';
-      document.getElementById('u_discord').value     = u.discord_username || '';
+      document.getElementById('u_discord').value     = cleanDiscordUsername(u.discord_username || '');
       document.getElementById('u_org_status').value  = u.org_status || '';
       document.getElementById('u_created').value     = u.created_at ? new Date(u.created_at).toLocaleString() : '-';
       document.getElementById('u_last_login').value  = u.last_login_at ? new Date(u.last_login_at).toLocaleString() : '-';
