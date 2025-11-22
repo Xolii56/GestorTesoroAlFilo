@@ -31,6 +31,7 @@
       }
     }
 
+    /* Columna derecha: lista + detalle en vertical */
     .sol-right-column {
       display: flex;
       flex-direction: column;
@@ -143,10 +144,13 @@
       border: 1px solid rgba(148,163,184,0.7);
     }
 
-    .badge-status.pendiente { border-color: rgba(250,204,21,0.9); }
-    .badge-status.aprobada  { border-color: rgba(34,197,94,0.9); }
-    .badge-status.rechazada { border-color: rgba(248,113,113,0.9); }
-    .badge-status.completada{ border-color: rgba(56,189,248,0.9); }
+    .badge-status.pendiente   { border-color: rgba(250,204,21,0.9); }
+    .badge-status.aprobada    { border-color: rgba(34,197,94,0.9); }
+    .badge-status.rechazada   { border-color: rgba(248,113,113,0.9); }
+    .badge-status.completada  { border-color: rgba(56,189,248,0.9); }
+    .badge-status.firmada_almacen,
+    .badge-status.firmada_solicitante { border-color: rgba(59,130,246,0.9); }
+    .badge-status.cancelada   { border-color: rgba(248,113,113,0.9); }
 
     .tipo-chip {
       display:inline-block;
@@ -185,6 +189,7 @@
       font-weight:600;
     }
 
+    /* Detalle de solicitud (solo lectura) */
     .sol-detail .field {
       margin-bottom: .7rem;
     }
@@ -244,6 +249,7 @@
         <p id="sol-perms-label" class="help-text" style="margin-bottom:.8rem;"></p>
 
         <form id="sol-form" class="sol-form">
+          <!-- Tipo de solicitud -->
           <div class="field">
             <label>Tipo de solicitud</label>
             <div class="tipo-toggle">
@@ -253,11 +259,13 @@
             <input type="hidden" id="request_type" value="compra"/>
           </div>
 
+          <!-- Solicitante -->
           <div class="field">
             <label>Solicitante</label>
             <input id="solicitante" type="text" readonly />
           </div>
 
+          <!-- Objeto -->
           <div class="field">
             <label for="item-select">Objeto</label>
             <select id="item-select" required>
@@ -285,6 +293,8 @@
 
       <!-- COLUMNA DERECHA: lista + detalle -->
       <div class="sol-right-column">
+
+        <!-- LISTADO -->
         <div class="card">
           <h3 style="margin-top:0;">Mis solicitudes</h3>
           <p class="help-text">
@@ -303,15 +313,18 @@
                   <th>Creada</th>
                 </tr>
               </thead>
-              <tbody id="sol-tbody"></tbody>
+              <tbody id="sol-tbody">
+                <!-- Rellenado por JS -->
+              </tbody>
             </table>
           </div>
         </div>
 
+        <!-- DETALLE SOLO LECTURA -->
         <div class="card sol-detail">
           <h3 style="margin-top:0;">Detalle de la solicitud</h3>
           <p id="sol-empty" class="help-text">
-            Selecciona una solicitud en la tabla para ver todos los detalles.
+            Selecciona una solicitud en la tabla para ver todos los detalles y firmar la entrega.
           </p>
 
           <div id="sol-detail-panel" style="display:none;">
@@ -352,6 +365,20 @@
               <label>Fechas</label>
               <div id="d_dates" class="help-text"></div>
             </div>
+
+            <div id="sol-detail-actions"
+                 style="display:none; margin-top:.6rem; display:flex; gap:.5rem; justify-content:flex-end;">
+              <button type="button" id="sol-reject-btn" class="btn btn-secondary">
+                Rechazar entrega
+              </button>
+              <button type="button" id="sol-sign-btn" class="btn btn-primary">
+                Firmar entrega (Solicitante)
+              </button>
+            </div>
+            <p id="sol-detail-help" class="help-text" style="display:none;">
+              Para completar la entrega se necesitan tu firma y la del Tesoro.
+              Si cualquiera de los dos rechaza la entrega, la solicitud pasará a estado "cancelada" y no se ajustará el stock.
+            </p>
           </div>
         </div>
 
@@ -365,12 +392,27 @@
     document.addEventListener('DOMContentLoaded', async () => {
       const { supa } = window;
 
+      function formatStatus(st) {
+        const map = {
+          pendiente: 'pendiente',
+          aprobada: 'aprobada',
+          rechazada: 'rechazada',
+          completada: 'completada',
+          firmada_almacen: 'firma Tesoro',
+          firmada_solicitante: 'firma solicitante',
+          cancelada: 'cancelada'
+        };
+        return map[st] || st;
+      }
+
+      // 1) Sesión
       const { data: { session } } = await supa.auth.getSession();
       if (!session) {
         window.location.href = './index.html';
         return;
       }
 
+      // 2) org_status
       const orgStatus = await getOrgStatus();
       if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
         await supa.auth.signOut();
@@ -378,6 +420,7 @@
         return;
       }
 
+      // 3) Header
       if (typeof window.loadHeader === 'function') {
         await window.loadHeader('app');
       }
@@ -394,6 +437,7 @@
         );
       }
 
+      // 4) Permisos del módulo "solicitudes"
       const { data: meRow, error: meError } = await supa
         .from('users')
         .select('tesoro_internal_role, handle_name, discord_username')
@@ -453,10 +497,12 @@
         solPermsLabel.textContent = 'Permisos: puedes crear nuevas solicitudes y consultar tu historial.';
       }
 
+      // 5) Mostrar nombre del solicitante
       const solicitanteInput = document.getElementById('solicitante');
       const handle = meRow?.handle_name || meRow?.discord_username || session.user.email || session.user.id;
       solicitanteInput.value = handle;
 
+      // 6) Toggle de tipo
       const typeHidden = document.getElementById('request_type');
       const tipoButtons = document.querySelectorAll('.tipo-toggle button');
       tipoButtons.forEach(btn => {
@@ -468,6 +514,7 @@
         });
       });
 
+      // 7) Cargar ítems desde commodities_master
       const itemSelect = document.getElementById('item-select');
       const { data: items, error: itemsError } = await supa
         .from('commodities_master')
@@ -479,7 +526,7 @@
       } else {
         (items || []).forEach(it => {
           const opt = document.createElement('option');
-          opt.value = it.id;
+          opt.value = it.id;                   // uuid de commodities_master
           opt.textContent = it.symbol
             ? `${it.name} (${it.symbol})`
             : it.name;
@@ -487,6 +534,7 @@
         });
       }
 
+      // 7.1) Cargar almacenes para mostrar nombres en detalle
       const { data: warehouses, error: whError } = await supa
         .from('warehouses')
         .select('id, name');
@@ -495,6 +543,7 @@
       const warehousesById = {};
       (warehouses || []).forEach(w => { warehousesById[w.id] = w; });
 
+      // 8) Listar solicitudes del usuario actual
       const tbody = document.getElementById('sol-tbody');
 
       const solEmpty = document.getElementById('sol-empty');
@@ -508,8 +557,14 @@
       const dDueDate   = document.getElementById('d_due_date');
       const dDates     = document.getElementById('d_dates');
 
+      const solDetailActions = document.getElementById('sol-detail-actions');
+      const solDetailHelp    = document.getElementById('sol-detail-help');
+      const solSignBtn       = document.getElementById('sol-sign-btn');
+      const solRejectBtn     = document.getElementById('sol-reject-btn');
+
       let myRequests = [];
       let selectedId = null;
+      let selectedRequest = null;
 
       function renderTipo(tipo) {
         if (!tipo) return '-';
@@ -517,6 +572,8 @@
       }
 
       function showDetail(r) {
+        selectedRequest = r;
+
         solEmpty.style.display = 'none';
         solDetailPanel.style.display = 'block';
 
@@ -528,7 +585,9 @@
         dType.value   = renderTipo(r.request_type);
         dItem.value   = itemName;
         dQty.value    = r.quantity;
-        dStatus.value = r.status || 'pendiente';
+
+        const st = r.status || 'pendiente';
+        dStatus.value = formatStatus(st);
 
         const wh = r.warehouse_id ? warehousesById[r.warehouse_id] : null;
         dWarehouse.value = wh ? wh.name : 'No asignado';
@@ -545,6 +604,20 @@
         if (aprobado)   timeline += ` · Aprobada: ${aprobado}`;
         if (completado) timeline += ` · Completada: ${completado}`;
         dDates.textContent = timeline;
+
+        const canInteract =
+          !readOnly &&
+          r.warehouse_id &&
+          ['aprobada','firmada_almacen','firmada_solicitante'].includes(st);
+
+        solDetailActions.style.display = canInteract ? 'flex' : 'none';
+        solDetailHelp.style.display    = canInteract ? 'block' : 'none';
+
+        const blocked = ['rechazada','cancelada','completada'].includes(st);
+        solSignBtn.disabled   = blocked || readOnly;
+        solRejectBtn.disabled = blocked || readOnly;
+        solSignBtn.classList.toggle('btn-disabled', blocked || readOnly);
+        solRejectBtn.classList.toggle('btn-disabled', blocked || readOnly);
       }
 
       async function loadMyRequests() {
@@ -569,7 +642,6 @@
           .eq('requester_discord_id', session.user.id)
           .order('created_at', { ascending: false });
 
-
         if (reqError) {
           console.error('Error cargando solicitudes:', reqError);
           return;
@@ -592,7 +664,7 @@
             <td><span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span></td>
             <td>${itemName}</td>
             <td>${r.quantity}</td>
-            <td><span class="badge-status ${st}">${st}</span></td>
+            <td><span class="badge-status ${st}">${formatStatus(st)}</span></td>
             <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
           `;
 
@@ -609,6 +681,7 @@
 
       await loadMyRequests();
 
+      // 9) Envío de formulario (solo nivel 2)
       solForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (readOnly) {
@@ -628,12 +701,12 @@
 
         const payload = {
           request_type: type,
-          item_id: itemId,
+          item_id: itemId,                  // uuid de commodities_master
           quantity: qty,
           requester_discord_id: session.user.id,
           status: 'pendiente'
         };
-        // if (notes) payload.notes = notes; // si añades columna notes en requests
+        // if (notes) payload.notes = notes;  // cuando añadas la columna notes
 
         const { error: insError } = await supa
           .from('requests')
@@ -646,6 +719,7 @@
         }
 
         solForm.reset();
+        // reset tipo a compra
         typeHidden.value = 'compra';
         tipoButtons.forEach(btn => {
           btn.classList.toggle('active', btn.dataset.type === 'compra');
@@ -653,6 +727,145 @@
 
         await loadMyRequests();
         alert('Solicitud creada correctamente.');
+      });
+
+      /* ───────────── 10) Firmas del lado solicitante ───────────── */
+
+      async function ajustarStockYCompletarDesdeSolicitud(req) {
+        if (!req.warehouse_id) {
+          alert('La solicitud no tiene almacén asignado; no se puede ajustar el stock.');
+          return false;
+        }
+
+        const { data: wiRow, error: wiError } = await supa
+          .from('warehouse_items')
+          .select('id, quantity')
+          .eq('warehouse_id', req.warehouse_id)
+          .eq('commodity_id', req.item_id)
+          .maybeSingle();
+
+        if (wiError) {
+          console.error('Error leyendo warehouse_items:', wiError);
+          alert('No se ha podido ajustar el stock (error en lectura).');
+          return false;
+        }
+
+        if (!wiRow) {
+          alert('No existe registro de stock para este ítem en el almacén.');
+          return false;
+        }
+
+        const currentQty = Number(wiRow.quantity || 0);
+        const delta = req.request_type === 'venta'
+          ? -Number(req.quantity || 0)
+          :  Number(req.quantity || 0);
+        const newQty = currentQty + delta;
+
+        const { error: updStockError } = await supa
+          .from('warehouse_items')
+          .update({ quantity: newQty })
+          .eq('id', wiRow.id);
+
+        if (updStockError) {
+          console.error('Error actualizando stock:', updStockError);
+          alert('No se ha podido ajustar el stock del almacén.');
+          return false;
+        }
+
+        const { error: updReqError } = await supa
+          .from('requests')
+          .update({
+            status: 'completada',
+            completed_at: new Date().toISOString()
+          })
+          .eq('id', req.id);
+
+        if (updReqError) {
+          console.error('Error marcando solicitud como completada:', updReqError);
+          alert('El stock se ha ajustado, pero no se ha podido actualizar el estado de la solicitud.');
+          return false;
+        }
+
+        return true;
+      }
+
+      // Firmar entrega (Solicitante)
+      solSignBtn.addEventListener('click', async () => {
+        if (readOnly || !selectedRequest) return;
+
+        const st = selectedRequest.status || 'pendiente';
+        if (['rechazada','cancelada','completada'].includes(st)) {
+          alert('Esta solicitud ya no admite firmas de entrega.');
+          return;
+        }
+
+        let newStatus = st;
+
+        if (st === 'aprobada') {
+          newStatus = 'firmada_solicitante';
+        } else if (st === 'firmada_almacen') {
+          newStatus = 'completada';
+        } else if (st === 'firmada_solicitante') {
+          alert('Ya has firmado esta entrega.');
+          return;
+        }
+
+        if (newStatus === 'completada') {
+          const ok = await ajustarStockYCompletarDesdeSolicitud(selectedRequest);
+          if (!ok) return;
+          alert('Entrega completada: stock ajustado y solicitud marcada como completada.');
+        } else {
+          const { error } = await supa
+            .from('requests')
+            .update({ status: newStatus })
+            .eq('id', selectedRequest.id);
+
+          if (error) {
+            console.error('Error registrando firma del solicitante:', error);
+            alert('No se ha podido registrar tu firma.');
+            return;
+          }
+          alert('Tu firma se ha registrado. Falta la firma de Tesoro para completar la entrega.');
+        }
+
+        await loadMyRequests();
+        const refreshed = myRequests.find(r => r.id === selectedRequest.id);
+        if (refreshed) showDetail(refreshed);
+      });
+
+      // Rechazar entrega (Solicitante)
+      solRejectBtn.addEventListener('click', async () => {
+        if (readOnly || !selectedRequest) return;
+
+        const st = selectedRequest.status || 'pendiente';
+        if (['rechazada','cancelada','completada'].includes(st)) {
+          alert('Esta solicitud ya no admite rechazo de entrega.');
+          return;
+        }
+
+        const okConfirm = confirm(
+          'Vas a marcar la entrega como NO realizada.\n' +
+          'La solicitud pasará a estado "cancelada" y no se ajustará el stock.\n\n' +
+          '¿Confirmas?'
+        );
+        if (!okConfirm) return;
+
+        const { error } = await supa
+          .from('requests')
+          .update({ status: 'cancelada' })
+          .eq('id', selectedRequest.id);
+
+        if (error) {
+          console.error('Error cancelando entrega:', error);
+          alert('No se ha podido marcar la entrega como cancelada.');
+          return;
+        }
+
+        alert('Has rechazado la entrega. La solicitud ha pasado a estado "cancelada".');
+
+        await loadMyRequests();
+        const refreshed = myRequests.find(r => r.id === selectedRequest.id);
+        if (refreshed) showDetail(refreshed);
       });
     });
   </script>
