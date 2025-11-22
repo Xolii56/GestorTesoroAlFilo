@@ -563,11 +563,12 @@
             due_date,
             approved_at,
             completed_at,
-            requester_id,
+            requester_discord_id,
             commodities_master(name, symbol)
           `)
-          .eq('requester_id', session.user.id)
+          .eq('requester_discord_id', session.user.id)
           .order('created_at', { ascending: false });
+
 
         if (reqError) {
           console.error('Error cargando solicitudes:', reqError);
@@ -629,7 +630,7 @@
           request_type: type,
           item_id: itemId,
           quantity: qty,
-          requester_id: session.user.id,
+          requester_discord_id: session.user.id,
           status: 'pendiente'
         };
         // if (notes) payload.notes = notes; // si añades columna notes en requests
