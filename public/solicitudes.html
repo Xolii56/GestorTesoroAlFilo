@@ -148,6 +148,7 @@
     .badge-status.aprobada  { border-color: rgba(34,197,94,0.9); }
     .badge-status.rechazada { border-color: rgba(248,113,113,0.9); }
     .badge-status.completada{ border-color: rgba(56,189,248,0.9); }
+    .badge-status.cancelada { border-color: rgba(239,68,68,0.9); }
 
     .tipo-chip {
       display:inline-block;
@@ -317,11 +318,11 @@
           </div>
         </div>
 
-        <!-- DETALLE SOLO LECTURA -->
+        <!-- DETALLE SOLO LECTURA + FIRMA SOLICITANTE -->
         <div class="card sol-detail">
           <h3 style="margin-top:0;">Detalle de la solicitud</h3>
           <p id="sol-empty" class="help-text">
-            Selecciona una solicitud en la tabla para ver todos los detalles.
+            Selecciona una solicitud en la tabla para ver todos los detalles y firmar la entrega.
           </p>
 
           <div id="sol-detail-panel" style="display:none;">
@@ -363,6 +364,18 @@
               <div id="d_dates" class="help-text"></div>
             </div>
 
+            <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.7rem;flex-wrap:wrap;">
+              <button type="button" id="d_sign_reject_btn" class="btn btn-secondary">
+                Rechazar entrega
+              </button>
+              <button type="button" id="d_sign_ok_btn" class="btn btn-primary">
+                Firmar entrega
+              </button>
+            </div>
+            <p id="d_sign_help" class="help-text">
+              Cuando tú y el Tesoro firméis la entrega, la solicitud pasará a estado "completada".
+              Si cualquiera rechaza la entrega, la solicitud pasará a "cancelada".
+            </p>
           </div>
         </div>
 
@@ -457,8 +470,8 @@
       const solForm = document.getElementById('sol-form');
       const solSubmitBtn = document.getElementById('sol-submit-btn');
 
-      const readOnly = (solLevel === 1);
-      if (readOnly) {
+      const readOnlyForCreation = (solLevel === 1);
+      if (readOnlyForCreation) {
         solPermsLabel.textContent = 'Permisos: solo lectura. Puedes consultar tus solicitudes, pero no crear nuevas.';
         solForm.querySelectorAll('input, select, textarea, button[data-type]').forEach(el => {
           el.disabled = true;
@@ -478,7 +491,7 @@
       const tipoButtons = document.querySelectorAll('.tipo-toggle button');
       tipoButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-          if (readOnly) return;
+          if (readOnlyForCreation) return;
           tipoButtons.forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           typeHidden.value = btn.dataset.type;
@@ -528,8 +541,13 @@
       const dDueDate   = document.getElementById('d_due_date');
       const dDates     = document.getElementById('d_dates');
 
+      const dSignOkBtn     = document.getElementById('d_sign_ok_btn');
+      const dSignRejectBtn = document.getElementById('d_sign_reject_btn');
+      const dSignHelp      = document.getElementById('d_sign_help');
+
       let myRequests = [];
       let selectedId = null;
+      let selectedRequest = null;
 
       function renderTipo(tipo) {
         if (!tipo) return '-';
@@ -537,6 +555,8 @@
       }
 
       function showDetail(r) {
+        selectedRequest = r;
+
         solEmpty.style.display = 'none';
         solDetailPanel.style.display = 'block';
 
@@ -560,11 +580,39 @@
         const creado    = r.created_at   ? new Date(r.created_at).toLocaleString()   : 'desconocido';
         const aprobado  = r.approved_at  ? new Date(r.approved_at).toLocaleString()  : null;
         const completado= r.completed_at ? new Date(r.completed_at).toLocaleString() : null;
+        const cancelado = r.cancelled_at ? new Date(r.cancelled_at).toLocaleString() : null;
 
         let timeline = `Creada: ${creado}`;
         if (aprobado)   timeline += ` · Aprobada: ${aprobado}`;
         if (completado) timeline += ` · Completada: ${completado}`;
+        if (cancelado)  timeline += ` · Cancelada: ${cancelado}`;
         dDates.textContent = timeline;
+
+        // Habilitar / deshabilitar botones de firma
+        const finalStatus = ['completada','cancelada','rechazada'].includes(r.status);
+        const yaFirmadoSolicitante = r.requester_signed_ok || r.requester_rejected;
+
+        const puedeFirmar = !finalStatus && !yaFirmadoSolicitante;
+
+        dSignOkBtn.disabled = !puedeFirmar;
+        dSignRejectBtn.disabled = !puedeFirmar;
+        dSignOkBtn.classList.toggle('btn-disabled', !puedeFirmar);
+        dSignRejectBtn.classList.toggle('btn-disabled', !puedeFirmar);
+
+        if (!r.warehouse_id || r.status !== 'aprobada') {
+          dSignHelp.textContent =
+            'Solo podrás firmar la entrega cuando la solicitud esté aprobada y asignada a un almacén.';
+        } else if (!puedeFirmar) {
+          if (finalStatus) {
+            dSignHelp.textContent = `La solicitud ya está en estado final (${r.status}); no puedes firmar más.`;
+          } else {
+            dSignHelp.textContent = 'Ya has registrado tu decisión sobre la entrega de esta solicitud.';
+          }
+        } else {
+          dSignHelp.textContent =
+            'Cuando tanto tú como el Tesoro firméis la entrega, la solicitud quedará como completada. ' +
+            'Si cualquiera rechaza la entrega, pasará a "cancelada".';
+        }
       }
 
       async function loadMyRequests() {
@@ -583,7 +631,13 @@
             due_date,
             approved_at,
             completed_at,
+            cancelled_at,
             requester_discord_id,
+            warehouse_signed_ok,
+            warehouse_rejected,
+            requester_signed_ok,
+            requester_rejected,
+            stock_applied,
             commodities_master(name, symbol)
           `)
           .eq('requester_discord_id', session.user.id)
@@ -628,10 +682,10 @@
 
       await loadMyRequests();
 
-      // 9) Envío de formulario (solo nivel 2)
+      /* 9) Envío de formulario (solo nivel 2) */
       solForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (readOnly) {
+        if (readOnlyForCreation) {
           alert('Tienes permisos de solo lectura en este módulo.');
           return;
         }
@@ -653,7 +707,7 @@
           requester_discord_id: session.user.id,
           status: 'pendiente'
         };
-        // En el futuro, si añadimos columna notes en requests:
+        // Si añades columna notes en requests:
         // if (notes) payload.notes = notes;
 
         const { error: insError } = await supa
@@ -675,6 +729,182 @@
 
         await loadMyRequests();
         alert('Solicitud creada correctamente.');
+      });
+
+      /* 10) Helpers de firma desde lado solicitante */
+
+      async function ajustarStockSiHaceFalta(requestRow) {
+        // Igual que en almacenes, pero usando warehouse_id de la propia fila.
+        if (!requestRow.warehouse_id || !requestRow.item_id) return;
+        if (requestRow.stock_applied) return;
+        if (requestRow.status !== 'completada') return;
+
+        const { data: wiRow, error: wiError } = await supa
+          .from('warehouse_items')
+          .select('id, quantity')
+          .eq('warehouse_id', requestRow.warehouse_id)
+          .eq('commodity_id', requestRow.item_id)
+          .maybeSingle();
+
+        if (wiError) {
+          console.error('Error leyendo warehouse_items para ajuste de stock:', wiError);
+          alert('No se ha podido ajustar el stock (error en lectura).');
+          return;
+        }
+        if (!wiRow) {
+          alert('No existe registro de stock para este ítem en el almacén.');
+          return;
+        }
+
+        const currentQty = Number(wiRow.quantity || 0);
+        const qty = Number(requestRow.quantity || 0);
+        const delta = requestRow.request_type === 'venta' ? -qty : qty;
+        const newQty = currentQty + delta;
+
+        const { error: updStockError } = await supa
+          .from('warehouse_items')
+          .update({ quantity: newQty })
+          .eq('id', wiRow.id);
+
+        if (updStockError) {
+          console.error('Error actualizando stock:', updStockError);
+          alert('No se ha podido ajustar el stock de este almacén.');
+          return;
+        }
+
+        const { error: markAppliedError } = await supa
+          .from('requests')
+          .update({ stock_applied: true })
+          .eq('id', requestRow.id);
+
+        if (markAppliedError) {
+          console.error('Error marcando stock_applied:', markAppliedError);
+        }
+      }
+
+      async function firmarEntregaComoSolicitante(decision) {
+        if (!selectedRequest) return;
+
+        // Recargamos fila fresca
+        const { data: reqRow, error: reqError } = await supa
+          .from('requests')
+          .select(`
+            id,
+            request_type,
+            item_id,
+            quantity,
+            status,
+            warehouse_id,
+            warehouse_signed_ok,
+            warehouse_rejected,
+            requester_signed_ok,
+            requester_rejected,
+            stock_applied
+          `)
+          .eq('id', selectedRequest.id)
+          .maybeSingle();
+
+        if (reqError || !reqRow) {
+          console.error('Error leyendo solicitud para firma solicitante:', reqError);
+          alert('No se ha podido leer la solicitud.');
+          return;
+        }
+
+        if (['completada','cancelada','rechazada'].includes(reqRow.status)) {
+          alert(`La solicitud ya está en estado final (${reqRow.status}).`);
+          return;
+        }
+
+        if (reqRow.requester_signed_ok || reqRow.requester_rejected) {
+          alert('Ya has registrado tu decisión sobre esta entrega.');
+          return;
+        }
+
+        if (!reqRow.warehouse_id || reqRow.status !== 'aprobada') {
+          alert('Solo puedes firmar cuando la solicitud esté aprobada y asignada a un almacén.');
+          return;
+        }
+
+        const now = new Date().toISOString();
+        const update = {
+          requester_signed_at: now,
+          requester_signed_by: session.user.id
+        };
+
+        if (decision === 'ok') {
+          update.requester_signed_ok = true;
+          update.requester_rejected = false;
+        } else {
+          update.requester_signed_ok = false;
+          update.requester_rejected = true;
+        }
+
+        const { data: afterSign, error: updError } = await supa
+          .from('requests')
+          .update(update)
+          .eq('id', reqRow.id)
+          .select()
+          .maybeSingle();
+
+        if (updError || !afterSign) {
+          console.error('Error guardando firma solicitante:', updError);
+          alert('No se ha podido guardar tu firma sobre la entrega.');
+          return;
+        }
+
+        // Calcular estado final
+        const anyRejected = afterSign.warehouse_rejected || afterSign.requester_rejected;
+        const bothOk = afterSign.warehouse_signed_ok && afterSign.requester_signed_ok;
+
+        let finalStatus = afterSign.status;
+        const extraUpdate = {};
+
+        if (anyRejected) {
+          finalStatus = 'cancelada';
+          extraUpdate.status = 'cancelada';
+          extraUpdate.cancelled_at = now;
+        } else if (bothOk) {
+          finalStatus = 'completada';
+          extraUpdate.status = 'completada';
+          extraUpdate.completed_at = now;
+        }
+
+        if (extraUpdate.status) {
+          const { error: stErr } = await supa
+            .from('requests')
+            .update(extraUpdate)
+            .eq('id', afterSign.id);
+          if (stErr) {
+            console.error('Error actualizando estado final tras firma solicitante:', stErr);
+            alert('Tu firma se ha guardado pero no se ha podido actualizar el estado de la solicitud.');
+            return;
+          }
+        }
+
+        if (finalStatus === 'completada' && !afterSign.stock_applied) {
+          await ajustarStockSiHaceFalta({ ...afterSign, status: finalStatus });
+        }
+
+        alert(
+          decision === 'ok'
+            ? 'Has firmado la entrega como solicitante.'
+            : 'Has rechazado la entrega como solicitante.'
+        );
+
+        await loadMyRequests();
+
+        // refrescar detalle con la nueva versión
+        const nueva = myRequests.find(r => r.id === afterSign.id);
+        if (nueva) {
+          showDetail(nueva);
+        }
+      }
+
+      dSignOkBtn.addEventListener('click', () => firmarEntregaComoSolicitante('ok'));
+      dSignRejectBtn.addEventListener('click', () => {
+        const ok = confirm('Si rechazas la entrega, la solicitud pasará a "cancelada" en cuanto una de las partes marque rechazo.\n\n¿Seguro que quieres rechazar la entrega?');
+        if (!ok) return;
+        firmarEntregaComoSolicitante('reject');
       });
     });
   </script>
