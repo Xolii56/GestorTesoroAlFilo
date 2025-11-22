@@ -760,7 +760,7 @@
             quantity,
             status,
             due_date,
-            requester_id,
+            requester_discord_id,
             commodities_master(name, symbol)
           `)
           .eq('warehouse_id', warehouseId)
@@ -785,9 +785,10 @@
           const itemName = cm
             ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
             : (r.item_id || '');
+          // CORRECTO
+          const requester = usersById[r.requester_discord_id];
+          const reqName = requester?.handle_name || requester?.discord_username || r.requester_discord_id;
 
-          const requester = usersById[r.requester_id];
-          const reqName = requester?.handle_name || requester?.discord_username || r.requester_id;
 
           const tr = document.createElement('tr');
 
