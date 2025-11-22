@@ -72,6 +72,116 @@
       transform: none;
       box-shadow: none;
     }
+
+    /* ---- ADMIN PANEL / MODAL ---- */
+
+    #admin-tools {
+      margin-top: 2.2rem;
+    }
+
+    .admin-tag {
+      font-size: .75rem;
+      padding: .12rem .55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(248,250,252,0.9);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      opacity: .85;
+      display: inline-block;
+      margin-bottom: .35rem;
+    }
+
+    .admin-box {
+      padding: .9rem 1rem;
+      border-radius: .75rem;
+      border: 1px solid rgba(248,250,252,0.16);
+      background: radial-gradient(circle at top left, rgba(248,250,252,0.08), rgba(15,23,42,0.95));
+    }
+
+    .btn {
+      padding: 0.35rem 0.85rem;
+      border-radius: 0.4rem;
+      border: none;
+      cursor: pointer;
+      font-size: .85rem;
+    }
+
+    .btn-secondary {
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid rgba(148,163,184,0.8);
+    }
+
+    .btn-primary {
+      background: #22c55e;
+      color: #020617;
+      font-weight: 600;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: #f9fafb;
+      font-weight: 600;
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: #e5e7eb;
+      border: 1px solid rgba(148,163,184,0.8);
+    }
+
+    .btn-disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .help-text {
+      font-size: .75rem;
+      opacity: .75;
+      margin-top: .15rem;
+    }
+
+    /* modal admin */
+    .admin-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .admin-modal {
+      background: #020617;
+      border-radius: .8rem;
+      padding: 1rem 1.2rem;
+      max-width: 460px;
+      width: 100%;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.8);
+    }
+
+    .admin-modal h3 {
+      margin-top: 0;
+      margin-bottom: .4rem;
+    }
+
+    .admin-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: .5rem;
+      margin-top: .9rem;
+      flex-wrap: wrap;
+    }
+
+    .admin-warning {
+      border-radius:.6rem;
+      border:1px solid rgba(248,113,113,0.7);
+      padding:.55rem .7rem;
+      font-size:.8rem;
+      margin-top:.5rem;
+      background:rgba(127,29,29,0.35);
+    }
   </style>
 </head>
 
@@ -129,7 +239,60 @@
       </div>
 
     </div>
+
+    <!-- BLOQUE ADMIN SOLO PARA ADMIN -->
+    <div id="admin-tools" style="display:none;">
+      <div class="admin-tag">ADMIN · MANTENIMIENTO</div>
+      <div class="admin-box">
+        <p style="margin:0 0 .4rem;font-size:.9rem;">
+          Herramientas peligrosas para resetear el sistema de pruebas.
+        </p>
+        <button type="button" id="admin-reset-open" class="btn btn-outline">
+          Mantenimiento / Reset BD
+        </button>
+        <p class="help-text">
+          Solo deberías usar esto en entornos de test. En producción esto sería una catástrofe nuclear.
+        </p>
+      </div>
+    </div>
   </main>
+
+  <!-- MODAL ADMIN RESET -->
+  <div id="admin-reset-modal-backdrop" class="admin-modal-backdrop" style="display:none;">
+    <div class="admin-modal">
+      <h3>Reset del sistema de Tesoro</h3>
+      <p style="font-size:.9rem;opacity:.9;">
+        Elige qué parte quieres resetear. Estas operaciones son <strong>destructivas</strong> y no se pueden deshacer.
+      </p>
+
+      <div class="admin-warning">
+        ⚠️ <strong>IMPORTANTE:</strong> estas acciones solo deben ejecutarse en entorno de pruebas.
+        Borran datos reales de la base de datos.
+      </div>
+
+      <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:.4rem;">
+        <button type="button" id="btn-reset-requests" class="btn btn-danger">
+          Resetear solicitudes (vaciar tabla requests)
+        </button>
+        <span class="help-text">
+          Borra todas las solicitudes y resetea el contador de IDs.
+        </span>
+
+        <button type="button" id="btn-reset-warehouses" class="btn btn-secondary">
+          Poner a 0 el stock de todos los almacenes
+        </button>
+        <span class="help-text">
+          No borra almacenes ni commodities, solo pone la cantidad a 0 en <code>warehouse_items</code>.
+        </span>
+      </div>
+
+      <div class="admin-modal-actions">
+        <button type="button" id="admin-reset-close" class="btn btn-secondary">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
 
 <script type="module">
   import { getOrgStatus } from './modules/profile.js';
@@ -261,7 +424,6 @@
           return;
         }
 
-
         // Placeholder para el resto hasta que los implementemos
         if (mod === 'inventario' || mod === 'calendario') {
           alert(`El módulo "${mod}" todavía no está implementado (nivel ${currentLevel}).`);
@@ -272,6 +434,95 @@
         alert(`Módulo "${mod}" aún no está implementado (nivel ${currentLevel}).`);
       });
     });
+
+    /* ─────────────────────────────────────
+       8) BLOQUE ADMIN: solo si es Admin
+       ───────────────────────────────────── */
+    const isAdmin =
+      internalRole &&
+      internalRole.toString().toLowerCase() === 'admin';
+
+    const adminTools = document.getElementById('admin-tools');
+    const adminModalBackdrop = document.getElementById('admin-reset-modal-backdrop');
+    const adminOpenBtn = document.getElementById('admin-reset-open');
+    const adminCloseBtn = document.getElementById('admin-reset-close');
+    const btnResetReq = document.getElementById('btn-reset-requests');
+    const btnResetWh = document.getElementById('btn-reset-warehouses');
+
+    if (isAdmin && adminTools) {
+      adminTools.style.display = 'block';
+    }
+
+    function openAdminModal() {
+      if (!isAdmin) return;
+      adminModalBackdrop.style.display = 'flex';
+    }
+    function closeAdminModal() {
+      adminModalBackdrop.style.display = 'none';
+    }
+
+    if (adminOpenBtn) {
+      adminOpenBtn.addEventListener('click', () => {
+        if (!isAdmin) {
+          alert('Solo el rol interno Admin puede usar estas opciones.');
+          return;
+        }
+        openAdminModal();
+      });
+    }
+
+    if (adminCloseBtn) {
+      adminCloseBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeAdminModal();
+      });
+    }
+
+    if (adminModalBackdrop) {
+      adminModalBackdrop.addEventListener('click', (e) => {
+        if (e.target === adminModalBackdrop) closeAdminModal();
+      });
+    }
+
+    // --- Reset de solicitudes ---
+    if (btnResetReq) {
+      btnResetReq.addEventListener('click', async () => {
+        if (!isAdmin) {
+          alert('Solo Admin puede ejecutar este reset.');
+          return;
+        }
+        const ok = confirm('Vas a BORRAR TODAS las solicitudes y resetear el contador de IDs.\n\n¿Seguro?');
+        if (!ok) return;
+
+        const { error } = await supa.rpc('admin_reset_requests');
+        if (error) {
+          console.error('Error en admin_reset_requests:', error);
+          alert('No se ha podido resetear la tabla de solicitudes.\n\n' + (error.message || ''));
+          return;
+        }
+        alert('Tabla de solicitudes reseteada correctamente.');
+      });
+    }
+
+    // --- Reset de cantidades de almacenes ---
+    if (btnResetWh) {
+      btnResetWh.addEventListener('click', async () => {
+        if (!isAdmin) {
+          alert('Solo Admin puede ejecutar este reset.');
+          return;
+        }
+        const ok = confirm('Vas a poner a 0 TODAS las cantidades en warehouse_items.\n\n¿Seguro?');
+        if (!ok) return;
+
+        const { error } = await supa.rpc('admin_reset_warehouse_quantities');
+        if (error) {
+          console.error('Error en admin_reset_warehouse_quantities:', error);
+          alert('No se han podido resetear las cantidades de los almacenes.\n\n' + (error.message || ''));
+          return;
+        }
+        alert('Cantidad en almacenes reseteada a 0 correctamente.');
+      });
+    }
   });
 </script>
 
