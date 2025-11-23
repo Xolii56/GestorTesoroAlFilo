@@ -230,8 +230,6 @@
     .badge-status.aprobada    { border-color:rgba(34,197,94,0.9); }
     .badge-status.rechazada   { border-color:rgba(248,113,113,0.9); }
     .badge-status.completada  { border-color:rgba(56,189,248,0.9); }
-    .badge-status.firmada_almacen,
-    .badge-status.firmada_solicitante { border-color:rgba(59,130,246,0.9); }
     .badge-status.cancelada   { border-color:rgba(248,113,113,0.9); }
 
     /* Modal genérico (almacén y solicitud reutilizan estilos) */
@@ -447,6 +445,14 @@
           <label>Estado actual</label>
           <input id="r_status" type="text" readonly/>
         </div>
+        <div class="field">
+          <label>Firma Tesoro (almacén)</label>
+          <input id="r_sign_warehouse" type="text" readonly/>
+        </div>
+        <div class="field">
+          <label>Firma solicitante</label>
+          <input id="r_sign_requester" type="text" readonly/>
+        </div>
       </div>
 
       <div class="alm-modal-actions">
@@ -472,6 +478,24 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
       const { supa } = window;
+
+      function formatStatus(st) {
+        const map = {
+          pendiente: 'pendiente',
+          aprobada: 'aprobada',
+          rechazada: 'rechazada',
+          completada: 'completada',
+          cancelada: 'cancelada'
+        };
+        return map[st] || st;
+      }
+
+      function humanSignText(v) {
+        const val = v || 'pendiente';
+        if (val === 'ok') return 'Firmada en positivo';
+        if (val === 'ko') return 'Rechazada';
+        return 'Pendiente';
+      }
 
       /* ───────────── 1) Sesión + org_status ───────────── */
       const { data: { session } } = await supa.auth.getSession();
@@ -572,12 +596,14 @@
       const reqSignBtn       = document.getElementById('req-sign-btn');
       const reqRejectBtn     = document.getElementById('req-reject-btn');
 
-      const rTipo  = document.getElementById('r_tipo');
-      const rItem  = document.getElementById('r_item');
-      const rQty   = document.getElementById('r_qty');
-      const rReq   = document.getElementById('r_req');
-      const rDue   = document.getElementById('r_due');
-      const rStatus= document.getElementById('r_status');
+      const rTipo    = document.getElementById('r_tipo');
+      const rItem    = document.getElementById('r_item');
+      const rQty     = document.getElementById('r_qty');
+      const rReq     = document.getElementById('r_req');
+      const rDue     = document.getElementById('r_due');
+      const rStatus  = document.getElementById('r_status');
+      const rSignWh  = document.getElementById('r_sign_warehouse');
+      const rSignRq  = document.getElementById('r_sign_requester');
 
       if (readOnly) {
         addBtn.disabled = true;
@@ -602,19 +628,6 @@
         .select('id, handle_name, discord_username');
       if (!usersError && users) {
         users.forEach(u => { usersById[u.id] = u; });
-      }
-
-      function formatStatus(st) {
-        const map = {
-          pendiente: 'pendiente',
-          aprobada: 'aprobada',
-          rechazada: 'rechazada',
-          completada: 'completada',
-          firmada_almacen: 'firma Tesoro',
-          firmada_solicitante: 'firma solicitante',
-          cancelada: 'cancelada'
-        };
-        return map[st] || st;
       }
 
       /* ───────────── 5) Cargar almacenes ───────────── */
@@ -786,9 +799,14 @@
             status,
             due_date,
             requester_discord_id,
+            warehouse_id,
+            warehouse_sign_result,
+            requester_sign_result,
             commodities_master(name, symbol)
           `)
           .eq('warehouse_id', warehouseId)
+          .eq('status', 'aprobada')
+          .or('warehouse_sign_result.is.null,warehouse_sign_result.eq.pendiente')
           .order('created_at', { ascending: false });
 
         if (error) {
@@ -800,7 +818,7 @@
         const rows = data || [];
 
         if (!rows.length) {
-          reqTbody.innerHTML = '<tr><td colspan="7">No hay solicitudes asignadas a este almacén.</td></tr>';
+          reqTbody.innerHTML = '<tr><td colspan="7">No hay solicitudes pendientes de firma en este almacén.</td></tr>';
           return;
         }
 
@@ -1001,13 +1019,20 @@
         rDue.value    = req.due_date || '-';
         rStatus.value = req.status || 'pendiente';
 
-        const st = req.status || 'pendiente';
-        const blocked = ['rechazada','cancelada','completada'].includes(st);
+        const wSign = req.warehouse_sign_result || 'pendiente';
+        const rqSign = req.requester_sign_result || 'pendiente';
+        if (rSignWh) rSignWh.value = humanSignText(wSign);
+        if (rSignRq) rSignRq.value = humanSignText(rqSign);
 
-        reqSignBtn.disabled   = readOnly || blocked;
-        reqRejectBtn.disabled = readOnly || blocked;
-        reqSignBtn.classList.toggle('btn-disabled', readOnly || blocked);
-        reqRejectBtn.classList.toggle('btn-disabled', readOnly || blocked);
+        const canSign =
+          !readOnly &&
+          req.status === 'aprobada' &&
+          (wSign === 'pendiente');
+
+        reqSignBtn.disabled   = !canSign;
+        reqRejectBtn.disabled = !canSign;
+        reqSignBtn.classList.toggle('btn-disabled', !canSign);
+        reqRejectBtn.classList.toggle('btn-disabled', !canSign);
 
         reqModalBackdrop.style.display = 'flex';
       }
@@ -1026,38 +1051,42 @@
         if (e.target === reqModalBackdrop) closeRequestModal();
       });
 
-      async function ajustarStockYCompletarDesdeAlmacen(req) {
-        if (!currentWarehouseId) {
-          alert('No hay almacén seleccionado.');
-          return false;
+      async function maybeFinalizeRequest(reqRow, actorId) {
+        const wSign = reqRow.warehouse_sign_result || 'pendiente';
+        const rSign = reqRow.requester_sign_result || 'pendiente';
+
+        if (reqRow.status !== 'aprobada') return;
+        if (!(wSign === 'ok' && rSign === 'ok')) return;
+
+        if (!reqRow.warehouse_id) {
+          alert('La solicitud no tiene almacén asignado; no se puede ajustar el stock.');
+          return;
         }
 
-        // 1) Leer la fila de warehouse_items para ese almacén + commodity
         const { data: wiRow, error: wiError } = await supa
           .from('warehouse_items')
           .select('id, quantity')
-          .eq('warehouse_id', currentWarehouseId)
-          .eq('commodity_id', req.item_id)
+          .eq('warehouse_id', reqRow.warehouse_id)
+          .eq('commodity_id', reqRow.item_id)
           .maybeSingle();
 
         if (wiError) {
-          console.error('Error leyendo warehouse_items:', wiError);
-          alert('No se ha podido ajustar el stock (error en lectura).');
-          return false;
+          console.error('Error leyendo warehouse_items para finalizar:', wiError);
+          alert('Las firmas se han guardado, pero no se ha podido ajustar el stock (error en lectura).');
+          return;
         }
 
         if (!wiRow) {
           alert('No existe registro de stock para este ítem en el almacén.');
-          return false;
+          return;
         }
 
         const currentQty = Number(wiRow.quantity || 0);
-        const delta = req.request_type === 'venta'
-          ? -Number(req.quantity || 0)
-          :  Number(req.quantity || 0);
+        const delta = reqRow.request_type === 'venta'
+          ? -Number(reqRow.quantity || 0)
+          :  Number(reqRow.quantity || 0);
         const newQty = currentQty + delta;
 
-        // 2) Actualizar stock
         const { error: updStockError } = await supa
           .from('warehouse_items')
           .update({ quantity: newQty })
@@ -1065,110 +1094,86 @@
 
         if (updStockError) {
           console.error('Error actualizando stock:', updStockError);
-          alert('No se ha podido ajustar el stock de este almacén.');
-          return false;
+          alert('Las firmas se han guardado, pero no se ha podido ajustar el stock de este almacén.');
+          return;
         }
 
-        // 3) Marcar solicitud como completada
         const { error: updReqError } = await supa
           .from('requests')
           .update({
             status: 'completada',
-            completed_at: new Date().toISOString()
+            completed_at: new Date().toISOString(),
+            completed_by_discord_id: actorId
           })
-          .eq('id', req.id);
+          .eq('id', reqRow.id);
 
         if (updReqError) {
           console.error('Error marcando solicitud como completada:', updReqError);
-          alert('El stock se ha ajustado, pero no se ha podido actualizar el estado de la solicitud.');
-          return false;
+          alert('El stock se ha ajustado, pero no se ha podido marcar la solicitud como completada.');
+          return;
         }
 
-        return true;
+        alert('Solicitud completada y stock ajustado correctamente.');
       }
 
-      // Firmar entrega (Tesoro)
-      reqSignBtn.addEventListener('click', async () => {
-        if (readOnly || !currentRequest) return;
+      async function handleWarehouseSign(decision) {
+        if (readOnly || !currentRequest || !currentWarehouseId) return;
 
-        const st = currentRequest.status || 'pendiente';
-        if (['rechazada','cancelada','completada'].includes(st)) {
-          alert('Esta solicitud ya no admite firmas de entrega.');
+        const isPositive = (decision === 'ok');
+
+        const currentWSign = currentRequest.warehouse_sign_result || 'pendiente';
+        if (currentWSign !== 'pendiente') {
+          alert('Tesoro ya ha firmado esta entrega desde este almacén.');
           return;
         }
 
-        let newStatus = st;
-
-        if (st === 'aprobada') {
-          newStatus = 'firmada_almacen';
-        } else if (st === 'firmada_solicitante') {
-          newStatus = 'completada';
-        } else if (st === 'firmada_almacen') {
-          alert('Tesoro ya ha firmado esta entrega.');
-          return;
-        } else {
-          // estados raros: no hacemos nada
-          newStatus = st;
+        const payload = {
+          warehouse_sign_result: isPositive ? 'ok' : 'ko',
+          warehouse_sign_at: new Date().toISOString(),
+          warehouse_sign_user: session.user.id
+        };
+        if (!isPositive) {
+          payload.status = 'cancelada';
         }
 
-        if (newStatus === st && newStatus !== 'completada') return;
+        const { data: updated, error } = await supa
+          .from('requests')
+          .update(payload)
+          .eq('id', currentRequest.id)
+          .select(`
+            id,
+            status,
+            request_type,
+            quantity,
+            item_id,
+            warehouse_id,
+            warehouse_sign_result,
+            requester_sign_result
+          `)
+          .maybeSingle();
 
-        if (newStatus === 'completada') {
-          const ok = await ajustarStockYCompletarDesdeAlmacen(currentRequest);
-          if (!ok) return;
-          alert('Entrega completada: stock ajustado y solicitud marcada como completada.');
+        if (error || !updated) {
+          console.error('Error guardando firma del almacén:', error);
+          alert('No se ha podido registrar la firma.');
+          return;
+        }
+
+        if (!isPositive) {
+          alert('Entrega cancelada por Tesoro. La solicitud ha pasado a estado "cancelada".');
         } else {
-          const { error } = await supa
-            .from('requests')
-            .update({ status: newStatus })
-            .eq('id', currentRequest.id);
-
-          if (error) {
-            console.error('Error actualizando estado de solicitud:', error);
-            alert('No se ha podido registrar la firma de Tesoro.');
-            return;
-          }
-          alert('Firma de Tesoro registrada. Falta la firma del solicitante para completar la entrega.');
+          await maybeFinalizeRequest(updated, session.user.id);
         }
 
         closeRequestModal();
         await loadInventory(currentWarehouseId);
         await loadRequests(currentWarehouseId);
-      });
+      }
+
+      // Firmar entrega (Tesoro)
+      reqSignBtn.addEventListener('click', () => handleWarehouseSign('ok'));
 
       // Rechazar entrega (Tesoro)
-      reqRejectBtn.addEventListener('click', async () => {
-        if (readOnly || !currentRequest) return;
-
-        const st = currentRequest.status || 'pendiente';
-        if (['rechazada','cancelada','completada'].includes(st)) {
-          alert('Esta solicitud ya no admite rechazo de entrega.');
-          return;
-        }
-
-        const okConfirm = confirm(
-          'Vas a marcar la entrega como NO realizada.\n' +
-          'La solicitud pasará a estado "cancelada" y no se ajustará el stock.\n\n' +
-          '¿Confirmas?'
-        );
-        if (!okConfirm) return;
-
-        const { error } = await supa
-          .from('requests')
-          .update({ status: 'cancelada' })
-          .eq('id', currentRequest.id);
-
-        if (error) {
-          console.error('Error cancelando entrega:', error);
-          alert('No se ha podido marcar la entrega como cancelada.');
-          return;
-        }
-
-        alert('Entrega cancelada. La solicitud ha pasado a estado "cancelada".');
-
-        closeRequestModal();
-        await loadRequests(currentWarehouseId);
-      });
+      reqRejectBtn.addEventListener('click', () => handleWarehouseSign('ko'));
 
       /* ───────────── 10) Carga inicial ───────────── */
       await loadWarehouses();
