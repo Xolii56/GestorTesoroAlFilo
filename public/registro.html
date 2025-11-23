@@ -95,6 +95,7 @@
     .badge-status.aprobada  { border-color: rgba(34,197,94,0.9); }
     .badge-status.rechazada { border-color: rgba(248,113,113,0.9); }
     .badge-status.completada{ border-color: rgba(56,189,248,0.9); }
+    .badge-status.cancelada { border-color: rgba(248,113,113,0.9); }
 
     .tipo-chip {
       display:inline-block;
@@ -176,6 +177,7 @@
             <option value="aprobada">Aprobadas</option>
             <option value="rechazada">Rechazadas</option>
             <option value="completada">Completadas</option>
+            <option value="cancelada">Canceladas</option>
           </select>
           <input type="search" id="buscador" placeholder="Filtrar por ítem o usuario..."/>
         </div>
@@ -257,6 +259,24 @@
 
   document.addEventListener('DOMContentLoaded', async () => {
     const { supa } = window;
+
+    function formatStatus(st) {
+      const map = {
+        pendiente: 'pendiente',
+        aprobada: 'aprobada',
+        rechazada: 'rechazada',
+        completada: 'completada',
+        cancelada: 'cancelada'
+      };
+      return map[st] || st;
+    }
+
+    function humanSignText(v) {
+      const val = v || 'pendiente';
+      if (val === 'ok') return 'Firmada en positivo';
+      if (val === 'ko') return 'Rechazada';
+      return 'Pendiente';
+    }
 
     // 1) Sesión
     const { data: { session } } = await supa.auth.getSession();
@@ -358,15 +378,15 @@
     const regEmpty  = document.getElementById('reg-empty');
     const regPanel  = document.getElementById('reg-detail-panel');
 
-    const dType      = document.getElementById('d_type');
-    const dItem      = document.getElementById('d_item');
-    const dQty       = document.getElementById('d_quantity');
-    const dReq       = document.getElementById('d_requester');
-    const dStatus    = document.getElementById('d_status');
-    const dWh        = document.getElementById('d_warehouse');
-    const dDates     = document.getElementById('d_dates');
-    const dDueDate   = document.getElementById('d_due_date');
-    const dApprover  = document.getElementById('d_approver');
+    const dType        = document.getElementById('d_type');
+    const dItem        = document.getElementById('d_item');
+    const dQty         = document.getElementById('d_quantity');
+    const dReq         = document.getElementById('d_requester');
+    const dStatus      = document.getElementById('d_status');
+    const dWh          = document.getElementById('d_warehouse');
+    const dDates       = document.getElementById('d_dates');
+    const dDueDate     = document.getElementById('d_due_date');
+    const dSignatures  = document.getElementById('d_signatures');
 
     let allRequests = [];
     let selectedId = null;
@@ -374,6 +394,17 @@
     function renderTipo(tipo) {
       if (!tipo) return '-';
       return tipo === 'compra' ? 'Compra' : 'Venta';
+    }
+
+    function resolveUserNameFromRequesterId(requesterId) {
+      const key = requesterId ? String(requesterId) : '';
+      const byDiscord = usersByDiscordId[key];
+      const byId      = usersById[key];
+
+      const u = byDiscord || byId;
+      if (!u) return requesterId || '';
+
+      return u.handle_name || u.discord_username || requesterId || '';
     }
 
     // 7) Cargar todas las solicitudes
@@ -390,8 +421,14 @@
           requester_discord_id,
           warehouse_id,
           due_date,
-          approver_discord_id,
           approved_at,
+          completed_at,
+          warehouse_sign_result,
+          warehouse_sign_at,
+          warehouse_sign_user,
+          requester_sign_result,
+          requester_sign_at,
+          requester_sign_user,
           commodities_master ( name, symbol )
         `)
         .order('created_at', { ascending: false });
@@ -403,29 +440,6 @@
 
       allRequests = reqs || [];
       renderTable();
-    }
-
-    function resolveUserNameFromRequesterId(requesterId) {
-      const key = requesterId ? String(requesterId) : '';
-      const byDiscord = usersByDiscordId[key];
-      const byId      = usersById[key];
-
-      const u = byDiscord || byId;
-      if (!u) return requesterId || '';
-
-      return u.handle_name || u.discord_username || requesterId || '';
-    }
-
-    function resolveUserNameFromApproverId(approverId) {
-      if (!approverId) return '-';
-      const key = String(approverId);
-      const byDiscord = usersByDiscordId[key];
-      const byId      = usersById[key];
-
-      const u = byDiscord || byId;
-      if (!u) return approverId;
-
-      return u.handle_name || u.discord_username || approverId;
     }
 
     function renderTable() {
@@ -457,15 +471,15 @@
         const tr = document.createElement('tr');
         tr.dataset.id = r.id;
 
-        // 👇 AHORA 7 COLUMNAS, CUADRANDO CON TU THEAD:
-        // ID · Tipo · Ítem · Cant. · Solicitante · Estado · Creada
+        const labelEstado = formatStatus(st);
+
         tr.innerHTML = `
           <td>#${r.id}</td>
           <td><span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span></td>
           <td>${itemName}</td>
           <td>${r.quantity}</td>
           <td>${reqName}</td>
-          <td><span class="badge-status ${st}">${st}</span></td>
+          <td><span class="badge-status ${st}">${labelEstado}</span></td>
           <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
         `;
 
@@ -498,18 +512,60 @@
       dItem.value   = itemName;
       dQty.value    = r.quantity;
       dReq.value    = reqName;
-      dStatus.value = r.status || 'pendiente';
+      dStatus.value = formatStatus(r.status || 'pendiente');
       dWh.value     = whName;
 
-      const creado   = r.created_at  ? new Date(r.created_at).toLocaleString()  : 'desconocido';
-      const aprobado = r.approved_at ? new Date(r.approved_at).toLocaleString() : null;
+      const creado     = r.created_at   ? new Date(r.created_at).toLocaleString()   : 'desconocido';
+      const aprobado   = r.approved_at  ? new Date(r.approved_at).toLocaleString()  : null;
+      const completado = r.completed_at ? new Date(r.completed_at).toLocaleString() : null;
 
-      dDates.textContent = aprobado
-        ? `Creada: ${creado} · Aprobada: ${aprobado}`
-        : `Creada: ${creado}`;
+      let timeline = `Creada: ${creado}`;
+      if (aprobado)   timeline += ` · Aprobada: ${aprobado}`;
+      if (completado) timeline += ` · Completada: ${completado}`;
+      dDates.textContent = timeline;
 
       dDueDate.value = r.due_date || '';
-      dApprover.value = resolveUserNameFromApproverId(r.approver_discord_id);
+
+      // Firmas detalladas
+      const wSignVal   = r.warehouse_sign_result || 'pendiente';
+      const wSignUserN = r.warehouse_sign_user
+        ? resolveUserNameFromRequesterId(r.warehouse_sign_user)
+        : null;
+      const wSignDate  = r.warehouse_sign_at
+        ? new Date(r.warehouse_sign_at).toLocaleString()
+        : null;
+
+      const rqSignVal   = r.requester_sign_result || 'pendiente';
+      const rqSignUserN = r.requester_sign_user
+        ? resolveUserNameFromRequesterId(r.requester_sign_user)
+        : null;
+      const rqSignDate  = r.requester_sign_at
+        ? new Date(r.requester_sign_at).toLocaleString()
+        : null;
+
+      const lines = [];
+
+      // Tesoro
+      let tesoroLine = `Tesoro: ${humanSignText(wSignVal)}`;
+      {
+        const parts = [];
+        if (wSignUserN) parts.push(wSignUserN);
+        if (wSignDate)  parts.push(wSignDate);
+        if (parts.length) tesoroLine += ' — ' + parts.join(' · ');
+      }
+      lines.push(tesoroLine);
+
+      // Solicitante
+      let solLine = `Solicitante: ${humanSignText(rqSignVal)}`;
+      {
+        const parts = [];
+        if (rqSignUserN) parts.push(rqSignUserN);
+        if (rqSignDate)  parts.push(rqSignDate);
+        if (parts.length) solLine += ' — ' + parts.join(' · ');
+      }
+      lines.push(solLine);
+
+      dSignatures.value = lines.join('\n');
     }
 
     filtro.addEventListener('change', renderTable);
