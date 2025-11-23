@@ -616,7 +616,21 @@
 
         const wSign = r.warehouse_sign_result || 'pendiente';
         const rqSign = r.requester_sign_result || 'pendiente';
-        dSignSummary.textContent = `Tesoro: ${humanSignText(wSign)} · Solicitante: ${humanSignText(rqSign)}`;
+
+        const lines = [];
+        let lineTesoro = `Tesoro: ${humanSignText(wSign)}`;
+        if (r.warehouse_sign_at) {
+          lineTesoro += ` — ${new Date(r.warehouse_sign_at).toLocaleString()}`;
+        }
+        lines.push(lineTesoro);
+
+        let lineSol = `Solicitante: ${humanSignText(rqSign)}`;
+        if (r.requester_sign_at) {
+          lineSol += ` — ${new Date(r.requester_sign_at).toLocaleString()}`;
+        }
+        lines.push(lineSol);
+
+        dSignSummary.innerHTML = lines.join('<br/>');
 
         const canSign =
           !readOnly &&
@@ -650,7 +664,9 @@
             completed_at,
             requester_discord_id,
             warehouse_sign_result,
+            warehouse_sign_at,
             requester_sign_result,
+            requester_sign_at,
             commodities_master(name, symbol)
           `)
           .eq('requester_discord_id', session.user.id)
@@ -738,6 +754,9 @@
         }
 
         solForm.reset();
+        // restaurar solicitante después del reset
+        solicitanteInput.value = handle;
+
         // reset tipo a compra
         typeHidden.value = 'compra';
         tipoButtons.forEach(btn => {
