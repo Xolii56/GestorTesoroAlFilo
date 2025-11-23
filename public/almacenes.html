@@ -362,6 +362,7 @@
                   <th>Cant.</th>
                   <th>Solicitante</th>
                   <th>Plazo máx.</th>
+                  <th>Firmas</th>
                   <th>Estado</th>
                 </tr>
               </thead>
@@ -453,6 +454,10 @@
           <label>Firma solicitante</label>
           <input id="r_sign_requester" type="text" readonly/>
         </div>
+        <div class="field">
+          <label>Log de firmas</label>
+          <textarea id="r_sign_log" readonly></textarea>
+        </div>
       </div>
 
       <div class="alm-modal-actions">
@@ -497,6 +502,20 @@
         return 'Pendiente';
       }
 
+      function shortSign(v) {
+        const val = v || 'pendiente';
+        if (val === 'ok') return 'OK';
+        if (val === 'ko') return 'KO';
+        return '-';
+      }
+
+      function formatDateTime(value) {
+        if (!value) return '';
+        const d = new Date(value);
+        if (Number.isNaN(d.getTime())) return value;
+        return d.toLocaleString();
+      }
+
       /* ───────────── 1) Sesión + org_status ───────────── */
       const { data: { session } } = await supa.auth.getSession();
       if (!session) {
@@ -528,7 +547,7 @@
       /* ───────────── 2) Permisos módulo almacenes ───────────── */
       const { data: meRow, error: meError } = await supa
         .from('users')
-        .select('tesoro_internal_role')
+        .select('tesoro_internal_role, handle_name, discord_username')
         .eq('id', session.user.id)
         .maybeSingle();
       if (meError) console.error('Error leyendo rol interno:', meError);
@@ -604,6 +623,7 @@
       const rStatus  = document.getElementById('r_status');
       const rSignWh  = document.getElementById('r_sign_warehouse');
       const rSignRq  = document.getElementById('r_sign_requester');
+      const rSignLog = document.getElementById('r_sign_log');
 
       if (readOnly) {
         addBtn.disabled = true;
@@ -621,13 +641,20 @@
       let editingWarehouseId = null;
       let currentRequest = null;     // solicitud abierta en modal
 
-      // Cache usuarios para mostrar solicitante
+      // Cache usuarios para mostrar solicitante / firmas
       const usersById = {};
       const { data: users, error: usersError } = await supa
         .from('users')
         .select('id, handle_name, discord_username');
       if (!usersError && users) {
         users.forEach(u => { usersById[u.id] = u; });
+      }
+
+      function resolveUserName(userId) {
+        if (!userId) return '';
+        const u = usersById[userId];
+        if (!u) return userId;
+        return u.handle_name || u.discord_username || userId;
       }
 
       /* ───────────── 5) Cargar almacenes ───────────── */
@@ -787,7 +814,7 @@
 
       /* ───────────── 7) Solicitudes asignadas ───────────── */
       async function loadRequests(warehouseId) {
-        reqTbody.innerHTML = '<tr><td colspan="7">Cargando solicitudes...</td></tr>';
+        reqTbody.innerHTML = '<tr><td colspan="8">Cargando solicitudes...</td></tr>';
 
         const { data, error } = await supa
           .from('requests')
@@ -801,24 +828,29 @@
             requester_discord_id,
             warehouse_id,
             warehouse_sign_result,
+            warehouse_sign_at,
+            warehouse_sign_user,
             requester_sign_result,
+            requester_sign_at,
+            requester_sign_user,
+            approver_discord_id,
+            approved_at,
             commodities_master(name, symbol)
           `)
           .eq('warehouse_id', warehouseId)
           .eq('status', 'aprobada')
-          .or('warehouse_sign_result.is.null,warehouse_sign_result.eq.pendiente')
           .order('created_at', { ascending: false });
 
         if (error) {
           console.error('Error cargando solicitudes de almacén:', error);
-          reqTbody.innerHTML = '<tr><td colspan="7">No se han podido cargar las solicitudes de este almacén.</td></tr>';
+          reqTbody.innerHTML = '<tr><td colspan="8">No se han podido cargar las solicitudes de este almacén.</td></tr>';
           return;
         }
 
         const rows = data || [];
 
         if (!rows.length) {
-          reqTbody.innerHTML = '<tr><td colspan="7">No hay solicitudes pendientes de firma en este almacén.</td></tr>';
+          reqTbody.innerHTML = '<tr><td colspan="8">No hay solicitudes pendientes de firma en este almacén.</td></tr>';
           return;
         }
 
@@ -852,6 +884,11 @@
           const tdDue = document.createElement('td');
           tdDue.textContent = r.due_date || '-';
 
+          const tdSigns = document.createElement('td');
+          const wSign = r.warehouse_sign_result || 'pendiente';
+          const rqSign = r.requester_sign_result || 'pendiente';
+          tdSigns.textContent = `T: ${shortSign(wSign)} · S: ${shortSign(rqSign)}`;
+
           const tdStatus = document.createElement('td');
           const span = document.createElement('span');
           const st = r.status || 'pendiente';
@@ -865,6 +902,7 @@
           tr.appendChild(tdQty);
           tr.appendChild(tdReq);
           tr.appendChild(tdDue);
+          tr.appendChild(tdSigns);
           tr.appendChild(tdStatus);
 
           // Abrir modal de detalle / firma
@@ -1009,6 +1047,50 @@
 
       /* ───────────── 9) Lógica de entrega (Tesoro) ───────────── */
 
+      function buildSignLog(req) {
+        const lines = [];
+
+        if (req.approved_at) {
+          const approverName = resolveUserName(req.approver_discord_id);
+          lines.push(
+            `Aprobada por ${approverName || 'desconocido'} el ${formatDateTime(req.approved_at)}.`
+          );
+        }
+
+        const wSign = req.warehouse_sign_result || 'pendiente';
+        const rqSign = req.requester_sign_result || 'pendiente';
+
+        if (wSign === 'ok') {
+          const whName = resolveUserName(req.warehouse_sign_user);
+          lines.push(
+            `Tesoro: firma POSITIVA por ${whName || 'desconocido'} el ${formatDateTime(req.warehouse_sign_at)}.`
+          );
+        } else if (wSign === 'ko') {
+          const whName = resolveUserName(req.warehouse_sign_user);
+          lines.push(
+            `Tesoro: entrega RECHAZADA por ${whName || 'desconocido'} el ${formatDateTime(req.warehouse_sign_at)}.`
+          );
+        } else {
+          lines.push('Tesoro: pendiente de firma.');
+        }
+
+        if (rqSign === 'ok') {
+          const rqName = resolveUserName(req.requester_sign_user);
+          lines.push(
+            `Solicitante: firma POSITIVA por ${rqName || 'desconocido'} el ${formatDateTime(req.requester_sign_at)}.`
+          );
+        } else if (rqSign === 'ko') {
+          const rqName = resolveUserName(req.requester_sign_user);
+          lines.push(
+            `Solicitante: entrega RECHAZADA por ${rqName || 'desconocido'} el ${formatDateTime(req.requester_sign_at)}.`
+          );
+        } else {
+          lines.push('Solicitante: pendiente de firma.');
+        }
+
+        return lines.join('\n');
+      }
+
       function openRequestModal(req) {
         currentRequest = req;
 
@@ -1023,6 +1105,10 @@
         const rqSign = req.requester_sign_result || 'pendiente';
         if (rSignWh) rSignWh.value = humanSignText(wSign);
         if (rSignRq) rSignRq.value = humanSignText(rqSign);
+
+        if (rSignLog) {
+          rSignLog.value = buildSignLog(req);
+        }
 
         const canSign =
           !readOnly &&
@@ -1148,7 +1234,13 @@
             item_id,
             warehouse_id,
             warehouse_sign_result,
-            requester_sign_result
+            warehouse_sign_at,
+            warehouse_sign_user,
+            requester_sign_result,
+            requester_sign_at,
+            requester_sign_user,
+            approver_discord_id,
+            approved_at
           `)
           .maybeSingle();
 
@@ -1158,15 +1250,32 @@
           return;
         }
 
+        const willComplete =
+          isPositive && ( (updated.requester_sign_result || 'pendiente') === 'ok' );
+
         if (!isPositive) {
           alert('Entrega cancelada por Tesoro. La solicitud ha pasado a estado "cancelada".');
-        } else {
-          await maybeFinalizeRequest(updated, session.user.id);
         }
 
-        closeRequestModal();
+        await maybeFinalizeRequest(updated, session.user.id);
+
+        // Refrescar inventario y tabla
         await loadInventory(currentWarehouseId);
         await loadRequests(currentWarehouseId);
+
+        if (!isPositive || willComplete) {
+          // Cancelada o completada: cerramos modal
+          closeRequestModal();
+          return;
+        }
+
+        // Firma positiva pero falta solicitante: mantener modal abierto y refrescar datos
+        currentRequest = { ...currentRequest, ...updated };
+        openRequestModal({
+          ...currentRequest,
+          itemName: rItem.value,
+          requesterName: rReq.value
+        });
       }
 
       // Firmar entrega (Tesoro)
