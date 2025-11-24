@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Detalle de solicitud</title>
+  <link rel="stylesheet" href="./style.css"/>
+
+  <!-- Supabase + módulos -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="./config.js" defer></script>
+  <script src="./modules/db.js" defer></script>
+  <script src="./modules/layout.js" defer></script>
+
+  <style>
+    body {
+      background:#020617;
+      color:#e5e7eb;
+    }
+
+    main.req-detail-main {
+      padding:1.2rem;
+      max-width:620px;
+      margin:0 auto;
+    }
+
+    .req-header-row {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:.75rem;
+      flex-wrap:wrap;
+      margin-bottom:1rem;
+    }
+
+    .btn {
+      padding:0.35rem 0.85rem;
+      border-radius:0.4rem;
+      border:none;
+      cursor:pointer;
+      font-size:.85rem;
+    }
+    .btn-secondary {
+      background:#020617;
+      color:#e5e7eb;
+      border:1px solid rgba(148,163,184,0.8);
+    }
+
+    .detail-form .field {
+      margin-bottom:.75rem;
+    }
+
+    .detail-form label {
+      display:block;
+      font-size:.78rem;
+      opacity:.8;
+      margin-bottom:.2rem;
+    }
+
+    .detail-form input,
+    .detail-form textarea {
+      width:100%;
+      padding:0.4rem 0.5rem;
+      border-radius:0.4rem;
+      border:1px solid rgba(148,163,184,0.8);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.9rem;
+    }
+
+    .detail-form textarea {
+      min-height:90px;
+      resize:vertical;
+      white-space:pre-wrap;
+    }
+
+    .detail-form input[readonly],
+    .detail-form textarea[readonly] {
+      opacity:.9;
+    }
+
+    .help-text {
+      font-size:.75rem;
+      opacity:.7;
+      margin-top:.15rem;
+    }
+
+    /* chip de estado igual que en las tablas */
+    .badge-status {
+      display:inline-flex;
+      align-items:center;
+      padding:0.1rem 0.55rem;
+      border-radius:999px;
+      font-size:.75rem;
+      border:1px solid rgba(148,163,184,0.7);
+    }
+    .badge-status.pendiente   { border-color:rgba(250,204,21,0.9); }
+    .badge-status.aprobada    { border-color:rgba(34,197,94,0.9); }
+    .badge-status.rechazada   { border-color:rgba(248,113,113,0.9); }
+    .badge-status.completada  { border-color:rgba(56,189,248,0.9); }
+    .badge-status.cancelada   { border-color:rgba(248,113,113,0.9); }
+
+    .tipo-chip {
+      display:inline-block;
+      padding:0.08rem 0.45rem;
+      border-radius:999px;
+      font-size:.75rem;
+      border:1px solid rgba(148,163,184,0.9);
+      opacity:.85;
+      margin-left:.25rem;
+    }
+    .tipo-chip.compra { border-color:rgba(34,197,94,0.9); }
+    .tipo-chip.venta  { border-color:rgba(248,113,113,0.9); }
+  </style>
+</head>
+
+<body>
+<main class="req-detail-main">
+  <div class="req-header-row">
+    <div>
+      <h2 style="margin:0;">Detalle de solicitud</h2>
+      <p id="req-id-label" class="help-text" style="margin-top:.25rem;"></p>
+    </div>
+    <button type="button" class="btn btn-secondary" onclick="window.close()">
+      Cerrar
+    </button>
+  </div>
+
+  <div class="card detail-form">
+    <div id="req-loading" class="help-text">Cargando solicitud...</div>
+    <div id="req-error" class="help-text" style="color:#fecaca;display:none;"></div>
+
+    <div id="req-content" style="display:none;">
+      <div class="field">
+        <label>Tipo de solicitud</label>
+        <input id="d_type" type="text" readonly/>
+      </div>
+
+      <div class="field">
+        <label>Estado de la solicitud</label>
+        <div id="d_status_badge"></div>
+      </div>
+
+      <div class="field">
+        <label>Log de actualización de estado</label>
+        <div id="d_status_log" class="help-text"></div>
+      </div>
+
+      <div class="field">
+        <label>Solicitante</label>
+        <input id="d_requester" type="text" readonly/>
+      </div>
+
+      <div class="field">
+        <label>Material</label>
+        <input id="d_item" type="text" readonly/>
+      </div>
+
+      <div class="field">
+        <label>Cantidad</label>
+        <input id="d_quantity" type="number" readonly/>
+      </div>
+
+      <div class="field">
+        <label>Lugar de transacción</label>
+        <input id="d_warehouse" type="text" readonly/>
+      </div>
+
+      <div class="field">
+        <label>Fecha límite</label>
+        <input id="d_due_date" type="text" readonly/>
+      </div>
+
+      <div class="field">
+        <label>Firmas</label>
+        <textarea id="d_signatures" readonly></textarea>
+        <p class="help-text">
+          Las firmas se generan automáticamente cuando Tesoro o el solicitante aceptan o rechazan la entrega.
+        </p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+  import { getOrgStatus } from './modules/profile.js';
+
+  function renderTipo(tipo) {
+    if (!tipo) return '-';
+    return tipo === 'compra' ? 'Compra' : 'Venta';
+  }
+
+  function formatStatus(st) {
+    const map = {
+      pendiente: 'pendiente',
+      aprobada: 'aprobada',
+      rechazada: 'rechazada',
+      completada: 'completada',
+      cancelada: 'cancelada'
+    };
+    return map[st] || st;
+  }
+
+  function formatDateTime(iso) {
+    if (!iso) return null;
+    try {
+      return new Date(iso).toLocaleString();
+    } catch {
+      return iso;
+    }
+  }
+
+  function humanSignLine(rol, signResult, userName, at) {
+    const state = signResult || 'pendiente';
+
+    if (state === 'ok') {
+      return `${rol}: Firmada en positivo — ${userName || '—'} — ${formatDateTime(at) || ''}`;
+    }
+    if (state === 'ko') {
+      return `${rol}: Rechazada — ${userName || '—'} — ${formatDateTime(at) || ''}`;
+    }
+    return `${rol}: Pendiente de firma.`;
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const { supa } = window;
+
+    const params = new URLSearchParams(window.location.search);
+    const reqId = params.get('id');
+
+    const idLabel    = document.getElementById('req-id-label');
+    const loadingEl  = document.getElementById('req-loading');
+    const errorEl    = document.getElementById('req-error');
+    const contentEl  = document.getElementById('req-content');
+
+    const dType        = document.getElementById('d_type');
+    const dStatusBadge = document.getElementById('d_status_badge');
+    const dStatusLog   = document.getElementById('d_status_log');
+    const dReq         = document.getElementById('d_requester');
+    const dItem        = document.getElementById('d_item');
+    const dQty         = document.getElementById('d_quantity');
+    const dWh          = document.getElementById('d_warehouse');
+    const dDue         = document.getElementById('d_due_date');
+    const dSigns       = document.getElementById('d_signatures');
+
+    if (reqId) {
+      idLabel.textContent = `ID de solicitud: #${reqId}`;
+    } else {
+      idLabel.textContent = 'ID de solicitud desconocido';
+    }
+
+    // 1) Sesión + org_status
+    const { data: { session } } = await supa.auth.getSession();
+    if (!session) {
+      window.location.href = './index.html';
+      return;
+    }
+
+    const orgStatus = await getOrgStatus();
+    if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
+      await supa.auth.signOut();
+      window.location.href = './index.html';
+      return;
+    }
+
+    // Header (por si quieres mantener la barra)
+    if (typeof window.loadHeader === 'function') {
+      await window.loadHeader('app');
+    }
+    if (typeof window.initHeaderUserMenu === 'function') {
+      window.initHeaderUserMenu(
+        session,
+        async () => {
+          await supa.auth.signOut();
+          window.location.href = "./index.html";
+        },
+        () => window.location.href = './perfil.html'
+      );
+    }
+
+    if (!reqId) {
+      loadingEl.style.display = 'none';
+      errorEl.style.display = 'block';
+      errorEl.textContent = 'No se ha proporcionado un ID de solicitud válido en la URL.';
+      return;
+    }
+
+    // 2) Datos auxiliares: usuarios y almacenes
+    const { data: users, error: usersError } = await supa
+      .from('users')
+      .select('id, handle_name, discord_username');
+    if (usersError) console.error('Error leyendo usuarios:', usersError);
+
+    const usersById = {};
+    (users || []).forEach(u => { usersById[u.id] = u; });
+
+    const { data: warehouses, error: whError } = await supa
+      .from('warehouses')
+      .select('id, name');
+    if (whError) console.error('Error leyendo almacenes:', whError);
+
+    const warehousesById = {};
+    (warehouses || []).forEach(w => { warehousesById[w.id] = w; });
+
+    function resolveUserName(id) {
+      if (!id) return '';
+      const u = usersById[id];
+      if (!u) return id;
+      return u.handle_name || u.discord_username || id;
+    }
+
+    // 3) Cargar solicitud
+    const { data: req, error: reqError } = await supa
+      .from('requests')
+      .select(`
+        id,
+        request_type,
+        item_id,
+        quantity,
+        status,
+        created_at,
+        warehouse_id,
+        due_date,
+        approved_at,
+        completed_at,
+        requester_discord_id,
+        approver_discord_id,
+        warehouse_sign_result,
+        warehouse_sign_user,
+        warehouse_sign_at,
+        requester_sign_result,
+        requester_sign_user,
+        requester_sign_at,
+        commodities_master(name, symbol)
+      `)
+      .eq('id', reqId)
+      .maybeSingle();
+
+    loadingEl.style.display = 'none';
+
+    if (reqError || !req) {
+      console.error('Error cargando solicitud:', reqError);
+      errorEl.style.display = 'block';
+      errorEl.textContent = 'No se ha podido cargar la solicitud.';
+      return;
+    }
+
+    contentEl.style.display = 'block';
+
+    // 4) Rellenar campos
+    const cm = req.commodities_master;
+    const itemName = cm
+      ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
+      : (req.item_id || '');
+
+    const requesterName = resolveUserName(req.requester_discord_id);
+    const approverName  = resolveUserName(req.approver_discord_id);
+
+    dType.value = renderTipo(req.request_type);
+    dItem.value = itemName;
+    dQty.value  = req.quantity ?? 0;
+    dReq.value  = requesterName || '';
+
+    const wh = req.warehouse_id ? warehousesById[req.warehouse_id] : null;
+    dWh.value = wh ? wh.name : 'No asignado';
+
+    dDue.value = req.due_date
+      ? new Date(req.due_date).toLocaleDateString()
+      : 'Sin definir';
+
+    // Estado + chip
+    const st = req.status || 'pendiente';
+    dStatusBadge.innerHTML = '';
+    const badge = document.createElement('span');
+    badge.className = 'badge-status ' + st;
+    badge.textContent = formatStatus(st);
+    dStatusBadge.appendChild(badge);
+
+    // Log de estados
+    const logLines = [];
+
+    const creado = formatDateTime(req.created_at);
+    if (creado) {
+      logLines.push(`Creada: ${creado}${requesterName ? ' — por ' + requesterName : ''}`);
+    }
+
+    if (req.approved_at) {
+      const label = (st === 'rechazada') ? 'Rechazada' : 'Aprobada';
+      logLines.push(`${label}: ${formatDateTime(req.approved_at)}${approverName ? ' — por ' + approverName : ''}`);
+    }
+
+    if (st === 'completada' && req.completed_at) {
+      logLines.push(`Completada: ${formatDateTime(req.completed_at)}`);
+    }
+
+    if (st === 'cancelada') {
+      let cancelAt = null;
+      let cancelUserName = null;
+
+      if (req.warehouse_sign_result === 'ko') {
+        cancelAt = req.warehouse_sign_at;
+        cancelUserName = resolveUserName(req.warehouse_sign_user);
+      } else if (req.requester_sign_result === 'ko') {
+        cancelAt = req.requester_sign_at;
+        cancelUserName = resolveUserName(req.requester_sign_user);
+      }
+
+      let line = 'Cancelada';
+      const dt = formatDateTime(cancelAt);
+      if (dt) line += `: ${dt}`;
+      if (cancelUserName) line += ` — por ${cancelUserName}`;
+      logLines.push(line);
+    }
+
+    dStatusLog.innerHTML = logLines.map(l => `<div>${l}</div>`).join('');
+
+    // Firmas
+    const whSignLine = humanSignLine(
+      'Tesoro',
+      req.warehouse_sign_result,
+      resolveUserName(req.warehouse_sign_user),
+      req.warehouse_sign_at
+    );
+    const rqSignLine = humanSignLine(
+      'Solicitante',
+      req.requester_sign_result,
+      resolveUserName(req.requester_sign_user),
+      req.requester_sign_at
+    );
+    dSigns.value = `${whSignLine}\n${rqSignLine}`;
+  });
+</script>
+</body>
+</html>
