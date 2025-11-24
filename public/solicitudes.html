@@ -648,7 +648,7 @@
 
       async function loadMyRequests() {
         tbody.innerHTML = '';
-
+      
         const { data: reqs, error: reqError } = await supa
           .from('requests')
           .select(`
@@ -671,35 +671,57 @@
           `)
           .eq('requester_discord_id', session.user.id)
           .order('created_at', { ascending: false });
-
+      
         if (reqError) {
           console.error('Error cargando solicitudes:', reqError);
           return;
         }
-
-        myRequests = reqs || [];
-        tr.addEventListener('click', () => {
-          // selecciona y muestra detalle interno (para firmar, etc.)
-          selectedId = r.id;
-          [...tbody.querySelectorAll('tr')].forEach(row => row.classList.remove('selected'));
-          tr.classList.add('selected');
-          showDetail(r);
       
-          // abre popup estándar de detalle
-          window.open(
-            `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
-            '_blank',
-            'width=720,height=760'
-          );
-        });
+        myRequests = reqs || [];
+      
+        myRequests.forEach(r => {
+          const tr = document.createElement('tr');
+      
+          const cm = r.commodities_master;
+          const itemName = cm
+            ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
+            : r.item_id || '-';
+      
+          const st = r.status || 'pendiente';
+      
+          tr.innerHTML = `
+            <td>#${r.id}</td>
+            <td><span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span></td>
+            <td>${itemName}</td>
+            <td>${r.quantity}</td>
+            <td><span class="badge-status ${st}">${formatStatus(st)}</span></td>
+            <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
+          `;
+      
+          tr.addEventListener('click', () => {
+            // selecciona y muestra detalle interno (para firmar, etc.)
+            selectedId = r.id;
+            [...tbody.querySelectorAll('tr')].forEach(row => row.classList.remove('selected'));
+            tr.classList.add('selected');
+            showDetail(r);
+      
+            // abre popup estándar de detalle
+            window.open(
+              `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
+              '_blank',
+              'width=720,height=760'
+            );
+          });
+      
           tbody.appendChild(tr);
         });
-
+      
         if (!selectedId) {
           solEmpty.style.display = 'block';
           solDetailPanel.style.display = 'none';
         }
       }
+      
 
       await loadMyRequests();
 
