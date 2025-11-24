@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Departamento del Tesoro — Revisión</title>
+  <title>Departamento del Tesoro — Revisión de solicitudes</title>
   <link rel="stylesheet" href="./style.css"/>
 
   <!-- Supabase + módulos -->
@@ -15,86 +15,89 @@
   <style>
     main.rev-main {
       padding: 1.5rem;
-      max-width: 1200px;
+      max-width: 1100px;
       margin: 0 auto;
     }
 
-    .rev-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
-      gap: 1.3rem;
+    .btn {
+      padding: 0.35rem 0.85rem;
+      border-radius: 0.4rem;
+      border: none;
+      cursor: pointer;
+      font-size: .85rem;
+    }
+    .btn-primary {
+      background: #22c55e;
+      color: #020617;
+      font-weight: 600;
+    }
+    .btn-secondary {
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid rgba(148,163,184,0.8);
+    }
+    .btn-disabled {
+      opacity: .6;
+      cursor: not-allowed;
     }
 
-    @media (max-width: 900px) {
-      .rev-layout {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-
-    .rev-toolbar {
-      display: flex;
-      justify-content: space-between;
-      gap: .75rem;
-      flex-wrap: wrap;
-      margin-bottom: .6rem;
-      align-items: center;
-    }
-
-    .rev-toolbar select,
-    .rev-toolbar input[type="search"] {
-      padding: 0.35rem 0.5rem;
+    .btn-icon {
+      width: 28px;
+      height: 28px;
       border-radius: 999px;
       border: 1px solid rgba(148,163,184,0.7);
       background: #020617;
       color: #e5e7eb;
-      font-size: .85rem;
+      font-size: .8rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      cursor: pointer;
+    }
+    .btn-icon.ok {
+      background: #22c55e;
+      color: #022c22;
+      border-color: #22c55e;
+    }
+    .btn-icon.ko {
+      background: #ef4444;
+      color: #fef2f2;
+      border-color: #ef4444;
+    }
+    .btn-icon:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .help-text {
+      font-size:.75rem;
+      opacity:.75;
+      margin-top:.15rem;
     }
 
     .rev-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .9rem;
+      width:100%;
+      border-collapse:collapse;
+      font-size:.9rem;
     }
-
     .rev-table thead {
-      font-size: .8rem;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-      opacity: .8;
+      font-size:.8rem;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      opacity:.8;
     }
-
     .rev-table th,
     .rev-table td {
-      padding: 0.35rem 0.4rem;
-      border-bottom: 1px solid rgba(148,163,184,0.25);
+      padding:0.35rem 0.45rem;
+      border-bottom:1px solid rgba(148,163,184,0.3);
     }
-
     .rev-table tbody tr {
-      cursor: pointer;
-      transition: background .12s ease-out;
+      transition:background .12s ease-out;
     }
-
     .rev-table tbody tr:hover {
-      background: rgba(15,23,42,0.9);
+      background:rgba(15,23,42,0.9);
     }
-
-    .rev-table tbody tr.selected {
-      background: rgba(56,189,248,0.18);
-    }
-
-    .badge-status {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.1rem 0.55rem;
-      border-radius: 999px;
-      font-size: .75rem;
-      border: 1px solid rgba(148,163,184,0.7);
-    }
-
-    .badge-status.pendiente { border-color: rgba(250,204,21,0.9); }
-    .badge-status.aprobada { border-color: rgba(34,197,94,0.9); }
-    .badge-status.rechazada { border-color: rgba(248,113,113,0.9); }
-    .badge-status.completada { border-color: rgba(56,189,248,0.9); }
 
     .tipo-chip {
       display:inline-block;
@@ -105,111 +108,127 @@
       margin-left:.25rem;
       opacity:.85;
     }
-
     .tipo-chip.compra { border-color: rgba(34,197,94,0.9); }
     .tipo-chip.venta  { border-color: rgba(248,113,113,0.9); }
 
-    .rev-detail .field {
-      margin-bottom: .7rem;
+    .badge-status {
+      display:inline-flex;
+      align-items:center;
+      padding:0.1rem 0.55rem;
+      border-radius:999px;
+      font-size:.75rem;
+      border:1px solid rgba(148,163,184,0.7);
+    }
+    .badge-status.pendiente   { border-color: rgba(250,204,21,0.9); }
+    .badge-status.aprobada    { border-color: rgba(34,197,94,0.9); }
+    .badge-status.rechazada   { border-color: rgba(248,113,113,0.9); }
+    .badge-status.completada  { border-color: rgba(56,189,248,0.9); }
+    .badge-status.cancelada   { border-color: rgba(248,113,113,0.9); }
+
+    .rev-toolbar {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:.6rem;
+      flex-wrap:wrap;
+      margin-bottom:.6rem;
+    }
+    .rev-toolbar-group {
+      display:flex;
+      gap:.4rem;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .rev-toolbar input[type="search"] {
+      padding:0.35rem 0.55rem;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.7);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.8rem;
     }
 
-    .rev-detail label {
-      display: block;
-      font-size: .8rem;
-      opacity: .8;
-      margin-bottom: .2rem;
+    /* Modal aprobación */
+    .rev-modal-backdrop {
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,0.8);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:50;
     }
-
-    .rev-detail input,
-    .rev-detail textarea,
-    .rev-detail select {
-      width: 100%;
-      padding: 0.4rem 0.5rem;
-      border-radius: 0.4rem;
-      border: 1px solid rgba(148,163,184,0.8);
-      background: #020617;
-      color: #e5e7eb;
-      font-size: .9rem;
+    .rev-modal {
+      background:#020617;
+      border-radius:0.75rem;
+      padding:1rem 1.2rem;
+      max-width:420px;
+      width:100%;
+      box-shadow:0 18px 40px rgba(0,0,0,0.75);
     }
-
-    .rev-detail textarea {
-      min-height: 70px;
-      resize: vertical;
+    .rev-form .field {
+      margin-bottom:.7rem;
     }
-
-    .btn {
-      padding: 0.35rem 0.85rem;
-      border-radius: 0.4rem;
-      border: none;
-      cursor: pointer;
-      font-size: .85rem;
+    .rev-form label {
+      display:block;
+      font-size:.8rem;
+      opacity:.8;
+      margin-bottom:.2rem;
     }
-
-    .btn-secondary {
-      background: #020617;
-      color: #e5e7eb;
-      border: 1px solid rgba(148,163,184,0.8);
+    .rev-form input,
+    .rev-form select,
+    .rev-form textarea {
+      width:100%;
+      padding:0.4rem 0.5rem;
+      border-radius:0.4rem;
+      border:1px solid rgba(148,163,184,0.8);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.9rem;
     }
-
-    .btn-approve {
-      background: #22c55e;
-      color: #020617;
-      font-weight: 600;
+    .rev-form textarea {
+      min-height:60px;
+      resize:vertical;
     }
-
-    .btn-reject {
-      background: #ef4444;
-      color: #f9fafb;
-      font-weight: 600;
-    }
-
-    .btn-disabled {
-      opacity: .6;
-      cursor: not-allowed;
-    }
-
-    .help-text {
-      font-size: .75rem;
-      opacity: .7;
-      margin-top: .2rem;
+    .rev-modal-actions {
+      display:flex;
+      justify-content:flex-end;
+      gap:.5rem;
+      margin-top:.5rem;
+      flex-wrap:wrap;
     }
   </style>
 </head>
 
 <body>
+  <div id="site-header"></div>
 
-<div id="site-header"></div>
-
-<main class="rev-main">
-
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
-    <div>
-      <h2>Revisión de solicitudes</h2>
-      <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
-        Revisa, aprueba o rechaza solicitudes realizadas al Departamento del Tesoro.
-      </p>
+  <main class="rev-main">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
+      <div>
+        <h2>Revisión de solicitudes</h2>
+        <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
+          Aprueba o rechaza las solicitudes pendientes del Tesoro.
+        </p>
+      </div>
+      <button type="button"
+              class="btn btn-secondary"
+              onclick="window.location.href='./app_ui.html'">
+        ← Volver al panel
+      </button>
     </div>
-    <button type="button" class="btn btn-secondary" onclick="window.location.href='./app_ui.html'">
-      ← Volver al panel
-    </button>
-  </div>
 
-  <div class="rev-layout">
-
-    <!-- LISTA -->
-    <div class="card">
+    <div class="card" style="padding:1rem 1.2rem;">
       <div class="rev-toolbar">
-        <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;">
-          <select id="filtro-estado">
-            <option value="todas">Todas</option>
-            <option value="pendiente">Pendientes</option>
-            <option value="aprobada">Aprobadas</option>
-            <option value="rechazada">Rechazadas</option>
-            <option value="completada">Completadas</option>
-          </select>
-          <input type="search" id="buscador" placeholder="Filtrar por ítem o usuario..."/>
+        <div class="rev-toolbar-group">
+          <strong style="font-size:.85rem;">Solicitudes pendientes</strong>
+          <span class="help-text">
+            Solo se muestran solicitudes en estado <b>pendiente</b>.
+          </span>
         </div>
-        <span class="help-text" id="rev-perms-label"></span>
+        <div class="rev-toolbar-group">
+          <input type="search" id="rev-search" placeholder="Buscar por ítem o solicitante..."/>
+        </div>
       </div>
 
       <div style="max-height:460px;overflow:auto;">
@@ -221,355 +240,401 @@
               <th>Ítem</th>
               <th>Cant.</th>
               <th>Solicitante</th>
-              <th>Estado</th>
               <th>Creada</th>
+              <th>Estado</th>
+              <th>Detalle</th>
+              <th>Acciones</th>
             </tr>
           </thead>
-          <tbody id="rev-tbody"></tbody>
+          <tbody id="rev-tbody">
+            <!-- filas JS -->
+          </tbody>
         </table>
       </div>
     </div>
+  </main>
 
-    <!-- DETALLE -->
-    <div class="card rev-detail">
-      <h3 style="margin-top:0;">Detalle de solicitud</h3>
-      <p id="rev-empty" class="help-text">
-        Selecciona una solicitud en la tabla para ver los detalles.
-      </p>
-
-      <div id="rev-detail-panel" style="display:none;">
+  <!-- MODAL APROBAR SOLICITUD -->
+  <div id="rev-modal-backdrop" class="rev-modal-backdrop" style="display:none;">
+    <div class="rev-modal">
+      <h3 style="margin-top:0;margin-bottom:.6rem;">Aprobar solicitud</h3>
+      <form id="rev-form" class="rev-form">
         <div class="field">
-          <label>Tipo de solicitud</label>
-          <input id="d_type" type="text" readonly/>
+          <label>Resumen</label>
+          <textarea id="rev-summary" readonly></textarea>
         </div>
-
         <div class="field">
-          <label>Ítem</label>
-          <input id="d_item" type="text" readonly/>
-        </div>
-
-        <div class="field">
-          <label>Cantidad</label>
-          <input id="d_quantity" type="number" readonly/>
-        </div>
-
-        <div class="field">
-          <label>Solicitante</label>
-          <input id="d_requester" type="text" readonly/>
-        </div>
-
-        <div class="field">
-          <label>Estado actual</label>
-          <input id="d_status" type="text" readonly/>
-        </div>
-
-        <div class="field">
-          <label>Fechas</label>
-          <div id="d_dates" class="help-text"></div>
-        </div>
-
-        <div class="field">
-          <label>Lugar de transacción (almacén)</label>
-          <select id="d_warehouse">
+          <label>Almacén / Lugar de transacción</label>
+          <select id="rev-warehouse-select" required>
             <option value="">Selecciona un almacén...</option>
           </select>
         </div>
-
         <div class="field">
-          <label>Plazo máximo de entrega</label>
-          <input id="d_due_date" type="date"/>
+          <label>Fecha límite de entrega</label>
+          <input id="rev-due-date" type="date" required/>
         </div>
 
-        <div class="field">
-          <label>Comentario interno (borrador local)</label>
-          <textarea id="d_comment" placeholder="Anota el motivo o detalles internos."></textarea>
-        </div>
-
-        <div style="display:flex;justify-content:flex-end;gap:.5rem;">
-          <button type="button" class="btn btn-secondary" onclick="
-            document.getElementById('rev-detail-panel').style.display='none';
-            document.getElementById('rev-empty').style.display='block';
-          ">
-            Cerrar
+        <div class="rev-modal-actions">
+          <button type="button" id="rev-cancel" class="btn btn-secondary">
+            Cancelar
           </button>
-          <button type="button" class="btn btn-reject" id="btn-reject">Rechazar</button>
-          <button type="button" class="btn btn-approve" id="btn-approve">Aprobar</button>
+          <button type="submit" id="rev-approve" class="btn btn-primary">
+            Aprobar solicitud
+          </button>
         </div>
-
-      </div>
+      </form>
+      <p class="help-text" style="margin-top:.5rem;">
+        Una vez aprobada o rechazada, la decisión no se puede deshacer desde la aplicación.
+      </p>
     </div>
-
   </div>
-</main>
 
-<script type="module">
-  import { getOrgStatus } from './modules/profile.js';
+  <script type="module">
+    import { getOrgStatus } from './modules/profile.js';
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    const { supa } = window;
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { supa } = window;
 
-    // 1) Sesión + org_status
-    const { data: { session } } = await supa.auth.getSession();
-    if (!session) {
-      window.location.href = './index.html';
-      return;
-    }
+      function formatStatus(st) {
+        const map = {
+          pendiente: 'pendiente',
+          aprobada: 'aprobada',
+          rechazada: 'rechazada',
+          completada: 'completada',
+          cancelada: 'cancelada'
+        };
+        return map[st] || st;
+      }
 
-    const orgStatus = await getOrgStatus();
-    if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
-      await supa.auth.signOut();
-      window.location.href = './index.html';
-      return;
-    }
+      function renderTipo(tipo) {
+        if (!tipo) return '-';
+        return tipo === 'compra' ? 'Compra' : 'Venta';
+      }
 
-    // Header
-    await loadHeader('app');
-    initHeaderUserMenu(
-      session,
-      async () => {
-        await supa.auth.signOut();
-        window.location.href = "./index.html";
-      },
-      () => window.location.href = './perfil.html'
-    );
-
-    // 2) Rol interno y permisos del módulo
-    const { data: meRow, error: meError } = await supa
-      .from('users')
-      .select('tesoro_internal_role')
-      .eq('id', session.user.id)
-      .maybeSingle();
-    if (meError) console.error('Error leyendo rol interno:', meError);
-
-    let myRole = meRow?.tesoro_internal_role || null;
-    if (typeof myRole === 'string') myRole = myRole.trim();
-
-    let roleRow = null;
-
-    const asNumber = Number(myRole);
-    if (!Number.isNaN(asNumber)) {
-      const { data, error } = await supa
-        .from('roles_app')
-        .select('*')
-        .eq('id', asNumber)
-        .maybeSingle();
-      if (!error) roleRow = data;
-    }
-
-    if (!roleRow && myRole) {
-      const { data, error } = await supa
-        .from('roles_app')
-        .select('*')
-        .ilike('role_name', myRole)
-        .maybeSingle();
-      if (!error) roleRow = data;
-    }
-
-    let revLevel = roleRow?.revision ?? 0;
-    if (!revLevel) {
-      alert('No tienes acceso al módulo de Revisión.');
-      window.location.href = './app_ui.html';
-      return;
-    }
-    const readOnly = (revLevel === 1);
-
-    const permsLabel = document.getElementById('rev-perms-label');
-    if (permsLabel) {
-      permsLabel.textContent = readOnly
-        ? 'Permisos: solo lectura.'
-        : 'Permisos: revisión y cambio de estado.';
-    }
-
-    // 3) Datos auxiliares: usuarios + almacenes
-    const { data: users, error: usersError } = await supa
-      .from('users')
-      .select('id, handle_name, discord_username');
-    if (usersError) console.error('Error leyendo usuarios:', usersError);
-
-    const usersById = {};
-    (users || []).forEach(u => { usersById[u.id] = u; });
-
-    const { data: warehouses, error: whError } = await supa
-      .from('warehouses')
-      .select('id, name')
-      .order('name', { ascending: true });
-    if (whError) console.error('Error leyendo almacenes:', whError);
-
-    const whSelect = document.getElementById('d_warehouse');
-    (warehouses || []).forEach(w => {
-      const opt = document.createElement('option');
-      opt.value = w.id;
-      opt.textContent = w.name;
-      whSelect.appendChild(opt);
-    });
-
-    // 4) Referencias DOM
-    const tbody = document.getElementById('rev-tbody');
-    const filtroEstado = document.getElementById('filtro-estado');
-    const buscador = document.getElementById('buscador');
-
-    const revEmpty = document.getElementById('rev-empty');
-    const revPanel = document.getElementById('rev-detail-panel');
-
-    const dType    = document.getElementById('d_type');
-    const dItem    = document.getElementById('d_item');
-    const dQty     = document.getElementById('d_quantity');
-    const dReq     = document.getElementById('d_requester');
-    const dStatus  = document.getElementById('d_status');
-    const dDates   = document.getElementById('d_dates');
-    const dDueDate = document.getElementById('d_due_date');
-    const dComment = document.getElementById('d_comment');
-
-    const btnApprove = document.getElementById('btn-approve');
-    const btnReject  = document.getElementById('btn-reject');
-
-    if (readOnly) {
-      btnApprove.classList.add('btn-disabled');
-      btnReject.classList.add('btn-disabled');
-      whSelect.disabled = true;
-      dDueDate.disabled = true;
-      dComment.disabled = true;
-    }
-
-    let allRequests = [];
-    let selectedId = null;
-
-    function renderTipo(tipo) {
-      if (!tipo) return '-';
-      return tipo === 'compra' ? 'Compra' : 'Venta';
-    }
-
-    // 5) Cargar solicitudes
-    async function loadRequests() {
-      const { data: reqs, error: reqError } = await supa
-        .from('requests')
-        .select(`
-          id,
-          request_type,
-          item_id,
-          quantity,
-          status,
-          created_at,
-          requester_discord_id,
-          warehouse_id,
-          due_date,
-          approver_discord_id,
-          approved_at,
-          commodities_master ( name, symbol )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (reqError) {
-        console.error('Error cargando solicitudes (revisión):', reqError);
+      /* ───── 1) Sesión + org_status ───── */
+      const { data: { session } } = await supa.auth.getSession();
+      if (!session) {
+        window.location.href = './index.html';
         return;
       }
 
-      allRequests = reqs || [];
-      renderTable();
-    }
+      const orgStatus = await getOrgStatus();
+      if (!orgStatus || !['daga','espada','admin'].includes(orgStatus)) {
+        // Revisión es solo para gente de Tesoro hacia arriba
+        await supa.auth.signOut();
+        window.location.href = './index.html';
+        return;
+      }
 
-    function renderTable() {
-      tbody.innerHTML = '';
-      const estado = filtroEstado.value;
-      const term = (buscador.value || '').toLowerCase();
+      if (typeof window.loadHeader === 'function') {
+        await window.loadHeader('app');
+      }
+      if (typeof window.initHeaderUserMenu === 'function') {
+        window.initHeaderUserMenu(
+          session,
+          async () => {
+            await supa.auth.signOut();
+            window.location.href = "./index.html";
+          },
+          () => window.location.href = './perfil.html'
+        );
+      }
 
-      allRequests.forEach(r => {
-        const st = r.status || 'pendiente';
-        if (estado !== 'todas' && st !== estado) return;
+      /* ───── 2) Permisos módulo revisión ───── */
+      const { data: meRow, error: meError } = await supa
+        .from('users')
+        .select('tesoro_internal_role')
+        .eq('id', session.user.id)
+        .maybeSingle();
 
-        const cm = r.commodities_master;
-        const itemName = cm
-          ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
-          : (r.item_id || '');
+      if (meError) console.error('Error leyendo rol interno:', meError);
 
-        const requester = usersById[r.requester_discord_id];
-        const reqName = requester?.handle_name || requester?.discord_username || r.requester_discord_id;
+      let myRole = meRow?.tesoro_internal_role || null;
+      if (typeof myRole === 'string') myRole = myRole.trim();
 
-        if (term) {
-          const search = (itemName + ' ' + reqName).toLowerCase();
-          if (!search.includes(term)) return;
+      let roleRow = null;
+      if (myRole) {
+        const asNumber = Number(myRole);
+        if (!Number.isNaN(asNumber) && myRole !== '') {
+          const { data, error } = await supa
+            .from('roles_app')
+            .select('*')
+            .eq('id', asNumber)
+            .maybeSingle();
+          if (!error) roleRow = data;
+        }
+        if (!roleRow) {
+          const { data, error } = await supa
+            .from('roles_app')
+            .select('*')
+            .ilike('role_name', myRole)
+            .maybeSingle();
+          if (!error) roleRow = data;
+        }
+      }
+
+      let revLevel = roleRow?.revision ?? 0;
+      if (!revLevel || revLevel === 0) {
+        alert('No tienes acceso al módulo de Revisión.');
+        window.location.href = './app_ui.html';
+        return;
+      }
+      const readOnly = (revLevel === 1);
+
+      /* ───── 3) Datos auxiliares: usuarios + almacenes ───── */
+      const usersById = {};
+      const { data: users, error: usersError } = await supa
+        .from('users')
+        .select('id, handle_name, discord_username');
+      if (!usersError && users) {
+        users.forEach(u => { usersById[u.id] = u; });
+      }
+
+      const warehousesById = {};
+      const { data: warehouses, error: whError } = await supa
+        .from('warehouses')
+        .select('id, name')
+        .order('name', { ascending: true });
+      if (whError) console.error('Error cargando almacenes:', whError);
+
+      (warehouses || []).forEach(w => { warehousesById[w.id] = w; });
+
+      /* Rellenar select del modal */
+      const warehouseSelect = document.getElementById('rev-warehouse-select');
+      (warehouses || []).forEach(w => {
+        const opt = document.createElement('option');
+        opt.value = w.id;
+        opt.textContent = w.name || 'Almacén';
+        warehouseSelect.appendChild(opt);
+      });
+
+      /* ───── 4) DOM tabla + modal ───── */
+      const tbody       = document.getElementById('rev-tbody');
+      const searchInput = document.getElementById('rev-search');
+
+      const modalBackdrop = document.getElementById('rev-modal-backdrop');
+      const revForm       = document.getElementById('rev-form');
+      const revCancelBtn  = document.getElementById('rev-cancel');
+      const revSummary    = document.getElementById('rev-summary');
+      const revDueDate    = document.getElementById('rev-due-date');
+
+      let pendingRequests = [];
+      let currentRequest  = null; // la que se está aprobando
+
+      function openModalForRequest(r, itemName, requesterName) {
+        currentRequest = r;
+        const resumen = [
+          `Tipo: ${renderTipo(r.request_type)}`,
+          `Ítem: ${itemName}`,
+          `Cantidad: ${r.quantity}`,
+          `Solicitante: ${requesterName}`
+        ].join('\\n');
+
+        revSummary.value = resumen;
+        warehouseSelect.value = '';
+        revDueDate.value = '';
+
+        modalBackdrop.style.display = 'flex';
+      }
+
+      function closeModal() {
+        modalBackdrop.style.display = 'none';
+        currentRequest = null;
+      }
+
+      revCancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeModal();
+      });
+
+      modalBackdrop.addEventListener('click', (e) => {
+        if (e.target === modalBackdrop) {
+          closeModal();
+        }
+      });
+
+      /* ───── 5) Carga de solicitudes pendientes ───── */
+      async function loadPendingRequests() {
+        const { data, error } = await supa
+          .from('requests')
+          .select(`
+            id,
+            request_type,
+            item_id,
+            quantity,
+            status,
+            created_at,
+            due_date,
+            requester_discord_id,
+            commodities_master(name, symbol)
+          `)
+          .eq('status', 'pendiente')
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          console.error('Error cargando solicitudes pendientes:', error);
+          return;
         }
 
-        const tr = document.createElement('tr');
-        tr.dataset.id = r.id;
+        pendingRequests = data || [];
+        renderTable();
+      }
 
-        tr.innerHTML = `
-          <td>#${r.id}</td>
-          <td><span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span></td>
-          <td>${itemName}</td>
-          <td>${r.quantity}</td>
-          <td>${reqName}</td>
-          <td><span class="badge-status ${st}">${st}</span></td>
-          <td>${new Date(r.created_at).toLocaleString()}</td>
-        `;
+      function renderTable() {
+        tbody.innerHTML = '';
 
-        tr.addEventListener('click', () => {
-          selectedId = r.id;
-          [...tbody.querySelectorAll('tr')].forEach(row => row.classList.remove('selected'));
-          tr.classList.add('selected');
-          showDetail(r, reqName);
+        const term = (searchInput.value || '').toLowerCase();
 
-          window.open(
-            `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
-            '_blank',
-            'width=720,height=760'
-          );
+        if (!pendingRequests.length) {
+          const tr = document.createElement('tr');
+          const td = document.createElement('td');
+          td.colSpan = 9;
+          td.textContent = 'No hay solicitudes pendientes de revisión.';
+          tr.appendChild(td);
+          tbody.appendChild(tr);
+          return;
+        }
 
+        pendingRequests.forEach(r => {
+          const cm = r.commodities_master;
+          const itemName = cm
+            ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
+            : (r.item_id || '');
+
+          const user = usersById[r.requester_discord_id];
+          const requesterName = user?.handle_name || user?.discord_username || r.requester_discord_id;
+
+          if (term) {
+            const haystack = (itemName + ' ' + requesterName).toLowerCase();
+            if (!haystack.includes(term)) return;
+          }
+
+          const tr = document.createElement('tr');
+
+          const tdId = document.createElement('td');
+          tdId.textContent = `#${r.id}`;
+
+          const tdTipo = document.createElement('td');
+          tdTipo.innerHTML = `<span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span>`;
+
+          const tdItem = document.createElement('td');
+          tdItem.textContent = itemName;
+
+          const tdQty = document.createElement('td');
+          tdQty.textContent = r.quantity;
+
+          const tdReq = document.createElement('td');
+          tdReq.textContent = requesterName;
+
+          const tdCreated = document.createElement('td');
+          tdCreated.textContent = r.created_at
+            ? new Date(r.created_at).toLocaleString()
+            : '-';
+
+          const tdStatus = document.createElement('td');
+          const statusSpan = document.createElement('span');
+          statusSpan.className = 'badge-status ' + (r.status || 'pendiente');
+          statusSpan.textContent = formatStatus(r.status || 'pendiente');
+          tdStatus.appendChild(statusSpan);
+
+          const tdDetalle = document.createElement('td');
+          const btnDetalle = document.createElement('button');
+          btnDetalle.type = 'button';
+          btnDetalle.className = 'btn btn-secondary';
+          btnDetalle.style.padding = '0.2rem 0.6rem';
+          btnDetalle.textContent = 'Ver';
+          btnDetalle.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            window.open(
+              `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
+              '_blank',
+              'width=720,height=760'
+            );
+          });
+          tdDetalle.appendChild(btnDetalle);
+
+          const tdAcc = document.createElement('td');
+          const canAct = !readOnly;
+
+          const okBtn = document.createElement('button');
+          okBtn.type = 'button';
+          okBtn.className = 'btn-icon ok';
+          okBtn.innerHTML = '✔';
+          okBtn.disabled = !canAct;
+          if (!canAct) okBtn.classList.add('btn-disabled');
+          okBtn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            if (!canAct) return;
+            openModalForRequest(r, itemName, requesterName);
+          });
+
+          const koBtn = document.createElement('button');
+          koBtn.type = 'button';
+          koBtn.className = 'btn-icon ko';
+          koBtn.style.marginLeft = '0.25rem';
+          koBtn.innerHTML = '✕';
+          koBtn.disabled = !canAct;
+          if (!canAct) koBtn.classList.add('btn-disabled');
+          koBtn.addEventListener('click', async (ev) => {
+            ev.stopPropagation();
+            if (!canAct) return;
+
+            const okConfirm = confirm(
+              '¿Seguro que quieres rechazar esta solicitud?\\n' +
+              'Esta acción no se puede deshacer.'
+            );
+            if (!okConfirm) return;
+
+            const { error } = await supa
+              .from('requests')
+              .update({
+                status: 'rechazada',
+                approver_discord_id: session.user.id
+              })
+              .eq('id', r.id);
+
+            if (error) {
+              console.error('Error rechazando solicitud:', error);
+              alert('No se ha podido rechazar la solicitud.');
+              return;
+            }
+
+            await loadPendingRequests();
+          });
+
+          tdAcc.appendChild(okBtn);
+          tdAcc.appendChild(koBtn);
+
+          tr.appendChild(tdId);
+          tr.appendChild(tdTipo);
+          tr.appendChild(tdItem);
+          tr.appendChild(tdQty);
+          tr.appendChild(tdReq);
+          tr.appendChild(tdCreated);
+          tr.appendChild(tdStatus);
+          tr.appendChild(tdDetalle);
+          tr.appendChild(tdAcc);
+
+          tbody.appendChild(tr);
         });
-
-        tbody.appendChild(tr);
-      });
-    }
-
-    function showDetail(r, requesterName) {
-      revEmpty.style.display = 'none';
-      revPanel.style.display = 'block';
-
-      const cm = r.commodities_master;
-      const itemName = cm
-        ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
-        : (r.item_id || '');
-
-      dType.value   = renderTipo(r.request_type);
-      dItem.value   = itemName;
-      dQty.value    = r.quantity;
-      dReq.value    = requesterName;
-      dStatus.value = r.status || 'pendiente';
-
-      const creado   = r.created_at   ? new Date(r.created_at).toLocaleString()   : 'desconocido';
-      const aprobado = r.approved_at  ? new Date(r.approved_at).toLocaleString()  : null;
-
-      dDates.textContent = aprobado
-        ? `Creada: ${creado} · Aprobada: ${aprobado}`
-        : `Creada: ${creado}`;
-
-      whSelect.value = r.warehouse_id || '';
-      dDueDate.value = r.due_date || '';
-      dComment.value = '';
-    }
-
-    filtroEstado.addEventListener('change', renderTable);
-    buscador.addEventListener('input', renderTable);
-
-    await loadRequests();
-
-    // ── 6) Aprobar / Rechazar ───────────────────────
-    async function updateStatus(newStatus) {
-      if (readOnly) {
-        alert('Permisos de solo lectura.');
-        return;
-      }
-      if (!selectedId) {
-        alert('Selecciona una solicitud primero.');
-        return;
       }
 
-      // Aprobación: requiere almacén + fecha
-      if (newStatus === 'aprobada') {
-        const wh  = whSelect.value;
-        const due = dDueDate.value;
-        if (!wh || !due) {
-          alert('Debes indicar almacén y plazo máximo de entrega.');
+      searchInput.addEventListener('input', renderTable);
+
+      /* ───── 6) Envío del formulario de aprobación ───── */
+      revForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (readOnly) {
+          alert('Tienes permisos de solo lectura en este módulo.');
+          return;
+        }
+        if (!currentRequest) return;
+
+        const warehouseId = warehouseSelect.value;
+        const dueDate = revDueDate.value;
+
+        if (!warehouseId || !dueDate) {
+          alert('Debes seleccionar un almacén y una fecha límite.');
           return;
         }
 
@@ -577,58 +642,26 @@
           .from('requests')
           .update({
             status: 'aprobada',
-            warehouse_id: wh,
-            due_date: due,
-            approved_at: new Date().toISOString()
-            // 👆 Nada de discord_id, ni approver_discord_id, ni gaitas
+            warehouse_id: warehouseId,
+            due_date: dueDate,
+            approved_at: new Date().toISOString(),
+            approver_discord_id: session.user.id
           })
-          .eq('id', selectedId);
+          .eq('id', currentRequest.id);
 
         if (error) {
-          console.error('Error actualizando solicitud:', error);
-          alert('No se ha podido aprobar la solicitud.\n\nDetalle: ' + error.message);
+          console.error('Error aprobando solicitud:', error);
+          alert('No se ha podido aprobar la solicitud.');
           return;
         }
-      }
 
-      // Rechazo
-      if (newStatus === 'rechazada') {
-        const { error } = await supa
-          .from('requests')
-          .update({
-            status: 'rechazada',
-            approved_at: new Date().toISOString()
-          })
-          .eq('id', selectedId);
+        closeModal();
+        await loadPendingRequests();
+      });
 
-        if (error) {
-          console.error('Error rechazando solicitud:', error);
-          alert('No se ha podido rechazar la solicitud.\n\nDetalle: ' + error.message);
-          return;
-        }
-      }
-
-      // Recargar lista y detalle
-      await loadRequests();
-      const updated = allRequests.find(x => x.id === selectedId);
-      if (updated) {
-        const requester = usersById[updated.requester_discord_id];
-        const reqName =
-          requester?.handle_name ||
-          requester?.discord_username ||
-          updated.requester_discord_id;
-
-        showDetail(updated, reqName);
-      }
-
-      alert(`Solicitud marcada como ${newStatus}.`);
-    }
-
-
-    btnApprove.addEventListener('click', () => updateStatus('aprobada'));
-    btnReject .addEventListener('click', () => updateStatus('rechazada'));
-  });
-</script>
-
+      /* ───── 7) Carga inicial ───── */
+      await loadPendingRequests();
+    });
+  </script>
 </body>
 </html>
