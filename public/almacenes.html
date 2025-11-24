@@ -907,11 +907,19 @@
 
           // Abrir modal de detalle / firma
           tr.addEventListener('click', () => {
+            // modal propio de almacén (firma Tesoro)
             openRequestModal({
               ...r,
               itemName,
               requesterName: reqName
             });
+          
+            // popup estándar de detalle
+            window.open(
+              `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
+              '_blank',
+              'width=720,height=760'
+            );
           });
 
           reqTbody.appendChild(tr);
