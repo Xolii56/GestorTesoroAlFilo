@@ -19,27 +19,21 @@
       margin: 0 auto;
     }
 
-    .solicitudes-layout {
+    /* FORM EN HORIZONTAL */
+    .sol-form-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr);
-      gap: 1.3rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.8rem 1rem;
     }
 
-    @media (max-width: 900px) {
-      .solicitudes-layout {
+    @media (max-width: 800px) {
+      .sol-form-grid {
         grid-template-columns: minmax(0, 1fr);
       }
     }
 
-    /* Columna derecha: lista + detalle en vertical */
-    .sol-right-column {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
     .sol-form .field {
-      margin-bottom: .8rem;
+      margin-bottom: .0rem; /* lo controla el grid */
     }
 
     .sol-form label {
@@ -97,6 +91,38 @@
       cursor: not-allowed;
     }
 
+    .btn-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.7);
+      background: #020617;
+      color: #e5e7eb;
+      font-size: .8rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .btn-icon.ok {
+      background: #22c55e;
+      color: #022c22;
+      border-color: #22c55e;
+    }
+
+    .btn-icon.ko {
+      background: #ef4444;
+      color: #fef2f2;
+      border-color: #ef4444;
+    }
+
+    .btn-icon:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
     .help-text {
       font-size: .75rem;
       opacity: .7;
@@ -123,16 +149,11 @@
     }
 
     .sol-table tbody tr {
-      cursor: pointer;
       transition: background .12s ease-out;
     }
 
     .sol-table tbody tr:hover {
       background: rgba(15,23,42,0.9);
-    }
-
-    .sol-table tbody tr.selected {
-      background: rgba(56,189,248,0.18);
     }
 
     .badge-status {
@@ -166,7 +187,6 @@
     .tipo-toggle {
       display:flex;
       gap:.4rem;
-      margin-bottom:.4rem;
     }
 
     .tipo-toggle button {
@@ -187,37 +207,30 @@
       font-weight:600;
     }
 
-    /* Detalle de solicitud (solo lectura) */
-    .sol-detail .field {
-      margin-bottom: .7rem;
+    /* Barra de filtros de "Mis solicitudes" */
+    .sol-toolbar {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:.6rem;
+      flex-wrap:wrap;
+      margin-bottom:.6rem;
     }
 
-    .sol-detail label {
-      display:block;
-      font-size:.8rem;
-      opacity:.8;
-      margin-bottom:.2rem;
+    .sol-toolbar-group {
+      display:flex;
+      gap:.4rem;
+      flex-wrap:wrap;
     }
 
-    .sol-detail input,
-    .sol-detail textarea {
-      width:100%;
-      padding:0.4rem 0.5rem;
-      border-radius:0.4rem;
-      border:1px solid rgba(148,163,184,0.8);
+    .sol-toolbar input[type="search"],
+    .sol-toolbar select {
+      padding:0.35rem 0.55rem;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.7);
       background:#020617;
       color:#e5e7eb;
-      font-size:.9rem;
-    }
-
-    .sol-detail textarea {
-      min-height:60px;
-      resize:vertical;
-    }
-
-    .sol-detail input[readonly],
-    .sol-detail textarea[readonly] {
-      opacity:.9;
+      font-size:.8rem;
     }
   </style>
 </head>
@@ -240,13 +253,13 @@
       </button>
     </div>
 
-    <div class="solicitudes-layout">
-      <!-- FORMULARIO -->
-      <div class="card">
-        <h3 style="margin-top:0;">Nueva solicitud</h3>
-        <p id="sol-perms-label" class="help-text" style="margin-bottom:.8rem;"></p>
+    <!-- FORMULARIO ARRIBA -->
+    <div class="card">
+      <h3 style="margin-top:0;">Nueva solicitud</h3>
+      <p id="sol-perms-label" class="help-text" style="margin-bottom:.8rem;"></p>
 
-        <form id="sol-form" class="sol-form">
+      <form id="sol-form" class="sol-form">
+        <div class="sol-form-grid">
           <!-- Tipo de solicitud -->
           <div class="field">
             <label>Tipo de solicitud</label>
@@ -271,120 +284,73 @@
             </select>
           </div>
 
+          <!-- Cantidad -->
           <div class="field">
             <label for="quantity">Cantidad</label>
             <input id="quantity" type="number" min="1" required />
           </div>
 
-          <div class="field">
+          <!-- Notas -->
+          <div class="field" style="grid-column:1 / -1;">
             <label for="notes">Notas (opcional)</label>
             <textarea id="notes" placeholder="Describe brevemente la solicitud."></textarea>
           </div>
+        </div>
 
-          <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.5rem;">
-            <button type="submit" class="btn btn-primary" id="sol-submit-btn">
-              Enviar solicitud
-            </button>
-          </div>
-        </form>
-      </div>
+        <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.8rem;">
+          <button type="submit" class="btn btn-primary" id="sol-submit-btn">
+            Enviar solicitud
+          </button>
+        </div>
+      </form>
+    </div>
 
-      <!-- COLUMNA DERECHA: lista + detalle -->
-      <div class="sol-right-column">
-
-        <!-- LISTADO -->
-        <div class="card">
+    <!-- BLOQUE: MIS SOLICITUDES -->
+    <div class="card" style="margin-top:1.25rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;">
+        <div>
           <h3 style="margin-top:0;">Mis solicitudes</h3>
           <p class="help-text">
             Solo se muestran las solicitudes realizadas con tu cuenta actual.
           </p>
-
-          <div style="max-height:300px;overflow:auto;margin-top:.6rem;">
-            <table class="sol-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Tipo</th>
-                  <th>Ítem</th>
-                  <th>Cant.</th>
-                  <th>Estado</th>
-                  <th>Creada</th>
-                </tr>
-              </thead>
-              <tbody id="sol-tbody">
-                <!-- Rellenado por JS -->
-              </tbody>
-            </table>
-          </div>
         </div>
+      </div>
 
-        <!-- DETALLE SOLO LECTURA -->
-        <div class="card sol-detail">
-          <h3 style="margin-top:0;">Detalle de la solicitud</h3>
-          <p id="sol-empty" class="help-text">
-            Selecciona una solicitud en la tabla para ver todos los detalles y firmar la entrega.
-          </p>
-
-          <div id="sol-detail-panel" style="display:none;">
-            <div class="field">
-              <label>Tipo de solicitud</label>
-              <input id="d_type" type="text" readonly>
-            </div>
-
-            <div class="field">
-              <label>Ítem</label>
-              <input id="d_item" type="text" readonly>
-            </div>
-
-            <div class="field">
-              <label>Cantidad</label>
-              <input id="d_quantity" type="number" readonly>
-            </div>
-
-            <div class="field">
-              <label>Estado actual</label>
-              <input id="d_status" type="text" readonly>
-            </div>
-
-            <div class="field">
-              <label>Almacén asignado</label>
-              <input id="d_warehouse" type="text" readonly>
-              <p class="help-text">
-                Si aún no se ha aprobado, este campo aparecerá vacío.
-              </p>
-            </div>
-
-            <div class="field">
-              <label>Plazo máximo de entrega</label>
-              <input id="d_due_date" type="text" readonly>
-            </div>
-
-            <div class="field">
-              <label>Fechas</label>
-              <div id="d_dates" class="help-text"></div>
-            </div>
-
-            <div class="field">
-              <label>Firmas</label>
-              <div id="d_sign_summary" class="help-text"></div>
-            </div>
-
-            <div id="sol-detail-actions"
-                 style="margin-top:.6rem; display:none; gap:.5rem; justify-content:flex-end;">
-              <button type="button" id="sol-reject-btn" class="btn btn-secondary">
-                Rechazar entrega
-              </button>
-              <button type="button" id="sol-sign-btn" class="btn btn-primary">
-                Firmar entrega (Solicitante)
-              </button>
-            </div>
-            <p id="sol-detail-help" class="help-text" style="display:none;">
-              Para completar la entrega se necesitan tu firma y la del Tesoro.
-              Si cualquiera de los dos rechaza la entrega, la solicitud pasará a estado "cancelada" y no se ajustará el stock.
-            </p>
-          </div>
+      <div class="sol-toolbar">
+        <div class="sol-toolbar-group">
+          <input type="search" id="sol-search" placeholder="Buscar por ítem..."/>
         </div>
+        <div class="sol-toolbar-group">
+          <label for="sol-status-filter" class="help-text" style="margin:0;">Estado:</label>
+          <select id="sol-status-filter">
+            <option value="todas">Todas</option>
+            <option value="pendiente">Pendientes</option>
+            <option value="aprobada">Aprobadas</option>
+            <option value="rechazada">Rechazadas</option>
+            <option value="completada">Completadas</option>
+            <option value="cancelada">Canceladas</option>
+          </select>
+        </div>
+      </div>
 
+      <div style="max-height:360px;overflow:auto;margin-top:.2rem;">
+        <table class="sol-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tipo</th>
+              <th>Ítem</th>
+              <th>Cant.</th>
+              <th>Estado</th>
+              <th>Creada</th>
+              <th>Detalle</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="sol-tbody">
+            <!-- Rellenado por JS -->
+          </tbody>
+        </table>
       </div>
     </div>
   </main>
@@ -534,7 +500,7 @@
       } else {
         (items || []).forEach(it => {
           const opt = document.createElement('option');
-          opt.value = it.id;                   // uuid de commodities_master
+          opt.value = it.id; // uuid de commodities_master
           opt.textContent = it.symbol
             ? `${it.name} (${it.symbol})`
             : it.name;
@@ -542,7 +508,7 @@
         });
       }
 
-      // 7.1) Cargar almacenes para mostrar nombres en detalle
+      // 7.1) Cargar almacenes (para otros módulos / detalle estándar)
       const { data: warehouses, error: whError } = await supa
         .from('warehouses')
         .select('id, name');
@@ -553,102 +519,104 @@
 
       // 8) Listar solicitudes del usuario actual
       const tbody = document.getElementById('sol-tbody');
-
-      const solEmpty = document.getElementById('sol-empty');
-      const solDetailPanel = document.getElementById('sol-detail-panel');
-
-      const dType      = document.getElementById('d_type');
-      const dItem      = document.getElementById('d_item');
-      const dQty       = document.getElementById('d_quantity');
-      const dStatus    = document.getElementById('d_status');
-      const dWarehouse = document.getElementById('d_warehouse');
-      const dDueDate   = document.getElementById('d_due_date');
-      const dDates     = document.getElementById('d_dates');
-      const dSignSummary = document.getElementById('d_sign_summary');
-
-      const solDetailActions = document.getElementById('sol-detail-actions');
-      const solDetailHelp    = document.getElementById('sol-detail-help');
-      const solSignBtn       = document.getElementById('sol-sign-btn');
-      const solRejectBtn     = document.getElementById('sol-reject-btn');
+      const searchInput = document.getElementById('sol-search');
+      const statusFilter = document.getElementById('sol-status-filter');
 
       let myRequests = [];
-      let selectedId = null;
-      let selectedRequest = null;
 
       function renderTipo(tipo) {
         if (!tipo) return '-';
         return tipo === 'compra' ? 'Compra' : 'Venta';
       }
 
-      function showDetail(r) {
-        selectedRequest = r;
+      function renderTable() {
+        tbody.innerHTML = '';
 
-        solEmpty.style.display = 'none';
-        solDetailPanel.style.display = 'block';
+        const estado = statusFilter.value;
+        const term = (searchInput.value || '').toLowerCase();
 
-        const cm = r.commodities_master;
-        const itemName = cm
-          ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
-          : (r.item_id || '');
+        myRequests.forEach(r => {
+          const st = r.status || 'pendiente';
+          if (estado !== 'todas' && st !== estado) return;
 
-        dType.value   = renderTipo(r.request_type);
-        dItem.value   = itemName;
-        dQty.value    = r.quantity;
+          const cm = r.commodities_master;
+          const itemName = cm
+            ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
+            : (r.item_id || '-');
 
-        const st = r.status || 'pendiente';
-        dStatus.value = formatStatus(st);
+          if (term) {
+            const haystack = (itemName || '').toLowerCase();
+            if (!haystack.includes(term)) return;
+          }
 
-        const wh = r.warehouse_id ? warehousesById[r.warehouse_id] : null;
-        dWarehouse.value = wh ? wh.name : 'No asignado';
+          const tr = document.createElement('tr');
 
-        dDueDate.value = r.due_date
-          ? new Date(r.due_date).toLocaleDateString()
-          : 'Sin definir';
+          tr.innerHTML = `
+            <td>#${r.id}</td>
+            <td><span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span></td>
+            <td>${itemName}</td>
+            <td>${r.quantity}</td>
+            <td><span class="badge-status ${st}">${formatStatus(st)}</span></td>
+            <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
+          `;
 
-        const creado    = r.created_at   ? new Date(r.created_at).toLocaleString()   : 'desconocido';
-        const aprobado  = r.approved_at  ? new Date(r.approved_at).toLocaleString()  : null;
-        const completado= r.completed_at ? new Date(r.completed_at).toLocaleString() : null;
+          // Columna Detalle -> popup estándar
+          const tdDetalle = document.createElement('td');
+          const btnDetalle = document.createElement('button');
+          btnDetalle.type = 'button';
+          btnDetalle.className = 'btn btn-secondary';
+          btnDetalle.style.padding = '0.2rem 0.6rem';
+          btnDetalle.textContent = 'Ver';
+          btnDetalle.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            window.open(
+              `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
+              '_blank',
+              'width=720,height=760'
+            );
+          });
+          tdDetalle.appendChild(btnDetalle);
+          tr.appendChild(tdDetalle);
 
-        let timeline = `Creada: ${creado}`;
-        if (aprobado)   timeline += ` · Aprobada: ${aprobado}`;
-        if (completado) timeline += ` · Completada: ${completado}`;
-        dDates.textContent = timeline;
+          // Columna Acciones -> firma solicitante (OK/KO) solo si aprobada
+          const tdAcc = document.createElement('td');
+          const canSign =
+            !readOnly &&
+            st === 'aprobada' &&
+            (r.requester_sign_result || 'pendiente') === 'pendiente';
 
-        const wSign = r.warehouse_sign_result || 'pendiente';
-        const rqSign = r.requester_sign_result || 'pendiente';
+          const okBtn = document.createElement('button');
+          okBtn.type = 'button';
+          okBtn.className = 'btn-icon ok';
+          okBtn.innerHTML = '✔';
+          okBtn.disabled = !canSign;
+          if (!canSign) okBtn.classList.add('btn-disabled');
+          okBtn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            handleRequesterSign(r, 'ok');
+          });
 
-        const lines = [];
-        let lineTesoro = `Tesoro: ${humanSignText(wSign)}`;
-        if (r.warehouse_sign_at) {
-          lineTesoro += ` — ${new Date(r.warehouse_sign_at).toLocaleString()}`;
-        }
-        lines.push(lineTesoro);
+          const koBtn = document.createElement('button');
+          koBtn.type = 'button';
+          koBtn.className = 'btn-icon ko';
+          koBtn.style.marginLeft = '0.25rem';
+          koBtn.innerHTML = '✕';
+          koBtn.disabled = !canSign;
+          if (!canSign) koBtn.classList.add('btn-disabled');
+          koBtn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            handleRequesterSign(r, 'ko');
+          });
 
-        let lineSol = `Solicitante: ${humanSignText(rqSign)}`;
-        if (r.requester_sign_at) {
-          lineSol += ` — ${new Date(r.requester_sign_at).toLocaleString()}`;
-        }
-        lines.push(lineSol);
+          tdAcc.appendChild(okBtn);
+          tdAcc.appendChild(koBtn);
+          tr.appendChild(tdAcc);
 
-        dSignSummary.innerHTML = lines.join('<br/>');
-
-        const canSign =
-          !readOnly &&
-          st === 'aprobada' &&
-          (rqSign === 'pendiente');
-
-        solDetailActions.style.display = canSign ? 'flex' : 'none';
-        solDetailHelp.style.display    = canSign ? 'block' : 'none';
-
-        solSignBtn.disabled   = !canSign;
-        solRejectBtn.disabled = !canSign;
-        solSignBtn.classList.toggle('btn-disabled', !canSign);
-        solRejectBtn.classList.toggle('btn-disabled', !canSign);
+          tbody.appendChild(tr);
+        });
       }
 
       async function loadMyRequests() {
-        tbody.innerHTML = '';
-      
         const { data: reqs, error: reqError } = await supa
           .from('requests')
           .select(`
@@ -671,57 +639,18 @@
           `)
           .eq('requester_discord_id', session.user.id)
           .order('created_at', { ascending: false });
-      
+
         if (reqError) {
           console.error('Error cargando solicitudes:', reqError);
           return;
         }
-      
+
         myRequests = reqs || [];
-      
-        myRequests.forEach(r => {
-          const tr = document.createElement('tr');
-      
-          const cm = r.commodities_master;
-          const itemName = cm
-            ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
-            : r.item_id || '-';
-      
-          const st = r.status || 'pendiente';
-      
-          tr.innerHTML = `
-            <td>#${r.id}</td>
-            <td><span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span></td>
-            <td>${itemName}</td>
-            <td>${r.quantity}</td>
-            <td><span class="badge-status ${st}">${formatStatus(st)}</span></td>
-            <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
-          `;
-      
-          tr.addEventListener('click', () => {
-            // selecciona y muestra detalle interno (para firmar, etc.)
-            selectedId = r.id;
-            [...tbody.querySelectorAll('tr')].forEach(row => row.classList.remove('selected'));
-            tr.classList.add('selected');
-            showDetail(r);
-      
-            // abre popup estándar de detalle
-            window.open(
-              `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
-              '_blank',
-              'width=720,height=760'
-            );
-          });
-      
-          tbody.appendChild(tr);
-        });
-      
-        if (!selectedId) {
-          solEmpty.style.display = 'block';
-          solDetailPanel.style.display = 'none';
-        }
+        renderTable();
       }
-      
+
+      searchInput.addEventListener('input', renderTable);
+      statusFilter.addEventListener('change', renderTable);
 
       await loadMyRequests();
 
@@ -745,7 +674,7 @@
 
         const payload = {
           request_type: type,
-          item_id: itemId,                  // uuid de commodities_master
+          item_id: itemId, // uuid de commodities_master
           quantity: qty,
           requester_discord_id: session.user.id,
           status: 'pendiente'
@@ -763,10 +692,8 @@
         }
 
         solForm.reset();
-        // restaurar solicitante después del reset
+        // restaurar solicitante y tipo después del reset
         solicitanteInput.value = handle;
-
-        // reset tipo a compra
         typeHidden.value = 'compra';
         tipoButtons.forEach(btn => {
           btn.classList.toggle('active', btn.dataset.type === 'compra');
@@ -843,100 +770,78 @@
         alert('Solicitud completada y stock ajustado correctamente.');
       }
 
-      // Firmar entrega (Solicitante)
-      solSignBtn.addEventListener('click', async () => {
-        if (readOnly || !selectedRequest) return;
+      async function handleRequesterSign(r, decision) {
+        if (readOnly) return;
 
-        const st = selectedRequest.status || 'pendiente';
+        const st = r.status || 'pendiente';
         if (st !== 'aprobada') {
           alert('Solo puedes firmar solicitudes que están en estado "aprobada".');
           return;
         }
 
-        const currentRqSign = selectedRequest.requester_sign_result || 'pendiente';
-        if (currentRqSign !== 'pendiente') {
-          alert('Ya has firmado esta solicitud.');
-          return;
-        }
-
-        const { data: updated, error } = await supa
-          .from('requests')
-          .update({
-            requester_sign_result: 'ok',
-            requester_sign_at: new Date().toISOString(),
-            requester_sign_user: session.user.id
-          })
-          .eq('id', selectedRequest.id)
-          .select(`
-            id,
-            status,
-            request_type,
-            quantity,
-            item_id,
-            warehouse_id,
-            warehouse_sign_result,
-            requester_sign_result
-          `)
-          .maybeSingle();
-
-        if (error || !updated) {
-          console.error('Error registrando firma del solicitante:', error);
-          alert('No se ha podido registrar tu firma.');
-          return;
-        }
-
-        await maybeFinalizeRequest(updated, session.user.id);
-
-        await loadMyRequests();
-        const refreshed = myRequests.find(r => r.id === selectedRequest.id);
-        if (refreshed) showDetail(refreshed);
-      });
-
-      // Rechazar entrega (Solicitante)
-      solRejectBtn.addEventListener('click', async () => {
-        if (readOnly || !selectedRequest) return;
-
-        const st = selectedRequest.status || 'pendiente';
-        if (st !== 'aprobada') {
-          alert('Solo puedes rechazar solicitudes que están en estado "aprobada".');
-          return;
-        }
-
-        const currentRqSign = selectedRequest.requester_sign_result || 'pendiente';
+        const currentRqSign = r.requester_sign_result || 'pendiente';
         if (currentRqSign !== 'pendiente') {
           alert('Ya has firmado o rechazado esta solicitud.');
           return;
         }
 
-        const okConfirm = confirm(
-          'Vas a marcar la entrega como NO aceptada.\n' +
-          'La solicitud pasará a estado "cancelada" y no se ajustará el stock.\n\n' +
-          '¿Confirmas?'
-        );
-        if (!okConfirm) return;
+        if (decision === 'ok') {
+          const { data: updated, error } = await supa
+            .from('requests')
+            .update({
+              requester_sign_result: 'ok',
+              requester_sign_at: new Date().toISOString(),
+              requester_sign_user: session.user.id
+            })
+            .eq('id', r.id)
+            .select(`
+              id,
+              status,
+              request_type,
+              quantity,
+              item_id,
+              warehouse_id,
+              warehouse_sign_result,
+              requester_sign_result
+            `)
+            .maybeSingle();
 
-        const { error } = await supa
-          .from('requests')
-          .update({
-            requester_sign_result: 'ko',
-            requester_sign_at: new Date().toISOString(),
-            requester_sign_user: session.user.id,
-            status: 'cancelada'
-          })
-          .eq('id', selectedRequest.id);
+          if (error || !updated) {
+            console.error('Error registrando firma del solicitante:', error);
+            alert('No se ha podido registrar tu firma.');
+            return;
+          }
 
-        if (error) {
-          console.error('Error cancelando entrega:', error);
-          alert('No se ha podido marcar la entrega como cancelada.');
-          return;
+          await maybeFinalizeRequest(updated, session.user.id);
+        } else {
+          const okConfirm = confirm(
+            'Vas a marcar la entrega como NO aceptada.\n' +
+            'La solicitud pasará a estado "cancelada" y no se ajustará el stock.\n\n' +
+            '¿Confirmas?'
+          );
+          if (!okConfirm) return;
+
+          const { error } = await supa
+            .from('requests')
+            .update({
+              requester_sign_result: 'ko',
+              requester_sign_at: new Date().toISOString(),
+              requester_sign_user: session.user.id,
+              status: 'cancelada'
+            })
+            .eq('id', r.id);
+
+          if (error) {
+            console.error('Error cancelando entrega:', error);
+            alert('No se ha podido marcar la entrega como cancelada.');
+            return;
+          }
+
+          alert('Has rechazado la entrega. La solicitud ha pasado a estado "cancelada".');
         }
 
-        alert('Has rechazado la entrega. La solicitud ha pasado a estado "cancelada".');
-
         await loadMyRequests();
-        const refreshed = myRequests.find(r => r.id === selectedRequest.id);
-        if (refreshed) showDetail(refreshed);
-      });
+      }
     });
   </script>
 </body>
