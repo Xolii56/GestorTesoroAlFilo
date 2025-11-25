@@ -15,7 +15,7 @@
   <style>
     main.alm-main {
       padding: 1.5rem;
-      max-width: 1200px;
+      max-width: 1440px; /* antes 1200px, más ancho para evitar scroll horizontal */
       margin: 0 auto;
     }
 
@@ -165,7 +165,7 @@
 
     .alm-detail-body {
       display:grid;
-      grid-template-columns:minmax(0,1.2fr) minmax(0,1.4fr);
+      grid-template-columns:minmax(0,1.6fr) minmax(0,1.4fr); /* inventario más ancho que solicitudes */
       gap:1rem;
     }
 
@@ -220,6 +220,21 @@
     .estado-pill.excedente {
       border-color:#eab308;
       color:#fef9c3;
+    }
+
+    /* NUEVO: columna "Pendiente" en inventario */
+    .alm-pend-cell {
+      text-align:right;
+      white-space:nowrap;
+      font-variant-numeric:tabular-nums;
+    }
+    .alm-pend-pos {
+      color:#16a34a; /* verde: entra stock (ventas al almacén) */
+      font-weight:600;
+    }
+    .alm-pend-neg {
+      color:#b91c1c; /* rojo oscuro: sale stock (compras al almacén) */
+      font-weight:600;
     }
 
     /* Tabla solicitudes */
@@ -367,6 +382,7 @@
                   <th>COMMODITY</th>
                   <th>SÍMBOLO</th>
                   <th>CANT.</th>
+                  <th>PENDIENTE</th>
                   <th>RANGO STOCK</th>
                   <th>ESTADO</th>
                 </tr>
@@ -671,8 +687,9 @@
       }
 
       async function loadInventory(warehouseId) {
-        stockTbody.innerHTML = '<tr><td colspan="5">Cargando inventario...</td></tr>';
+        stockTbody.innerHTML = '<tr><td colspan="6">Cargando inventario...</td></tr>';
 
+        // 1) Stock actual del almacén
         const { data, error } = await supa
           .from('warehouse_items')
           .select(`
@@ -686,16 +703,41 @@
 
         if (error) {
           console.error('Error cargando stock de almacén:', error);
-          stockTbody.innerHTML = '<tr><td colspan="5">No se ha podido cargar el inventario de este almacén.</td></tr>';
+          stockTbody.innerHTML = '<tr><td colspan="6">No se ha podido cargar el inventario de este almacén.</td></tr>';
           return;
         }
 
         const rows = data || [];
         if (!rows.length) {
-          stockTbody.innerHTML = '<tr><td colspan="5">Este almacén no tiene aún commodities asignados.</td></tr>';
+          stockTbody.innerHTML = '<tr><td colspan="6">Este almacén no tiene aún commodities asignados.</td></tr>';
           return;
         }
 
+        // 2) Movimientos de stock pendientes (solicitudes aprobadas no completadas/canceladas)
+        const { data: pendingReqs, error: pendingError } = await supa
+          .from('requests')
+          .select('item_id, quantity, request_type')
+          .eq('warehouse_id', warehouseId)
+          .eq('status', 'aprobada');
+
+        if (pendingError) {
+          console.error('Error cargando solicitudes pendientes para inventario:', pendingError);
+        }
+
+        // Mapa commodity_id -> cantidad pendiente (compra = -, venta = +)
+        const pendingMap = {};
+        (pendingReqs || []).forEach(req => {
+          const key = req.item_id;
+          if (!key) return;
+          const qty = Number(req.quantity || 0);
+          if (!qty) return;
+
+          // IMPORTANTE: compra RESTA stock, venta SUMA stock
+          const delta = req.request_type === 'venta' ? qty : -qty;
+          pendingMap[key] = (pendingMap[key] || 0) + delta;
+        });
+
+        // 3) Pintar filas
         stockTbody.innerHTML = '';
         rows.forEach(row => {
           const cm = row.commodities_master || {};
@@ -712,6 +754,18 @@
 
           const tdQty = document.createElement('td');
           tdQty.textContent = row.quantity ?? 0;
+
+          // NUEVA COLUMNA: PENDIENTE
+          const tdPend = document.createElement('td');
+          tdPend.className = 'alm-pend-cell';
+          const pendVal = pendingMap[row.commodity_id] || 0;
+
+          if (!pendVal) {
+            tdPend.textContent = '-';
+          } else {
+            tdPend.textContent = (pendVal > 0 ? '+' : '') + pendVal;
+            tdPend.classList.add(pendVal > 0 ? 'alm-pend-pos' : 'alm-pend-neg');
+          }
 
           const tdRange = document.createElement('td');
           let rangeText = '-';
@@ -731,6 +785,7 @@
           tr.appendChild(tdComm);
           tr.appendChild(tdSym);
           tr.appendChild(tdQty);
+          tr.appendChild(tdPend);
           tr.appendChild(tdRange);
           tr.appendChild(tdEstado);
 
@@ -1135,4 +1190,3 @@
   </script>
 </body>
 </html>
-
