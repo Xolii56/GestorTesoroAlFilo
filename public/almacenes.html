@@ -759,7 +759,6 @@
           `)
           .eq('warehouse_id', warehouseId)
           .eq('status', 'aprobada')
-          .or('warehouse_sign_result.is.null,warehouse_sign_result.eq.pendiente')
           .order('created_at', { ascending: false });
 
         if (error) {
