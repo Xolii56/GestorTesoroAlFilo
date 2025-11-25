@@ -107,6 +107,36 @@
       cursor:not-allowed;
     }
 
+    /* Botones icono (✔ / ✕) */
+    .btn-icon {
+      width:28px;
+      height:28px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.7);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.8rem;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:0;
+      cursor:pointer;
+    }
+    .btn-icon.ok {
+      background:#22c55e;
+      color:#022c22;
+      border-color:#22c55e;
+    }
+    .btn-icon.ko {
+      background:#ef4444;
+      color:#fef2f2;
+      border-color:#ef4444;
+    }
+    .btn-icon:disabled {
+      opacity:.5;
+      cursor:not-allowed;
+    }
+
     .help-text {
       font-size:.75rem;
       opacity:.75;
@@ -211,7 +241,6 @@
     }
 
     .alm-req-table tbody tr {
-      cursor:pointer;
       transition:background .12s ease-out;
     }
     .alm-req-table tbody tr:hover {
@@ -232,7 +261,7 @@
     .badge-status.completada  { border-color:rgba(56,189,248,0.9); }
     .badge-status.cancelada   { border-color:rgba(248,113,113,0.9); }
 
-    /* Modal genérico (almacén y solicitud reutilizan estilos) */
+    /* Modal genérico (almacén) */
     .alm-modal-backdrop {
       position:fixed;
       inset:0;
@@ -362,8 +391,9 @@
                   <th>Cant.</th>
                   <th>Solicitante</th>
                   <th>Plazo máx.</th>
-                  <th>Firmas</th>
                   <th>Estado</th>
+                  <th>Detalle</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody id="alm-req-tbody">
@@ -372,7 +402,7 @@
             </table>
           </div>
           <p class="help-text" style="margin-top:.4rem;">
-            Pulsa sobre una solicitud para ver el detalle y firmar o rechazar la entrega.
+            Pulsa en "Ver" para abrir el detalle estándar de la solicitud. Usa ✔ / ✕ para firmar o cancelar la entrega.
           </p>
         </div>
       </div>
@@ -417,67 +447,6 @@
     </div>
   </div>
 
-  <!-- MODAL DETALLE / FIRMA DE SOLICITUD -->
-  <div id="req-modal-backdrop" class="alm-modal-backdrop" style="display:none;">
-    <div class="alm-modal">
-      <h3 style="margin-top:0;margin-bottom:.6rem;">Detalle de solicitud</h3>
-      <div class="alm-form">
-        <div class="field">
-          <label>Tipo</label>
-          <input id="r_tipo" type="text" readonly/>
-        </div>
-        <div class="field">
-          <label>Ítem</label>
-          <input id="r_item" type="text" readonly/>
-        </div>
-        <div class="field">
-          <label>Cantidad</label>
-          <input id="r_qty" type="text" readonly/>
-        </div>
-        <div class="field">
-          <label>Solicitante</label>
-          <input id="r_req" type="text" readonly/>
-        </div>
-        <div class="field">
-          <label>Plazo máximo de entrega</label>
-          <input id="r_due" type="text" readonly/>
-        </div>
-        <div class="field">
-          <label>Estado actual</label>
-          <input id="r_status" type="text" readonly/>
-        </div>
-        <div class="field">
-          <label>Firma Tesoro (almacén)</label>
-          <input id="r_sign_warehouse" type="text" readonly/>
-        </div>
-        <div class="field">
-          <label>Firma solicitante</label>
-          <input id="r_sign_requester" type="text" readonly/>
-        </div>
-        <div class="field">
-          <label>Log de firmas</label>
-          <textarea id="r_sign_log" readonly></textarea>
-        </div>
-      </div>
-
-      <div class="alm-modal-actions">
-        <button type="button" id="req-modal-cancel" class="btn btn-secondary">
-          Cerrar
-        </button>
-        <button type="button" id="req-reject-btn" class="btn btn-secondary">
-          Rechazar entrega
-        </button>
-        <button type="button" id="req-sign-btn" class="btn btn-primary">
-          Firmar entrega (Tesoro)
-        </button>
-      </div>
-      <p class="help-text">
-        Para completar la entrega se necesitan la firma del Tesoro y la del solicitante.
-        Si cualquiera de las dos partes rechaza la entrega, la solicitud pasa a estado "cancelada" y no se ajusta el stock.
-      </p>
-    </div>
-  </div>
-
   <script type="module">
     import { getOrgStatus } from './modules/profile.js';
 
@@ -500,20 +469,6 @@
         if (val === 'ok') return 'Firmada en positivo';
         if (val === 'ko') return 'Rechazada';
         return 'Pendiente';
-      }
-
-      function shortSign(v) {
-        const val = v || 'pendiente';
-        if (val === 'ok') return 'OK';
-        if (val === 'ko') return 'KO';
-        return '-';
-      }
-
-      function formatDateTime(value) {
-        if (!value) return '';
-        const d = new Date(value);
-        if (Number.isNaN(d.getTime())) return value;
-        return d.toLocaleString();
       }
 
       /* ───────────── 1) Sesión + org_status ───────────── */
@@ -547,7 +502,7 @@
       /* ───────────── 2) Permisos módulo almacenes ───────────── */
       const { data: meRow, error: meError } = await supa
         .from('users')
-        .select('tesoro_internal_role, handle_name, discord_username')
+        .select('tesoro_internal_role')
         .eq('id', session.user.id)
         .maybeSingle();
       if (meError) console.error('Error leyendo rol interno:', meError);
@@ -609,52 +564,24 @@
       const wManager  = document.getElementById('w_manager');
       const wNotes    = document.getElementById('w_notes');
 
-      // Modal solicitud
-      const reqModalBackdrop = document.getElementById('req-modal-backdrop');
-      const reqModalCancel   = document.getElementById('req-modal-cancel');
-      const reqSignBtn       = document.getElementById('req-sign-btn');
-      const reqRejectBtn     = document.getElementById('req-reject-btn');
-
-      const rTipo    = document.getElementById('r_tipo');
-      const rItem    = document.getElementById('r_item');
-      const rQty     = document.getElementById('r_qty');
-      const rReq     = document.getElementById('r_req');
-      const rDue     = document.getElementById('r_due');
-      const rStatus  = document.getElementById('r_status');
-      const rSignWh  = document.getElementById('r_sign_warehouse');
-      const rSignRq  = document.getElementById('r_sign_requester');
-      const rSignLog = document.getElementById('r_sign_log');
-
       if (readOnly) {
         addBtn.disabled = true;
         addBtn.classList.add('btn-disabled');
         editBtn.classList.add('btn-disabled');
-        reqSignBtn.disabled = true;
-        reqSignBtn.classList.add('btn-disabled');
-        reqRejectBtn.disabled = true;
-        reqRejectBtn.classList.add('btn-disabled');
       }
 
       /* ───────────── 4) Estado en memoria ───────────── */
       let warehouses = [];
-      let currentWarehouseId = null; // nada seleccionado al principio
+      let currentWarehouseId = null;
       let editingWarehouseId = null;
-      let currentRequest = null;     // solicitud abierta en modal
 
-      // Cache usuarios para mostrar solicitante / firmas
+      // Cache usuarios para mostrar solicitante
       const usersById = {};
       const { data: users, error: usersError } = await supa
         .from('users')
         .select('id, handle_name, discord_username');
       if (!usersError && users) {
         users.forEach(u => { usersById[u.id] = u; });
-      }
-
-      function resolveUserName(userId) {
-        if (!userId) return '';
-        const u = usersById[userId];
-        if (!u) return userId;
-        return u.handle_name || u.discord_username || userId;
       }
 
       /* ───────────── 5) Cargar almacenes ───────────── */
@@ -697,7 +624,6 @@
           btn.textContent = w.name || 'Almacén';
           btn.dataset.id = w.id;
           btn.addEventListener('click', async () => {
-            // toggle
             if (currentWarehouseId === w.id) {
               currentWarehouseId = null;
               panel.style.display = 'none';
@@ -814,7 +740,7 @@
 
       /* ───────────── 7) Solicitudes asignadas ───────────── */
       async function loadRequests(warehouseId) {
-        reqTbody.innerHTML = '<tr><td colspan="8">Cargando solicitudes...</td></tr>';
+        reqTbody.innerHTML = '<tr><td colspan="9">Cargando solicitudes...</td></tr>';
 
         const { data, error } = await supa
           .from('requests')
@@ -828,29 +754,24 @@
             requester_discord_id,
             warehouse_id,
             warehouse_sign_result,
-            warehouse_sign_at,
-            warehouse_sign_user,
             requester_sign_result,
-            requester_sign_at,
-            requester_sign_user,
-            approver_discord_id,
-            approved_at,
             commodities_master(name, symbol)
           `)
           .eq('warehouse_id', warehouseId)
           .eq('status', 'aprobada')
+          .or('warehouse_sign_result.is.null,warehouse_sign_result.eq.pendiente')
           .order('created_at', { ascending: false });
 
         if (error) {
           console.error('Error cargando solicitudes de almacén:', error);
-          reqTbody.innerHTML = '<tr><td colspan="8">No se han podido cargar las solicitudes de este almacén.</td></tr>';
+          reqTbody.innerHTML = '<tr><td colspan="9">No se han podido cargar las solicitudes de este almacén.</td></tr>';
           return;
         }
 
         const rows = data || [];
 
         if (!rows.length) {
-          reqTbody.innerHTML = '<tr><td colspan="8">No hay solicitudes pendientes de firma en este almacén.</td></tr>';
+          reqTbody.innerHTML = '<tr><td colspan="9">No hay solicitudes pendientes de firma en este almacén.</td></tr>';
           return;
         }
 
@@ -884,11 +805,6 @@
           const tdDue = document.createElement('td');
           tdDue.textContent = r.due_date || '-';
 
-          const tdSigns = document.createElement('td');
-          const wSign = r.warehouse_sign_result || 'pendiente';
-          const rqSign = r.requester_sign_result || 'pendiente';
-          tdSigns.textContent = `T: ${shortSign(wSign)} · S: ${shortSign(rqSign)}`;
-
           const tdStatus = document.createElement('td');
           const span = document.createElement('span');
           const st = r.status || 'pendiente';
@@ -896,31 +812,62 @@
           span.textContent = formatStatus(st);
           tdStatus.appendChild(span);
 
-          tr.appendChild(tdId);
-          tr.appendChild(tdTipo);
-          tr.appendChild(tdItem);
-          tr.appendChild(tdQty);
-          tr.appendChild(tdReq);
-          tr.appendChild(tdDue);
-          tr.appendChild(tdSigns);
-          tr.appendChild(tdStatus);
-
-          // Abrir modal de detalle / firma
-          tr.addEventListener('click', () => {
-            // modal propio de almacén (firma Tesoro)
-            openRequestModal({
-              ...r,
-              itemName,
-              requesterName: reqName
-            });
-          
-            // popup estándar de detalle
+          const tdDetalle = document.createElement('td');
+          const btnDetalle = document.createElement('button');
+          btnDetalle.type = 'button';
+          btnDetalle.className = 'btn btn-secondary';
+          btnDetalle.style.padding = '0.2rem 0.6rem';
+          btnDetalle.textContent = 'Ver';
+          btnDetalle.addEventListener('click', (ev) => {
+            ev.stopPropagation();
             window.open(
               `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
               '_blank',
               'width=720,height=760'
             );
           });
+          tdDetalle.appendChild(btnDetalle);
+
+          const tdAcc = document.createElement('td');
+          const canAct = !readOnly;
+
+          const okBtn = document.createElement('button');
+          okBtn.type = 'button';
+          okBtn.className = 'btn-icon ok';
+          okBtn.innerHTML = '✔';
+          okBtn.disabled = !canAct;
+          if (!canAct) okBtn.classList.add('btn-disabled');
+          okBtn.addEventListener('click', async (ev) => {
+            ev.stopPropagation();
+            if (!canAct) return;
+            await handleWarehouseSign('ok', r);
+          });
+
+          const koBtn = document.createElement('button');
+          koBtn.type = 'button';
+          koBtn.className = 'btn-icon ko';
+          koBtn.style.marginLeft = '0.25rem';
+          koBtn.innerHTML = '✕';
+          koBtn.disabled = !canAct;
+          if (!canAct) koBtn.classList.add('btn-disabled');
+          koBtn.addEventListener('click', async (ev) => {
+            ev.stopPropagation();
+            if (!canAct) return;
+            await handleWarehouseSign('ko', r);
+          });
+
+          tdAcc.appendChild(okBtn);
+          tdAcc.appendChild(koBtn);
+
+          tr.appendChild(tdId);
+          tr.appendChild(tdTipo);
+          tr.appendChild(tdItem);
+          tr.appendChild(tdQty);
+          tr.appendChild(tdReq);
+          tr.appendChild(tdDue);
+          tr.appendChild(tdStatus);
+          tr.appendChild(tdDetalle);
+          tr.appendChild(tdAcc);
 
           reqTbody.appendChild(tr);
         });
@@ -1055,96 +1002,6 @@
 
       /* ───────────── 9) Lógica de entrega (Tesoro) ───────────── */
 
-      function buildSignLog(req) {
-        const lines = [];
-
-        if (req.approved_at) {
-          const approverName = resolveUserName(req.approver_discord_id);
-          lines.push(
-            `Aprobada por ${approverName || 'desconocido'} el ${formatDateTime(req.approved_at)}.`
-          );
-        }
-
-        const wSign = req.warehouse_sign_result || 'pendiente';
-        const rqSign = req.requester_sign_result || 'pendiente';
-
-        if (wSign === 'ok') {
-          const whName = resolveUserName(req.warehouse_sign_user);
-          lines.push(
-            `Tesoro: firma POSITIVA por ${whName || 'desconocido'} el ${formatDateTime(req.warehouse_sign_at)}.`
-          );
-        } else if (wSign === 'ko') {
-          const whName = resolveUserName(req.warehouse_sign_user);
-          lines.push(
-            `Tesoro: entrega RECHAZADA por ${whName || 'desconocido'} el ${formatDateTime(req.warehouse_sign_at)}.`
-          );
-        } else {
-          lines.push('Tesoro: pendiente de firma.');
-        }
-
-        if (rqSign === 'ok') {
-          const rqName = resolveUserName(req.requester_sign_user);
-          lines.push(
-            `Solicitante: firma POSITIVA por ${rqName || 'desconocido'} el ${formatDateTime(req.requester_sign_at)}.`
-          );
-        } else if (rqSign === 'ko') {
-          const rqName = resolveUserName(req.requester_sign_user);
-          lines.push(
-            `Solicitante: entrega RECHAZADA por ${rqName || 'desconocido'} el ${formatDateTime(req.requester_sign_at)}.`
-          );
-        } else {
-          lines.push('Solicitante: pendiente de firma.');
-        }
-
-        return lines.join('\n');
-      }
-
-      function openRequestModal(req) {
-        currentRequest = req;
-
-        rTipo.value   = req.request_type === 'venta' ? 'Venta' : 'Compra';
-        rItem.value   = req.itemName || '';
-        rQty.value    = String(req.quantity ?? '');
-        rReq.value    = req.requesterName || '';
-        rDue.value    = req.due_date || '-';
-        rStatus.value = req.status || 'pendiente';
-
-        const wSign = req.warehouse_sign_result || 'pendiente';
-        const rqSign = req.requester_sign_result || 'pendiente';
-        if (rSignWh) rSignWh.value = humanSignText(wSign);
-        if (rSignRq) rSignRq.value = humanSignText(rqSign);
-
-        if (rSignLog) {
-          rSignLog.value = buildSignLog(req);
-        }
-
-        const canSign =
-          !readOnly &&
-          req.status === 'aprobada' &&
-          (wSign === 'pendiente');
-
-        reqSignBtn.disabled   = !canSign;
-        reqRejectBtn.disabled = !canSign;
-        reqSignBtn.classList.toggle('btn-disabled', !canSign);
-        reqRejectBtn.classList.toggle('btn-disabled', !canSign);
-
-        reqModalBackdrop.style.display = 'flex';
-      }
-
-      function closeRequestModal() {
-        reqModalBackdrop.style.display = 'none';
-        currentRequest = null;
-      }
-
-      reqModalCancel.addEventListener('click', (e) => {
-        e.preventDefault();
-        closeRequestModal();
-      });
-
-      reqModalBackdrop.addEventListener('click', (e) => {
-        if (e.target === reqModalBackdrop) closeRequestModal();
-      });
-
       async function maybeFinalizeRequest(reqRow, actorId) {
         const wSign = reqRow.warehouse_sign_result || 'pendiente';
         const rSign = reqRow.requester_sign_result || 'pendiente';
@@ -1176,9 +1033,11 @@
         }
 
         const currentQty = Number(wiRow.quantity || 0);
+        // IMPORTANTE: compra RESTA stock, venta SUMA stock
         const delta = reqRow.request_type === 'venta'
-          ? -Number(reqRow.quantity || 0)
-          :  Number(reqRow.quantity || 0);
+          ?  Number(reqRow.quantity || 0)
+          : -Number(reqRow.quantity || 0);
+
         const newQty = currentQty + delta;
 
         const { error: updStockError } = await supa
@@ -1210,15 +1069,24 @@
         alert('Solicitud completada y stock ajustado correctamente.');
       }
 
-      async function handleWarehouseSign(decision) {
-        if (readOnly || !currentRequest || !currentWarehouseId) return;
+      async function handleWarehouseSign(decision, reqRow) {
+        if (readOnly || !reqRow || !currentWarehouseId) return;
 
         const isPositive = (decision === 'ok');
 
-        const currentWSign = currentRequest.warehouse_sign_result || 'pendiente';
+        const currentWSign = reqRow.warehouse_sign_result || 'pendiente';
         if (currentWSign !== 'pendiente') {
           alert('Tesoro ya ha firmado esta entrega desde este almacén.');
           return;
+        }
+
+        if (!isPositive) {
+          const okConfirm = confirm(
+            'Vas a marcar la entrega como NO aceptada.\n' +
+            'La solicitud pasará a estado "cancelada" y no se ajustará el stock.\n\n' +
+            '¿Confirmas?'
+          );
+          if (!okConfirm) return;
         }
 
         const payload = {
@@ -1233,7 +1101,7 @@
         const { data: updated, error } = await supa
           .from('requests')
           .update(payload)
-          .eq('id', currentRequest.id)
+          .eq('id', reqRow.id)
           .select(`
             id,
             status,
@@ -1242,13 +1110,7 @@
             item_id,
             warehouse_id,
             warehouse_sign_result,
-            warehouse_sign_at,
-            warehouse_sign_user,
-            requester_sign_result,
-            requester_sign_at,
-            requester_sign_user,
-            approver_discord_id,
-            approved_at
+            requester_sign_result
           `)
           .maybeSingle();
 
@@ -1258,39 +1120,15 @@
           return;
         }
 
-        const willComplete =
-          isPositive && ( (updated.requester_sign_result || 'pendiente') === 'ok' );
-
         if (!isPositive) {
           alert('Entrega cancelada por Tesoro. La solicitud ha pasado a estado "cancelada".');
+        } else {
+          await maybeFinalizeRequest(updated, session.user.id);
         }
 
-        await maybeFinalizeRequest(updated, session.user.id);
-
-        // Refrescar inventario y tabla
         await loadInventory(currentWarehouseId);
         await loadRequests(currentWarehouseId);
-
-        if (!isPositive || willComplete) {
-          // Cancelada o completada: cerramos modal
-          closeRequestModal();
-          return;
-        }
-
-        // Firma positiva pero falta solicitante: mantener modal abierto y refrescar datos
-        currentRequest = { ...currentRequest, ...updated };
-        openRequestModal({
-          ...currentRequest,
-          itemName: rItem.value,
-          requesterName: rReq.value
-        });
       }
-
-      // Firmar entrega (Tesoro)
-      reqSignBtn.addEventListener('click', () => handleWarehouseSign('ok'));
-
-      // Rechazar entrega (Tesoro)
-      reqRejectBtn.addEventListener('click', () => handleWarehouseSign('ko'));
 
       /* ───────────── 10) Carga inicial ───────────── */
       await loadWarehouses();
@@ -1298,3 +1136,4 @@
   </script>
 </body>
 </html>
+
