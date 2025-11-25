@@ -15,7 +15,7 @@
   <style>
     main.alm-main {
       padding: 1.5rem;
-      max-width: 1440px; /* antes 1200px, más ancho para evitar scroll horizontal */
+      max-width: 1440px; /* más ancho para evitar scroll horizontal */
       margin: 0 auto;
     }
 
@@ -732,7 +732,8 @@
           const qty = Number(req.quantity || 0);
           if (!qty) return;
 
-          // IMPORTANTE: compra RESTA stock, venta SUMA stock
+          // COMPRA: el usuario compra al almacén -> el almacén pierde stock -> negativo
+          // VENTA : el usuario vende al almacén -> el almacén gana stock -> positivo
           const delta = req.request_type === 'venta' ? qty : -qty;
           pendingMap[key] = (pendingMap[key] || 0) + delta;
         });
@@ -1060,6 +1061,7 @@
         const wSign = reqRow.warehouse_sign_result || 'pendiente';
         const rSign = reqRow.requester_sign_result || 'pendiente';
 
+        // Solo se completa si el estado es aprobada y ambas firmas son OK
         if (reqRow.status !== 'aprobada') return;
         if (!(wSign === 'ok' && rSign === 'ok')) return;
 
@@ -1087,10 +1089,14 @@
         }
 
         const currentQty = Number(wiRow.quantity || 0);
-        // IMPORTANTE: compra RESTA stock, venta SUMA stock
+        const qty = Number(reqRow.quantity || 0);
+
+        // MISMA LÓGICA QUE EN PENDIENTE:
+        // COMPRA → el almacén vende → pierde stock → delta negativo
+        // VENTA  → el almacén compra → gana stock → delta positivo
         const delta = reqRow.request_type === 'venta'
-          ?  Number(reqRow.quantity || 0)
-          : -Number(reqRow.quantity || 0);
+          ? qty   // venta → entra material
+          : -qty; // compra → sale material
 
         const newQty = currentQty + delta;
 
