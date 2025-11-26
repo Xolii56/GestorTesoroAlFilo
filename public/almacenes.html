@@ -1126,6 +1126,19 @@
           return;
         }
 
+        // 🔔 Notificación al solicitante: solicitud completada
+        if (reqRow.requester_discord_id) {
+          await supa.from('notifications').insert({
+            user_id: reqRow.requester_discord_id,
+            type: 'request_completed',
+            title: `Solicitud #${reqRow.id} completada`,
+            body: 'Tu solicitud ha sido completada y el material ha sido movido en el almacén.',
+            link_url: `./solicitud_detalle.html?id=${encodeURIComponent(reqRow.id)}`,
+            related_request_id: reqRow.id,
+            level: 'info'
+          });
+        }
+
         alert('Solicitud completada y stock ajustado correctamente.');
       }
 
@@ -1170,7 +1183,8 @@
             item_id,
             warehouse_id,
             warehouse_sign_result,
-            requester_sign_result
+            requester_sign_result,
+            requester_discord_id
           `)
           .maybeSingle();
 
@@ -1182,7 +1196,39 @@
 
         if (!isPositive) {
           alert('Entrega cancelada por Tesoro. La solicitud ha pasado a estado "cancelada".');
+
+          // 🔔 Notificación al solicitante: entrega cancelada
+          if (updated.requester_discord_id) {
+            await supa.from('notifications').insert({
+              user_id: updated.requester_discord_id,
+              type: 'request_delivery_cancelled',
+              title: `Entrega cancelada — Solicitud #${updated.id}`,
+              body: 'Tesoro ha cancelado la entrega de tu solicitud desde el almacén.',
+              link_url: `./solicitud_detalle.html?id=${encodeURIComponent(updated.id)}`,
+              related_request_id: updated.id,
+              level: 'danger'
+            });
+          }
         } else {
+          // Ambas firmas OK?
+          const bothSigned =
+            updated.warehouse_sign_result === 'ok' &&
+            updated.requester_sign_result === 'ok';
+
+          // 🔔 Notificación al solicitante: Tesoro ha firmado la entrega (si aún falta su firma)
+          if (!bothSigned && updated.requester_discord_id) {
+            await supa.from('notifications').insert({
+              user_id: updated.requester_discord_id,
+              type: 'request_delivery_signed_by_treasury',
+              title: `Tesoro ha firmado la entrega — Solicitud #${updated.id}`,
+              body: 'Tesoro ha firmado la entrega de tu solicitud. Si aún no lo has hecho, firma tu recepción para completarla.',
+              link_url: `./solicitud_detalle.html?id=${encodeURIComponent(updated.id)}`,
+              related_request_id: updated.id,
+              level: 'info'
+            });
+          }
+
+          // Intentar completar si ya están ambas firmas
           await maybeFinalizeRequest(updated, session.user.id);
         }
 
