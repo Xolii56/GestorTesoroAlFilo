@@ -709,6 +709,7 @@
         const wSign = reqRow.warehouse_sign_result || 'pendiente';
         const rSign = reqRow.requester_sign_result || 'pendiente';
 
+        // Solo se completa si el estado es aprobada y ambas firmas son OK
         if (reqRow.status !== 'aprobada') return;
         if (!(wSign === 'ok' && rSign === 'ok')) return;
 
@@ -736,9 +737,15 @@
         }
 
         const currentQty = Number(wiRow.quantity || 0);
+        const qty = Number(reqRow.quantity || 0);
+
+        // MISMA LÓGICA QUE EN ALMACENES:
+        // COMPRA → el almacén vende → pierde stock → delta negativo
+        // VENTA  → el almacén compra → gana stock → delta positivo
         const delta = reqRow.request_type === 'venta'
-          ? -Number(reqRow.quantity || 0)
-          :  Number(reqRow.quantity || 0);
+          ?  qty   // venta → entra material
+          : -qty;  // compra → sale material
+
         const newQty = currentQty + delta;
 
         const { error: updStockError } = await supa
@@ -765,6 +772,19 @@
           console.error('Error marcando solicitud como completada:', updReqError);
           alert('El stock se ha ajustado, pero no se ha podido marcar la solicitud como completada.');
           return;
+        }
+
+        // 🔔 Notificación al solicitante: solicitud completada
+        if (reqRow.requester_discord_id) {
+          await supa.from('notifications').insert({
+            user_id: reqRow.requester_discord_id,
+            type: 'request_completed',
+            title: `Solicitud #${reqRow.id} completada`,
+            body: 'Tu solicitud ha sido completada y el material ha sido movido en el almacén.',
+            link_url: `./solicitud_detalle.html?id=${encodeURIComponent(reqRow.id)}`,
+            related_request_id: reqRow.id,
+            level: 'info'
+          });
         }
 
         alert('Solicitud completada y stock ajustado correctamente.');
@@ -802,7 +822,8 @@
               item_id,
               warehouse_id,
               warehouse_sign_result,
-              requester_sign_result
+              requester_sign_result,
+              requester_discord_id
             `)
             .maybeSingle();
 
