@@ -428,7 +428,7 @@
           `Ítem: ${itemName}`,
           `Cantidad: ${r.quantity}`,
           `Solicitante: ${requesterName}`
-        ].join('\\n');
+        ].join('\n');
 
         revSummary.value = resumen;
         warehouseSelect.value = '';
@@ -580,7 +580,7 @@
             if (!canAct) return;
 
             const okConfirm = confirm(
-              '¿Seguro que quieres rechazar esta solicitud?\\n' +
+              '¿Seguro que quieres rechazar esta solicitud?\n' +
               'Esta acción no se puede deshacer.'
             );
             if (!okConfirm) return;
@@ -597,6 +597,19 @@
               console.error('Error rechazando solicitud:', error);
               alert('No se ha podido rechazar la solicitud.');
               return;
+            }
+
+            // 🔔 Notificación al solicitante: solicitud rechazada
+            if (r.requester_discord_id) {
+              await supa.from('notifications').insert({
+                user_id: r.requester_discord_id,
+                type: 'request_rejected',
+                title: `Solicitud #${r.id} rechazada`,
+                body: 'Tesoro ha rechazado tu solicitud en la fase de revisión.',
+                link_url: `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
+                related_request_id: r.id,
+                level: 'danger'
+              });
             }
 
             await loadPendingRequests();
@@ -653,6 +666,19 @@
           console.error('Error aprobando solicitud:', error);
           alert('No se ha podido aprobar la solicitud.');
           return;
+        }
+
+        // 🔔 Notificación al solicitante: solicitud aprobada
+        if (currentRequest.requester_discord_id) {
+          await supa.from('notifications').insert({
+            user_id: currentRequest.requester_discord_id,
+            type: 'request_approved',
+            title: `Solicitud #${currentRequest.id} aprobada`,
+            body: `Tesoro ha aprobado tu solicitud. Plazo máx.: ${dueDate}.`,
+            link_url: `./solicitud_detalle.html?id=${encodeURIComponent(currentRequest.id)}`,
+            related_request_id: currentRequest.id,
+            level: 'info'
+          });
         }
 
         closeModal();
