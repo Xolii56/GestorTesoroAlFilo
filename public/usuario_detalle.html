@@ -113,9 +113,10 @@
 
         <div class="field">
           <label>Estado en la organización (org_status)</label>
-          <input id="u_org_status" type="text"/>
+          <!-- AHORA ES UN SELECT CON OPCIONES DE public.discord_roles -->
+          <select id="u_org_status"></select>
           <p class="help-text">
-            Estado general en la organización (miembro, daga, espada, admin, etc.).
+            Valores basados en <b>public.discord_roles.mapped_org_status</b> (Miembro, Daga, Espada, Afiliado, etc.).
             No puedes cambiar tu propio estado desde aquí.
           </p>
         </div>
@@ -227,22 +228,23 @@
         ? 'Permisos: solo lectura. No puedes editar usuarios.'
         : 'Permisos: edición habilitada. No puedes modificar tu propio rol/org_status.';
 
-      // Cargar roles_app para el select
+      // --- Referencias a campos ---
+      const roleSelect     = document.getElementById('u_role_internal');
+      const orgSelect      = document.getElementById('u_org_status');
+      const handleInput    = document.getElementById('u_handle');
+      const discordInput   = document.getElementById('u_discord');
+      const createdInput   = document.getElementById('u_created');
+      const lastLoginInput = document.getElementById('u_last_login');
+      const saveBtn        = document.getElementById('btn-save');
+      const closeBtn       = document.getElementById('btn-close');
+
+      // 1) Cargar roles_app para combo de rol interno
       const { data: rolesApp, error: rolesError } = await supa
         .from('roles_app')
         .select('role_name')
         .order('id', { ascending: true });
 
       if (rolesError) console.error('Error cargando roles_app:', rolesError);
-
-      const roleSelect    = document.getElementById('u_role_internal');
-      const handleInput   = document.getElementById('u_handle');
-      const discordInput  = document.getElementById('u_discord');
-      const orgInput      = document.getElementById('u_org_status');
-      const createdInput  = document.getElementById('u_created');
-      const lastLoginInput= document.getElementById('u_last_login');
-      const saveBtn       = document.getElementById('btn-save');
-      const closeBtn      = document.getElementById('btn-close');
 
       (rolesApp || []).forEach(r => {
         const opt = document.createElement('option');
@@ -251,7 +253,25 @@
         roleSelect.appendChild(opt);
       });
 
-      // Cargar usuario a editar
+      // 2) Cargar roles de Discord para org_status (public.discord_roles)
+      const { data: orgRoles, error: orgRolesError } = await supa
+        .from('discord_roles')
+        .select('name, mapped_org_status')
+        .order('id', { ascending: true });
+
+      if (orgRolesError) {
+        console.error('Error cargando discord_roles:', orgRolesError);
+      }
+
+      // Rellenamos el select de org_status con Name visible y value = mapped_org_status
+      (orgRoles || []).forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.mapped_org_status;   // ej: "miembro"
+        opt.textContent = r.name;          // ej: "Miembro"
+        orgSelect.appendChild(opt);
+      });
+
+      // 3) Cargar usuario a editar
       const { data: userRow, error: userError } = await supa
         .from('users')
         .select('id, handle_name, discord_username, org_status, tesoro_internal_role, created_at, last_login_at')
@@ -270,19 +290,28 @@
       function fillForm(u) {
         handleInput.value    = u.handle_name || '';
         discordInput.value   = cleanDiscordUsername(u.discord_username || '');
-        orgInput.value       = u.org_status || '';
         createdInput.value   = u.created_at ? new Date(u.created_at).toLocaleString() : '-';
         lastLoginInput.value = u.last_login_at ? new Date(u.last_login_at).toLocaleString() : '-';
-        roleSelect.value     = u.tesoro_internal_role || '';
+
+        roleSelect.value = u.tesoro_internal_role || '';
+
+        // Si no tiene org_status, por defecto "afiliado" (si existe en la tabla)
+        const currentOrg = u.org_status || 'afiliado';
+        orgSelect.value = currentOrg;
+
+        // Si por lo que sea el valor no existe en el select, lo dejamos sin seleccionar
+        if (orgSelect.value !== currentOrg) {
+          orgSelect.value = '';
+        }
       }
 
       fillForm(userRow);
 
-      // Aplicar permisos a los campos
+      // 4) Aplicar permisos a los campos
       if (readOnly) {
         handleInput.readOnly = true;
         roleSelect.disabled  = true;
-        orgInput.readOnly    = true;
+        orgSelect.disabled   = true;
         saveBtn.classList.add('btn-disabled');
       } else {
         // Nivel edición
@@ -291,11 +320,11 @@
 
         if (isSelf) {
           // No te cambias tu propio rol/org_status
-          roleSelect.disabled  = true;
-          orgInput.readOnly    = true;
+          roleSelect.disabled = true;
+          orgSelect.disabled  = true;
         } else {
-          roleSelect.disabled  = false;
-          orgInput.readOnly    = false;
+          roleSelect.disabled = false;
+          orgSelect.disabled  = false;
         }
       }
 
@@ -321,7 +350,7 @@
 
         if (!isSelf) {
           updates.tesoro_internal_role = roleSelect.value || null;
-          updates.org_status           = orgInput.value.trim() || null;
+          updates.org_status           = orgSelect.value || null; // siempre uno de mapped_org_status
         }
 
         const { error: updError } = await supa
