@@ -266,16 +266,20 @@
       return;
     }
 
-    // Header
-    await loadHeader('app');
-    initHeaderUserMenu(
-      session,
-      async () => {
-        await supa.auth.signOut();
-        window.location.href = "./index.html";
-      },
-      () => window.location.href = './perfil.html'
-    );
+    // Header (versión segura)
+    if (typeof window.loadHeader === 'function') {
+      await window.loadHeader('app');
+    }
+    if (typeof window.initHeaderUserMenu === 'function') {
+      window.initHeaderUserMenu(
+        session,
+        async () => {
+          await supa.auth.signOut();
+          window.location.href = "./index.html";
+        },
+        () => window.location.href = './perfil.html'
+      );
+    }
 
     // 2) Rol interno + permisos del módulo "usuarios"
     const { data: meRow, error: meError } = await supa
@@ -435,7 +439,7 @@
 
     await loadUsers();
 
-    // 5) Guardar cambios (solo nivel 2)
+    // 5) Guardar cambios (solo nivel 2) + notificación al usuario afectado
     const saveBtn = document.getElementById('users-save-btn');
     saveBtn.addEventListener('click', async () => {
       if (readOnly) {
@@ -450,23 +454,57 @@
       const newHandle = document.getElementById('u_handle').value.trim();
       const newRole   = roleSelect.value;
 
-      const { error } = await supa
+      // usuario antes de cambiar
+      const oldUser = allUsers.find(u => u.id === selectedId);
+
+      const { data: updatedUser, error } = await supa
         .from('users')
         .update({
           handle_name: newHandle || null,
           tesoro_internal_role: newRole || null
         })
-        .eq('id', selectedId);
+        .eq('id', selectedId)
+        .select('id, handle_name, tesoro_internal_role')
+        .maybeSingle();
 
-      if (error) {
+      if (error || !updatedUser) {
         console.error('Error actualizando usuario:', error);
         alert('No se han podido guardar los cambios.');
         return;
       }
 
+      // 🔔 Notificación al usuario si se han cambiado cosas de su perfil
+      try {
+        if (oldUser && session.user.id !== selectedId) {
+          const changedFields = [];
+          if ((oldUser.handle_name || '') !== (updatedUser.handle_name || '')) {
+            changedFields.push('handle en la app');
+          }
+          if ((oldUser.tesoro_internal_role || '') !== (updatedUser.tesoro_internal_role || '')) {
+            changedFields.push('rol interno/permisos');
+          }
+
+          if (changedFields.length) {
+            const summary = changedFields.join(' y ');
+            await supa.from('notifications').insert({
+              user_id: selectedId,
+              type: 'profile_updated',
+              title: 'Tu perfil interno ha sido actualizado',
+              body: `Se han modificado los siguientes datos: ${summary}.`,
+              link_url: './perfil.html',
+              related_request_id: null,
+              level: 'info'
+            });
+          }
+        }
+      } catch (notifErr) {
+        console.error('Error creando notificación de perfil actualizado:', notifErr);
+        // no rompemos el flujo si falla la noti
+      }
+
       await loadUsers();
-      const updated = allUsers.find(u => u.id === selectedId);
-      if (updated) showDetail(updated);
+      const refreshed = allUsers.find(u => u.id === selectedId);
+      if (refreshed) showDetail(refreshed);
       alert('Usuario actualizado.');
     });
   });
