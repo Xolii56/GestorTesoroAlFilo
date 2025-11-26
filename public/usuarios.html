@@ -19,18 +19,6 @@
       margin: 0 auto;
     }
 
-    .users-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr);
-      gap: 1.3rem;
-    }
-
-    @media (max-width: 900px) {
-      .users-layout {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-
     .users-table {
       width: 100%;
       border-collapse: collapse;
@@ -76,26 +64,6 @@
     .badge-role.gestor  { border-color: rgba(52,211,153,0.9); }
     .badge-role.usuario { border-color: rgba(148,163,184,0.9); }
 
-    .users-detail .field {
-      margin-bottom:.7rem;
-    }
-    .users-detail label {
-      display:block;
-      font-size:.8rem;
-      opacity:.8;
-      margin-bottom:.2rem;
-    }
-    .users-detail input,
-    .users-detail select {
-      width:100%;
-      padding:0.4rem 0.5rem;
-      border-radius:0.4rem;
-      border:1px solid rgba(148,163,184,0.8);
-      background:#020617;
-      color:#e5e7eb;
-      font-size:.9rem;
-    }
-
     .btn {
       padding:0.35rem 0.85rem;
       border-radius:0.4rem;
@@ -140,6 +108,56 @@
       color:#e5e7eb;
       font-size:.85rem;
     }
+
+    /* MODAL DETALLE USUARIO (estilo similar a otros modales) */
+    .user-modal-backdrop {
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,0.8);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:50;
+    }
+    .user-modal {
+      background:#020617;
+      border-radius:0.75rem;
+      padding:1rem 1.2rem;
+      max-width:520px;
+      width:100%;
+      box-shadow:0 18px 40px rgba(0,0,0,0.75);
+    }
+    .user-form .field {
+      margin-bottom:.7rem;
+    }
+    .user-form label {
+      display:block;
+      font-size:.8rem;
+      opacity:.8;
+      margin-bottom:.2rem;
+    }
+    .user-form input,
+    .user-form select {
+      width:100%;
+      padding:0.4rem 0.5rem;
+      border-radius:0.4rem;
+      border:1px solid rgba(148,163,184,0.8);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.9rem;
+    }
+    .user-form input[readonly],
+    .user-form select[disabled] {
+      opacity:.8;
+      cursor:not-allowed;
+    }
+    .user-modal-actions {
+      display:flex;
+      justify-content:flex-end;
+      gap:.5rem;
+      margin-top:.4rem;
+      flex-wrap:wrap;
+    }
   </style>
 </head>
 
@@ -148,7 +166,6 @@
 <div id="site-header"></div>
 
 <main class="users-main">
-
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
     <div>
       <h2>Gestión de usuarios</h2>
@@ -161,89 +178,94 @@
     </button>
   </div>
 
-  <div class="users-layout">
-    <!-- LISTA -->
-    <div class="card">
-      <div class="users-toolbar">
-        <input id="users-search" type="search" placeholder="Buscar por nombre o usuario Discord..."/>
-        <span id="users-perms-label" class="help-text"></span>
-      </div>
-
-      <div style="max-height:460px;overflow:auto;">
-        <table class="users-table">
-          <thead>
-            <tr>
-              <th>Nombre en la app</th>
-              <th>Discord</th>
-              <th>Rol interno</th>
-              <th>Alta</th>
-              <th>Último acceso</th>
-            </tr>
-          </thead>
-          <tbody id="users-tbody"></tbody>
-        </table>
-      </div>
+  <div class="card">
+    <div class="users-toolbar">
+      <input id="users-search" type="search" placeholder="Buscar por nombre o usuario Discord..."/>
+      <span id="users-perms-label" class="help-text"></span>
     </div>
 
-    <!-- DETALLE -->
-    <div class="card users-detail">
-      <h3 style="margin-top:0;">Detalle de usuario</h3>
-      <p id="users-empty" class="help-text">
-        Selecciona un usuario en la tabla para ver o editar sus datos.
-      </p>
-
-      <div id="users-detail-panel" style="display:none;">
-        <div class="field">
-          <label>Handle en la app</label>
-          <input id="u_handle" type="text"/>
-        </div>
-
-        <div class="field">
-          <label>Usuario de Discord</label>
-          <input id="u_discord" type="text" readonly/>
-        </div>
-
-        <div class="field">
-          <label>Rol interno del Tesoro</label>
-          <select id="u_role_internal"></select>
-          <div class="help-text">
-            Controla los permisos sobre los módulos (según tabla roles_app).
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Estado en la organización (org_status)</label>
-          <input id="u_org_status" type="text" readonly/>
-        </div>
-
-        <div class="field">
-          <label>Fecha de alta</label>
-          <input id="u_created" type="text" readonly/>
-        </div>
-
-        <div class="field">
-          <label>Último login</label>
-          <input id="u_last_login" type="text" readonly/>
-        </div>
-
-        <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.4rem;">
-          <button type="button" class="btn btn-secondary"
-                  onclick="document.getElementById('users-detail-panel').style.display='none';document.getElementById('users-empty').style.display='block';">
-            Cerrar
-          </button>
-          <button type="button" class="btn btn-primary" id="users-save-btn">
-            Guardar cambios
-          </button>
-        </div>
-      </div>
+    <div style="max-height:460px;overflow:auto;">
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>Nombre en la app</th>
+            <th>Discord</th>
+            <th>Rol interno</th>
+            <th>Org. status</th>
+            <th>Alta</th>
+            <th>Último acceso</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody"></tbody>
+      </table>
     </div>
+
+    <p class="help-text" style="margin-top:.4rem;">
+      Pulsa sobre un usuario para ver su ficha detallada. Si tienes permisos, podrás ajustar su rol interno y estado en la organización.
+    </p>
   </div>
 </main>
+
+<!-- MODAL DETALLE USUARIO -->
+<div id="user-modal-backdrop" class="user-modal-backdrop" style="display:none;">
+  <div class="user-modal">
+    <h3 id="user-modal-title" style="margin-top:0;margin-bottom:.6rem;">Detalle de usuario</h3>
+    <form id="user-form" class="user-form">
+      <div class="field">
+        <label>Handle en la app</label>
+        <input id="u_handle" type="text"/>
+        <p class="help-text">
+          Alias mostrado dentro de la herramienta.
+        </p>
+      </div>
+
+      <div class="field">
+        <label>Usuario de Discord</label>
+        <input id="u_discord" type="text" readonly/>
+      </div>
+
+      <div class="field">
+        <label>Rol interno del Tesoro</label>
+        <select id="u_role_internal"></select>
+        <p class="help-text">
+          Controla permisos sobre módulos (según tabla <b>roles_app</b>). No se puede cambiar el propio rol desde aquí.
+        </p>
+      </div>
+
+      <div class="field">
+        <label>Estado en la organización (org_status)</label>
+        <input id="u_org_status" type="text"/>
+        <p class="help-text">
+          Estado general en la organización (miembro, daga, espada, admin, etc.). No se puede cambiar el propio estado desde aquí.
+        </p>
+      </div>
+
+      <div class="field">
+        <label>Fecha de alta</label>
+        <input id="u_created" type="text" readonly/>
+      </div>
+
+      <div class="field">
+        <label>Último login</label>
+        <input id="u_last_login" type="text" readonly/>
+      </div>
+
+      <div class="user-modal-actions">
+        <button type="button" class="btn btn-secondary" id="user-cancel-btn">
+          Cerrar
+        </button>
+        <button type="button" class="btn btn-primary" id="users-save-btn">
+          Guardar cambios
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <script type="module">
   import { getOrgStatus } from './modules/profile.js';
 
-  // Helper para limpiar el #0 final
+  // Helper para limpiar el #0 final de Discord
   function cleanDiscordUsername(raw) {
     if (!raw) return '';
     return raw.endsWith('#0') ? raw.slice(0, -2) : raw;
@@ -252,7 +274,7 @@
   document.addEventListener('DOMContentLoaded', async () => {
     const { supa } = window;
 
-    // 1) Sesión + org_status
+    /* 1) Sesión + org_status */
     const { data: { session } } = await supa.auth.getSession();
     if (!session) {
       window.location.href = './index.html';
@@ -266,7 +288,7 @@
       return;
     }
 
-    // Header (versión segura)
+    // Header (mismo patrón que en otros módulos)
     if (typeof window.loadHeader === 'function') {
       await window.loadHeader('app');
     }
@@ -281,7 +303,7 @@
       );
     }
 
-    // 2) Rol interno + permisos del módulo "usuarios"
+    /* 2) Rol interno + permisos del módulo "usuarios" */
     const { data: meRow, error: meError } = await supa
       .from('users')
       .select('tesoro_internal_role')
@@ -297,7 +319,7 @@
 
     if (myRole) {
       const asNumber = Number(myRole);
-      if (!Number.isNaN(asNumber)) {
+      if (!Number.isNaN(asNumber) && myRole !== '') {
         const { data, error } = await supa
           .from('roles_app')
           .select('*')
@@ -317,7 +339,7 @@
     }
 
     const usersLevel = appRoleRow?.usuarios ?? 0;
-    const readOnly = (usersLevel === 1);
+    const readOnly   = (usersLevel === 1);
 
     if (!usersLevel || usersLevel === 0) {
       alert('No tienes acceso al módulo de Usuarios.');
@@ -328,11 +350,11 @@
     const permsLabel = document.getElementById('users-perms-label');
     if (permsLabel) {
       permsLabel.textContent = readOnly
-        ? 'Permisos: solo lectura.'
+        ? 'Permisos: solo lectura. No puedes editar usuarios.'
         : 'Permisos: edición habilitada.';
     }
 
-    // 3) Cargar lista de roles_app para el combo
+    /* 3) Cargar lista de roles_app para el combo */
     const { data: rolesApp, error: rolesError } = await supa
       .from('roles_app')
       .select('role_name')
@@ -348,36 +370,16 @@
       roleSelect.appendChild(opt);
     });
 
-    if (readOnly) {
-      roleSelect.disabled = true;
-      document.getElementById('u_handle').readOnly = true;
-      document.getElementById('users-save-btn').classList.add('btn-disabled');
-    }
+    /* 4) Cargar usuarios */
+    let allUsers    = [];
+    let currentUser = null;
 
-    // 4) Cargar usuarios
-    let allUsers = [];
-    let selectedId = null;
-
-    async function loadUsers() {
-      const { data, error } = await supa
-        .from('users')
-        .select('id, handle_name, discord_username, org_status, tesoro_internal_role, created_at, last_login_at')
-        .order('handle_name', { ascending: true });
-
-      if (error) {
-        console.error('Error cargando usuarios:', error);
-        return;
-      }
-      allUsers = data || [];
-      renderTable();
-    }
-
-    const tbody = document.getElementById('users-tbody');
+    const tbody       = document.getElementById('users-tbody');
     const searchInput = document.getElementById('users-search');
 
     function renderRoleBadge(roleName) {
       if (!roleName) return '<span class="badge-role">Sin rol</span>';
-      const low = roleName.toLowerCase();
+      const low = String(roleName).toLowerCase();
       let cls = 'usuario';
       if (low === 'admin') cls = 'admin';
       else if (low === 'rrhh') cls = 'rrhh';
@@ -394,7 +396,7 @@
         const handle = u.handle_name || '(sin nombre)';
         const disc   = cleanDiscordUsername(u.discord_username || '-');
         const rol    = u.tesoro_internal_role || '';
-        const combo  = (handle + ' ' + disc + ' ' + rol).toLowerCase();
+        const combo  = (handle + ' ' + disc + ' ' + rol + ' ' + (u.org_status || '')).toLowerCase();
 
         if (term && !combo.includes(term)) return;
 
@@ -405,107 +407,164 @@
           <td>${handle}</td>
           <td>${disc}</td>
           <td>${renderRoleBadge(rol)}</td>
+          <td>${u.org_status || '-'}</td>
           <td>${u.created_at ? new Date(u.created_at).toLocaleString() : '-'}</td>
           <td>${u.last_login_at ? new Date(u.last_login_at).toLocaleString() : '-'}</td>
         `;
 
         tr.addEventListener('click', () => {
-          selectedId = u.id;
           [...tbody.querySelectorAll('tr')].forEach(row => row.classList.remove('selected'));
           tr.classList.add('selected');
-          showDetail(u);
+          openUserModal(u);
         });
 
         tbody.appendChild(tr);
       });
+
+      if (!allUsers.length) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 6;
+        td.textContent = 'No hay usuarios registrados en el sistema.';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      }
     }
 
-    const emptyMsg   = document.getElementById('users-empty');
-    const detailPane = document.getElementById('users-detail-panel');
+    async function loadUsers() {
+      const { data, error } = await supa
+        .from('users')
+        .select('id, handle_name, discord_username, org_status, tesoro_internal_role, created_at, last_login_at')
+        .order('handle_name', { ascending: true });
 
-    function showDetail(u) {
-      emptyMsg.style.display = 'none';
-      detailPane.style.display = 'block';
-
-      document.getElementById('u_handle').value      = u.handle_name || '';
-      document.getElementById('u_discord').value     = cleanDiscordUsername(u.discord_username || '');
-      document.getElementById('u_org_status').value  = u.org_status || '';
-      document.getElementById('u_created').value     = u.created_at ? new Date(u.created_at).toLocaleString() : '-';
-      document.getElementById('u_last_login').value  = u.last_login_at ? new Date(u.last_login_at).toLocaleString() : '-';
-      roleSelect.value = u.tesoro_internal_role || '';
+      if (error) {
+        console.error('Error cargando usuarios:', error);
+        return;
+      }
+      allUsers = data || [];
+      renderTable();
     }
 
     searchInput.addEventListener('input', renderTable);
 
     await loadUsers();
 
-    // 5) Guardar cambios (solo nivel 2) + notificación al usuario afectado
-    const saveBtn = document.getElementById('users-save-btn');
+    /* 5) MODAL DETALLE USUARIO */
+
+    const modalBackdrop = document.getElementById('user-modal-backdrop');
+    const modalTitle    = document.getElementById('user-modal-title');
+    const handleInput   = document.getElementById('u_handle');
+    const discordInput  = document.getElementById('u_discord');
+    const orgStatusInput= document.getElementById('u_org_status');
+    const createdInput  = document.getElementById('u_created');
+    const lastLoginInput= document.getElementById('u_last_login');
+    const saveBtn       = document.getElementById('users-save-btn');
+    const cancelBtn     = document.getElementById('user-cancel-btn');
+
+    function openUserModal(u) {
+      currentUser = u;
+
+      const isSelf = (u.id === session.user.id);
+
+      modalTitle.textContent = 'Detalle de usuario';
+
+      handleInput.value      = u.handle_name || '';
+      discordInput.value     = cleanDiscordUsername(u.discord_username || '');
+      orgStatusInput.value   = u.org_status || '';
+      createdInput.value     = u.created_at ? new Date(u.created_at).toLocaleString() : '-';
+      lastLoginInput.value   = u.last_login_at ? new Date(u.last_login_at).toLocaleString() : '-';
+      roleSelect.value       = u.tesoro_internal_role || '';
+
+      // Permisos de edición:
+      // - Si usersLevel == 1 => solo lectura todo.
+      // - Si usersLevel >= 2:
+      //    - handle_name editable siempre.
+      //    - rol interno y org_status editables SOLO si no es tu propio usuario.
+      if (readOnly) {
+        handleInput.readOnly    = true;
+        roleSelect.disabled     = true;
+        orgStatusInput.readOnly = true;
+        saveBtn.classList.add('btn-disabled');
+      } else {
+        // Nivel edición
+        handleInput.readOnly    = false;
+        saveBtn.classList.remove('btn-disabled');
+
+        if (isSelf) {
+          // No te cambias tu propio rol / org_status
+          roleSelect.disabled     = true;
+          orgStatusInput.readOnly = true;
+        } else {
+          roleSelect.disabled     = false;
+          orgStatusInput.readOnly = false;
+        }
+      }
+
+      modalBackdrop.style.display = 'flex';
+    }
+
+    function closeUserModal() {
+      modalBackdrop.style.display = 'none';
+      currentUser = null;
+    }
+
+    cancelBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeUserModal();
+    });
+
+    modalBackdrop.addEventListener('click', (e) => {
+      if (e.target === modalBackdrop) {
+        closeUserModal();
+      }
+    });
+
+    /* 6) Guardar cambios (solo nivel edición, nunca sobre uno mismo para rol/org_status) */
     saveBtn.addEventListener('click', async () => {
+      if (!currentUser) {
+        alert('No hay ningún usuario seleccionado.');
+        return;
+      }
       if (readOnly) {
         alert('Tienes permisos de solo lectura en este módulo.');
         return;
       }
-      if (!selectedId) {
-        alert('Selecciona un usuario primero.');
-        return;
+
+      const isSelf = (currentUser.id === session.user.id);
+
+      const newHandle   = handleInput.value.trim();
+      const newRoleName = roleSelect.value;
+      const newOrg      = orgStatusInput.value.trim();
+
+      const updates = {
+        handle_name: newHandle || null
+      };
+
+      // Solo se permite cambiar rol interno y org_status si NO es tu propio usuario
+      if (!isSelf) {
+        updates.tesoro_internal_role = newRoleName || null;
+        updates.org_status           = newOrg || null;
       }
 
-      const newHandle = document.getElementById('u_handle').value.trim();
-      const newRole   = roleSelect.value;
-
-      // usuario antes de cambiar
-      const oldUser = allUsers.find(u => u.id === selectedId);
-
-      const { data: updatedUser, error } = await supa
+      const { error } = await supa
         .from('users')
-        .update({
-          handle_name: newHandle || null,
-          tesoro_internal_role: newRole || null
-        })
-        .eq('id', selectedId)
-        .select('id, handle_name, tesoro_internal_role')
-        .maybeSingle();
+        .update(updates)
+        .eq('id', currentUser.id);
 
-      if (error || !updatedUser) {
+      if (error) {
         console.error('Error actualizando usuario:', error);
         alert('No se han podido guardar los cambios.');
         return;
       }
 
-      // 🔔 Notificación al usuario si se han cambiado cosas de su perfil
-      try {
-        if (oldUser && session.user.id !== selectedId) {
-          const changedFields = [];
-          if ((oldUser.handle_name || '') !== (updatedUser.handle_name || '')) {
-            changedFields.push('handle en la app');
-          }
-          if ((oldUser.tesoro_internal_role || '') !== (updatedUser.tesoro_internal_role || '')) {
-            changedFields.push('rol interno/permisos');
-          }
-
-          if (changedFields.length) {
-            const summary = changedFields.join(' y ');
-            await supa.from('notifications').insert({
-              user_id: selectedId,
-              type: 'profile_updated',
-              title: 'Tu perfil interno ha sido actualizado',
-              body: `Se han modificado los siguientes datos: ${summary}.`,
-              link_url: './perfil.html',
-              related_request_id: null,
-              level: 'info'
-            });
-          }
-        }
-      } catch (notifErr) {
-        console.error('Error creando notificación de perfil actualizado:', notifErr);
-        // no rompemos el flujo si falla la noti
+      // Recargar lista y refrescar datos del usuario en modal
+      await loadUsers();
+      const refreshed = allUsers.find(u => u.id === currentUser.id);
+      if (refreshed) {
+        openUserModal(refreshed); // reabre con datos actualizados
       }
 
-      await loadUsers();
-      const refreshed = allUsers.find(u => u.id === selectedId);
-      if (refreshed) showDetail(refreshed);
-      alert('Usuario actualizado.');
+      alert('Usuario actualizado correctamente.');
     });
   });
 </script>
