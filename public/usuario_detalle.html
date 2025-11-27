@@ -92,9 +92,6 @@
         <div class="field">
           <label>Handle en la app</label>
           <input id="u_handle" type="text"/>
-          <p class="help-text">
-            Alias mostrado dentro de la herramienta.
-          </p>
         </div>
 
         <div class="field">
@@ -105,20 +102,11 @@
         <div class="field">
           <label>Rol interno del Tesoro</label>
           <select id="u_role_internal"></select>
-          <p class="help-text">
-            Controla permisos sobre módulos (según tabla <b>roles_app</b>).
-            No puedes cambiar tu propio rol desde aquí.
-          </p>
         </div>
 
         <div class="field">
           <label>Estado en la organización (org_status)</label>
-          <!-- AHORA ES UN SELECT CON OPCIONES DE public.discord_roles -->
           <select id="u_org_status"></select>
-          <p class="help-text">
-            Valores basados en <b>public.discord_roles.mapped_org_status</b> (Miembro, Daga, Espada, Afiliado, etc.).
-            No puedes cambiar tu propio estado desde aquí.
-          </p>
         </div>
 
         <div class="field">
@@ -154,7 +142,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       const { supa } = window;
 
-      // Parsear ?id=...
+      // --- 0) ID del usuario a editar ---
       const params = new URLSearchParams(window.location.search);
       const userId = params.get('id');
       if (!userId) {
@@ -163,7 +151,7 @@
         return;
       }
 
-      // Sesión
+      // --- 1) Sesión + org_status general ---
       const { data: { session } } = await supa.auth.getSession();
       if (!session) {
         alert('Sesión no válida.');
@@ -171,7 +159,6 @@
         return;
       }
 
-      // org_status global (acceso mínimo a app)
       const orgStatus = await getOrgStatus();
       if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
         await supa.auth.signOut();
@@ -180,7 +167,7 @@
         return;
       }
 
-      // Permisos módulo usuarios
+      // --- 2) Permisos módulo usuarios ---
       const { data: meRow, error: meError } = await supa
         .from('users')
         .select('tesoro_internal_role')
@@ -203,7 +190,6 @@
             .maybeSingle();
           if (!error) appRoleRow = data;
         }
-
         if (!appRoleRow) {
           const { data, error } = await supa
             .from('roles_app')
@@ -225,10 +211,10 @@
 
       const permsLabel = document.getElementById('user-perms-label');
       permsLabel.textContent = readOnly
-        ? 'Permisos: solo lectura. No puedes editar usuarios.'
-        : 'Permisos: edición habilitada. No puedes modificar tu propio rol/org_status.';
+        ? 'Permisos: solo lectura.'
+        : 'Permisos: edición habilitada.';
 
-      // --- Referencias a campos ---
+      // --- 3) Referencias a campos ---
       const roleSelect     = document.getElementById('u_role_internal');
       const orgSelect      = document.getElementById('u_org_status');
       const handleInput    = document.getElementById('u_handle');
@@ -238,13 +224,15 @@
       const saveBtn        = document.getElementById('btn-save');
       const closeBtn       = document.getElementById('btn-close');
 
-      // 1) Cargar roles_app para combo de rol interno
+      // --- 4) roles_app -> rol interno ---
       const { data: rolesApp, error: rolesError } = await supa
         .from('roles_app')
         .select('role_name')
         .order('id', { ascending: true });
 
-      if (rolesError) console.error('Error cargando roles_app:', rolesError);
+      if (rolesError) {
+        console.error('Error cargando roles_app:', rolesError);
+      }
 
       (rolesApp || []).forEach(r => {
         const opt = document.createElement('option');
@@ -253,25 +241,37 @@
         roleSelect.appendChild(opt);
       });
 
-      // 2) Cargar roles de Discord para org_status (public.discord_roles)
+      // --- 5) discord_roles -> org_status ---
+      let orgOptions = [];
       const { data: orgRoles, error: orgRolesError } = await supa
-        .from('discord_roles')
+        .from('discord_roles')          // public.discord_roles
         .select('name, mapped_org_status')
         .order('id', { ascending: true });
 
       if (orgRolesError) {
         console.error('Error cargando discord_roles:', orgRolesError);
+      } else {
+        orgOptions = orgRoles || [];
       }
 
-      // Rellenamos el select de org_status con Name visible y value = mapped_org_status
-      (orgRoles || []).forEach(r => {
+      // Si la tabla devolviera 0 filas, metemos un fallback estático
+      if (!orgOptions.length) {
+        orgOptions = [
+          { name: 'Afiliado', mapped_org_status: 'afiliado' },
+          { name: 'Miembro',  mapped_org_status: 'miembro'  },
+          { name: 'Daga',     mapped_org_status: 'daga'     },
+          { name: 'Espada',   mapped_org_status: 'espada'   }
+        ];
+      }
+
+      orgOptions.forEach(r => {
         const opt = document.createElement('option');
-        opt.value = r.mapped_org_status;   // ej: "miembro"
-        opt.textContent = r.name;          // ej: "Miembro"
+        opt.value = r.mapped_org_status;
+        opt.textContent = r.name;
         orgSelect.appendChild(opt);
       });
 
-      // 3) Cargar usuario a editar
+      // --- 6) Cargar usuario a editar ---
       const { data: userRow, error: userError } = await supa
         .from('users')
         .select('id, handle_name, discord_username, org_status, tesoro_internal_role, created_at, last_login_at')
@@ -285,8 +285,6 @@
         return;
       }
 
-      const isSelf = (userRow.id === session.user.id);
-
       function fillForm(u) {
         handleInput.value    = u.handle_name || '';
         discordInput.value   = cleanDiscordUsername(u.discord_username || '');
@@ -295,46 +293,38 @@
 
         roleSelect.value = u.tesoro_internal_role || '';
 
-        // Si no tiene org_status, por defecto "afiliado" (si existe en la tabla)
         const currentOrg = u.org_status || 'afiliado';
         orgSelect.value = currentOrg;
-
-        // Si por lo que sea el valor no existe en el select, lo dejamos sin seleccionar
         if (orgSelect.value !== currentOrg) {
-          orgSelect.value = '';
+          // si no existe, seleccionamos la primera opción
+          if (orgSelect.options.length > 0) {
+            orgSelect.selectedIndex = 0;
+          }
         }
       }
 
       fillForm(userRow);
 
-      // 4) Aplicar permisos a los campos
+      // --- 7) Aplicar permisos a campos ---
       if (readOnly) {
         handleInput.readOnly = true;
         roleSelect.disabled  = true;
         orgSelect.disabled   = true;
         saveBtn.classList.add('btn-disabled');
       } else {
-        // Nivel edición
         handleInput.readOnly = false;
+        roleSelect.disabled  = false;
+        orgSelect.disabled   = false;
         saveBtn.classList.remove('btn-disabled');
-
-        if (isSelf) {
-          // No te cambias tu propio rol/org_status
-          roleSelect.disabled = true;
-          orgSelect.disabled  = true;
-        } else {
-          roleSelect.disabled = false;
-          orgSelect.disabled  = false;
-        }
       }
 
-      // Botón cerrar
+      // --- 8) Botón cerrar ---
       closeBtn.addEventListener('click', (e) => {
         e.preventDefault();
         window.close();
       });
 
-      // Guardar cambios
+      // --- 9) Guardar cambios ---
       const form = document.getElementById('user-form');
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -345,13 +335,10 @@
         }
 
         const updates = {
-          handle_name: handleInput.value.trim() || null
+          handle_name: handleInput.value.trim() || null,
+          tesoro_internal_role: roleSelect.value || null,
+          org_status: orgSelect.value || null   // siempre uno de mapped_org_status
         };
-
-        if (!isSelf) {
-          updates.tesoro_internal_role = roleSelect.value || null;
-          updates.org_status           = orgSelect.value || null; // siempre uno de mapped_org_status
-        }
 
         const { error: updError } = await supa
           .from('users')
@@ -360,11 +347,10 @@
 
         if (updError) {
           console.error('Error actualizando usuario:', updError);
-          alert('No se han podido guardar los cambios.');
+          alert('No se han podido guardar los cambios.\n\nDetalle: ' + updError.message);
           return;
         }
 
-        // Recargar datos del usuario y refrescar formulario
         const { data: refreshed, error: refError } = await supa
           .from('users')
           .select('id, handle_name, discord_username, org_status, tesoro_internal_role, created_at, last_login_at')
