@@ -162,6 +162,11 @@
       </div>
 
       <div class="field">
+        <label>Preferencia de entrega</label>
+        <input id="d_pref_warehouse" type="text" readonly/>
+      </div>
+
+      <div class="field">
         <label>Lugar de transacción</label>
         <input id="d_warehouse" type="text" readonly/>
       </div>
@@ -239,6 +244,7 @@
     const dReq         = document.getElementById('d_requester');
     const dItem        = document.getElementById('d_item');
     const dQty         = document.getElementById('d_quantity');
+    const dPrefWh      = document.getElementById('d_pref_warehouse');
     const dWh          = document.getElementById('d_warehouse');
     const dDue         = document.getElementById('d_due_date');
     const dSigns       = document.getElementById('d_signatures');
@@ -263,7 +269,7 @@
       return;
     }
 
-    // Header (por si quieres mantener la barra)
+    // Header opcional
     if (typeof window.loadHeader === 'function') {
       await window.loadHeader('app');
     }
@@ -320,6 +326,7 @@
         status,
         created_at,
         warehouse_id,
+        preferred_warehouse_id,
         due_date,
         approved_at,
         completed_at,
@@ -360,6 +367,9 @@
     dItem.value = itemName;
     dQty.value  = req.quantity ?? 0;
     dReq.value  = requesterName || '';
+
+    const prefWh = req.preferred_warehouse_id ? warehousesById[req.preferred_warehouse_id] : null;
+    dPrefWh.value = prefWh ? prefWh.name : 'Sin preferencia';
 
     const wh = req.warehouse_id ? warehousesById[req.warehouse_id] : null;
     dWh.value = wh ? wh.name : 'No asignado';
