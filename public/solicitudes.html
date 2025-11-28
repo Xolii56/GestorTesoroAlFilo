@@ -207,7 +207,7 @@
       font-weight:600;
     }
 
-    /* Barra de filtros de "Mis solicitudes" */
+    /* Barras de filtros */
     .sol-toolbar {
       display:flex;
       justify-content:space-between;
@@ -221,6 +221,7 @@
       display:flex;
       gap:.4rem;
       flex-wrap:wrap;
+      align-items:center;
     }
 
     .sol-toolbar input[type="search"],
@@ -243,7 +244,7 @@
       <div>
         <h2>Solicitudes</h2>
         <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
-          Crea solicitudes de compra o venta y consulta el estado de las que ya has realizado.
+          Crea solicitudes de compra o venta y consulta su estado.
         </p>
       </div>
       <button type="button"
@@ -253,7 +254,7 @@
       </button>
     </div>
 
-    <!-- FORMULARIO ARRIBA -->
+    <!-- BLOQUE 1: FORMULARIO -->
     <div class="card">
       <h3 style="margin-top:0;">Nueva solicitud</h3>
       <p id="sol-perms-label" class="help-text" style="margin-bottom:.8rem;"></p>
@@ -290,10 +291,12 @@
             <input id="quantity" type="number" min="1" required />
           </div>
 
-          <!-- Notas -->
+          <!-- Preferencia de entrega -->
           <div class="field" style="grid-column:1 / -1;">
-            <label for="notes">Notas (opcional)</label>
-            <textarea id="notes" placeholder="Describe brevemente la solicitud."></textarea>
+            <label for="preferred-warehouse">Preferencia de entrega</label>
+            <select id="preferred-warehouse">
+              <option value="">Cualquier almacén</option>
+            </select>
           </div>
         </div>
 
@@ -305,35 +308,31 @@
       </form>
     </div>
 
-    <!-- BLOQUE: MIS SOLICITUDES -->
+    <!-- BLOQUE 2: SOLICITUDES ABIERTAS -->
     <div class="card" style="margin-top:1.25rem;">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;">
-        <div>
-          <h3 style="margin-top:0;">Mis solicitudes</h3>
-          <p class="help-text">
-            Solo se muestran las solicitudes realizadas con tu cuenta actual.
-          </p>
-        </div>
+        <h3 style="margin-top:0;">Mis solicitudes abiertas</h3>
       </div>
 
       <div class="sol-toolbar">
         <div class="sol-toolbar-group">
-          <input type="search" id="sol-search" placeholder="Buscar por ítem..."/>
+          <input type="search" id="sol-open-search" placeholder="Buscar por ítem..."/>
         </div>
         <div class="sol-toolbar-group">
-          <label for="sol-status-filter" class="help-text" style="margin:0;">Estado:</label>
-          <select id="sol-status-filter">
+          <select id="sol-open-status-filter">
             <option value="todas">Todas</option>
             <option value="pendiente">Pendientes</option>
             <option value="aprobada">Aprobadas</option>
-            <option value="rechazada">Rechazadas</option>
-            <option value="completada">Completadas</option>
-            <option value="cancelada">Canceladas</option>
+          </select>
+          <select id="sol-open-type-filter">
+            <option value="todas">Todos los tipos</option>
+            <option value="compra">Compras</option>
+            <option value="venta">Ventas</option>
           </select>
         </div>
       </div>
 
-      <div style="max-height:360px;overflow:auto;margin-top:.2rem;">
+      <div style="max-height:260px;overflow:auto;margin-top:.2rem;">
         <table class="sol-table">
           <thead>
             <tr>
@@ -347,8 +346,54 @@
               <th>Acciones</th>
             </tr>
           </thead>
-          <tbody id="sol-tbody">
-            <!-- Rellenado por JS -->
+          <tbody id="sol-open-tbody">
+            <!-- JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BLOQUE 3: HISTÓRICO -->
+    <div class="card" style="margin-top:1.25rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;">
+        <h3 style="margin-top:0;">Histórico de mis solicitudes</h3>
+      </div>
+
+      <div class="sol-toolbar">
+        <div class="sol-toolbar-group">
+          <input type="search" id="sol-history-search" placeholder="Buscar por ítem..."/>
+        </div>
+        <div class="sol-toolbar-group">
+          <select id="sol-history-status-filter">
+            <option value="todas">Todos los estados</option>
+            <option value="completada">Completadas</option>
+            <option value="rechazada">Rechazadas</option>
+            <option value="cancelada">Canceladas</option>
+          </select>
+          <select id="sol-history-type-filter">
+            <option value="todas">Todos los tipos</option>
+            <option value="compra">Compras</option>
+            <option value="venta">Ventas</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="max-height:260px;overflow:auto;margin-top:.2rem;">
+        <table class="sol-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tipo</th>
+              <th>Ítem</th>
+              <th>Cant.</th>
+              <th>Estado</th>
+              <th>Creada</th>
+              <th>Cierre</th>
+              <th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody id="sol-history-tbody">
+            <!-- JS -->
           </tbody>
         </table>
       </div>
@@ -372,11 +417,9 @@
         return map[st] || st;
       }
 
-      function humanSignText(v) {
-        const val = v || 'pendiente';
-        if (val === 'ok') return 'Firmada en positivo';
-        if (val === 'ko') return 'Rechazada';
-        return 'Pendiente';
+      function renderTipo(tipo) {
+        if (!tipo) return '-';
+        return tipo === 'compra' ? 'Compra' : 'Venta';
       }
 
       // 1) Sesión
@@ -462,13 +505,13 @@
 
       const readOnly = (solLevel === 1);
       if (readOnly) {
-        solPermsLabel.textContent = 'Permisos: solo lectura. Puedes consultar tus solicitudes, pero no crear nuevas.';
+        solPermsLabel.textContent = 'Permisos: solo lectura.';
         solForm.querySelectorAll('input, select, textarea, button[data-type]').forEach(el => {
           el.disabled = true;
         });
         solSubmitBtn.classList.add('btn-disabled');
       } else {
-        solPermsLabel.textContent = 'Permisos: puedes crear nuevas solicitudes y consultar tu historial.';
+        solPermsLabel.textContent = '';
       }
 
       // 5) Mostrar nombre del solicitante
@@ -508,36 +551,52 @@
         });
       }
 
-      // 7.1) Cargar almacenes (para otros módulos / detalle estándar)
+      // 7.1) Cargar almacenes (para preferencia de entrega + detalle estándar)
+      const preferredSelect = document.getElementById('preferred-warehouse');
       const { data: warehouses, error: whError } = await supa
         .from('warehouses')
-        .select('id, name');
+        .select('id, name')
+        .order('name', { ascending: true });
       if (whError) console.error('Error cargando almacenes:', whError);
 
       const warehousesById = {};
-      (warehouses || []).forEach(w => { warehousesById[w.id] = w; });
+      (warehouses || []).forEach(w => {
+        warehousesById[w.id] = w;
+        // opciones preferencia de entrega
+        const opt = document.createElement('option');
+        opt.value = w.id;
+        opt.textContent = w.name || 'Almacén';
+        preferredSelect.appendChild(opt);
+      });
 
       // 8) Listar solicitudes del usuario actual
-      const tbody = document.getElementById('sol-tbody');
-      const searchInput = document.getElementById('sol-search');
-      const statusFilter = document.getElementById('sol-status-filter');
+      const openTbody        = document.getElementById('sol-open-tbody');
+      const historyTbody     = document.getElementById('sol-history-tbody');
+      const openSearchInput  = document.getElementById('sol-open-search');
+      const openStatusFilter = document.getElementById('sol-open-status-filter');
+      const openTypeFilter   = document.getElementById('sol-open-type-filter');
+
+      const histSearchInput  = document.getElementById('sol-history-search');
+      const histStatusFilter = document.getElementById('sol-history-status-filter');
+      const histTypeFilter   = document.getElementById('sol-history-type-filter');
 
       let myRequests = [];
 
-      function renderTipo(tipo) {
-        if (!tipo) return '-';
-        return tipo === 'compra' ? 'Compra' : 'Venta';
-      }
+      function renderOpenTable() {
+        openTbody.innerHTML = '';
 
-      function renderTable() {
-        tbody.innerHTML = '';
+        const term   = (openSearchInput.value || '').toLowerCase();
+        const est    = openStatusFilter.value;
+        const tipoF  = openTypeFilter.value;
 
-        const estado = statusFilter.value;
-        const term = (searchInput.value || '').toLowerCase();
+        const openStatuses = ['pendiente', 'aprobada'];
 
         myRequests.forEach(r => {
           const st = r.status || 'pendiente';
-          if (estado !== 'todas' && st !== estado) return;
+          if (!openStatuses.includes(st)) return;
+
+          if (est !== 'todas' && st !== est) return;
+          if (tipoF !== 'todas' && r.request_type !== tipoF) return;
 
           const cm = r.commodities_master;
           const itemName = cm
@@ -560,7 +619,7 @@
             <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
           `;
 
-          // Columna Detalle -> popup estándar
+          // Detalle
           const tdDetalle = document.createElement('td');
           const btnDetalle = document.createElement('button');
           btnDetalle.type = 'button';
@@ -578,7 +637,7 @@
           tdDetalle.appendChild(btnDetalle);
           tr.appendChild(tdDetalle);
 
-          // Columna Acciones -> firma solicitante (OK/KO) solo si aprobada
+          // Acciones (firma solicitante)
           const tdAcc = document.createElement('td');
           const canSign =
             !readOnly &&
@@ -612,8 +671,92 @@
           tdAcc.appendChild(koBtn);
           tr.appendChild(tdAcc);
 
-          tbody.appendChild(tr);
+          openTbody.appendChild(tr);
         });
+
+        if (!openTbody.children.length) {
+          const tr = document.createElement('tr');
+          const td = document.createElement('td');
+          td.colSpan = 8;
+          td.textContent = 'No hay solicitudes abiertas.';
+          tr.appendChild(td);
+          openTbody.appendChild(tr);
+        }
+      }
+
+      function renderHistoryTable() {
+        historyTbody.innerHTML = '';
+
+        const term   = (histSearchInput.value || '').toLowerCase();
+        const est    = histStatusFilter.value;
+        const tipoF  = histTypeFilter.value;
+
+        const historyStatuses = ['completada', 'rechazada', 'cancelada'];
+
+        myRequests.forEach(r => {
+          const st = r.status || 'pendiente';
+          if (!historyStatuses.includes(st)) return;
+
+          if (est !== 'todas' && st !== est) return;
+          if (tipoF !== 'todas' && r.request_type !== tipoF) return;
+
+          const cm = r.commodities_master;
+          const itemName = cm
+            ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
+            : (r.item_id || '-');
+
+          if (term) {
+            const haystack = (itemName || '').toLowerCase();
+            if (!haystack.includes(term)) return;
+          }
+
+          const tr = document.createElement('tr');
+
+          const cierre = r.completed_at || r.approved_at || null;
+
+          tr.innerHTML = `
+            <td>#${r.id}</td>
+            <td><span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span></td>
+            <td>${itemName}</td>
+            <td>${r.quantity}</td>
+            <td><span class="badge-status ${st}">${formatStatus(st)}</span></td>
+            <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
+            <td>${cierre ? new Date(cierre).toLocaleString() : '-'}</td>
+          `;
+
+          const tdDetalle = document.createElement('td');
+          const btnDetalle = document.createElement('button');
+          btnDetalle.type = 'button';
+          btnDetalle.className = 'btn btn-secondary';
+          btnDetalle.style.padding = '0.2rem 0.6rem';
+          btnDetalle.textContent = 'Ver';
+          btnDetalle.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            window.open(
+              `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
+              '_blank',
+              'width=720,height=760'
+            );
+          });
+          tdDetalle.appendChild(btnDetalle);
+          tr.appendChild(tdDetalle);
+
+          historyTbody.appendChild(tr);
+        });
+
+        if (!historyTbody.children.length) {
+          const tr = document.createElement('tr');
+          const td = document.createElement('td');
+          td.colSpan = 8;
+          td.textContent = 'Sin histórico todavía.';
+          tr.appendChild(td);
+          historyTbody.appendChild(tr);
+        }
+      }
+
+      function renderTables() {
+        renderOpenTable();
+        renderHistoryTable();
       }
 
       async function loadMyRequests() {
@@ -627,6 +770,7 @@
             status,
             created_at,
             warehouse_id,
+            preferred_warehouse_id,
             due_date,
             approved_at,
             completed_at,
@@ -646,11 +790,16 @@
         }
 
         myRequests = reqs || [];
-        renderTable();
+        renderTables();
       }
 
-      searchInput.addEventListener('input', renderTable);
-      statusFilter.addEventListener('change', renderTable);
+      openSearchInput.addEventListener('input', renderTables);
+      openStatusFilter.addEventListener('change', renderTables);
+      openTypeFilter.addEventListener('change', renderTables);
+
+      histSearchInput.addEventListener('input', renderTables);
+      histStatusFilter.addEventListener('change', renderTables);
+      histTypeFilter.addEventListener('change', renderTables);
 
       await loadMyRequests();
 
@@ -662,10 +811,10 @@
           return;
         }
 
-        const type = typeHidden.value || 'compra';
+        const type   = typeHidden.value || 'compra';
         const itemId = itemSelect.value;
-        const qty = Number(document.getElementById('quantity').value);
-        const notes = document.getElementById('notes').value.trim();
+        const qty    = Number(document.getElementById('quantity').value);
+        const preferredWarehouseId = preferredSelect.value || null;
 
         if (!itemId || !qty || qty <= 0) {
           alert('Debes seleccionar un ítem y una cantidad válida.');
@@ -677,9 +826,9 @@
           item_id: itemId, // uuid de commodities_master
           quantity: qty,
           requester_discord_id: session.user.id,
-          status: 'pendiente'
+          status: 'pendiente',
+          preferred_warehouse_id: preferredWarehouseId
         };
-        // if (notes) payload.notes = notes;  // cuando añadas la columna notes
 
         const { error: insError } = await supa
           .from('requests')
@@ -698,6 +847,8 @@
         tipoButtons.forEach(btn => {
           btn.classList.toggle('active', btn.dataset.type === 'compra');
         });
+        // restaurar preferencia
+        preferredSelect.value = '';
 
         await loadMyRequests();
         alert('Solicitud creada correctamente.');
