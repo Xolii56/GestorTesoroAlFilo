@@ -6,62 +6,15 @@
   <title>Departamento del Tesoro — Revisión de solicitudes</title>
   <link rel="stylesheet" href="./style.css"/>
 
-  <!-- FLATPICKR (CALENDARIO) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
-  <!-- TEMA OSCURO PERSONALIZADO FLATPICKR -->
-  <style>
-    .flatpickr-calendar {
-      background:#0f172a !important;
-      border:1px solid rgba(148,163,184,0.25) !important;
-      color:#e2e8f0 !important;
-      box-shadow:0 10px 35px rgba(0,0,0,0.55) !important;
-    }
-    .flatpickr-months {
-      background:#0f172a !important;
-      color:#e2e8f0 !important;
-    }
-    .flatpickr-monthDropdown-months,
-    .flatpickr-monthDropdown-months option {
-      background:#020617 !important;
-      color:#e5e7eb !important;
-    }
-    .flatpickr-current-month .numInputWrapper input {
-      background:#020617 !important;
-      color:#e5e7eb !important;
-      border-radius:6px;
-    }
-    .flatpickr-weekday {
-      color:#94a3b8 !important;
-    }
-    .flatpickr-day {
-      color:#e2e8f0 !important;
-      border-radius:6px !important;
-      transition:background .15s ease;
-    }
-    .flatpickr-day:hover {
-      background:rgba(56,189,248,0.25) !important;
-    }
-    .flatpickr-day.today {
-      border:1px solid #38bdf8 !important;
-      color:#38bdf8 !important;
-    }
-    .flatpickr-day.selected {
-      background:#38bdf8 !important;
-      color:#0f172a !important;
-    }
-    .flatpickr-next-month,
-    .flatpickr-prev-month {
-      fill:#e5e7eb !important;
-    }
-  </style>
-
   <!-- Supabase + módulos -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="./config.js" defer></script>
   <script src="./modules/db.js" defer></script>
   <script src="./modules/layout.js" defer></script>
+
+  <!-- Flatpickr -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
   <style>
     main.rev-main {
@@ -212,25 +165,25 @@
     .rev-modal {
       background:#020617;
       border-radius:0.9rem;
-      padding:1.2rem 1.4rem;
-      max-width:540px;
+      padding:1.1rem 1.3rem 0.9rem;
+      max-width:520px;
       width:100%;
       box-shadow:0 18px 40px rgba(0,0,0,0.75);
     }
     .rev-form .field {
-      margin-bottom:.9rem;
+      margin-bottom:.8rem;
     }
     .rev-form label {
       display:block;
       font-size:.8rem;
-      opacity:.85;
+      opacity:.8;
       margin-bottom:.25rem;
     }
     .rev-form input,
     .rev-form select,
     .rev-form textarea {
       width:100%;
-      padding:0.45rem 0.55rem;
+      padding:0.4rem 0.55rem;
       border-radius:0.5rem;
       border:1px solid rgba(148,163,184,0.8);
       background:#020617;
@@ -238,24 +191,56 @@
       font-size:.9rem;
     }
     .rev-form textarea {
-      min-height:90px;
+      min-height:100px;   /* <-- más alto para no tener que estirarlo */
       resize:vertical;
-      white-space:pre-line;
-    }
-    #rev-summary {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     .rev-modal-actions {
       display:flex;
       justify-content:flex-end;
       gap:.5rem;
-      margin-top:.5rem;
+      margin-top:.7rem;
       flex-wrap:wrap;
     }
 
-    /* pequeña ayuda para que el input de fecha no parezca editable aunque lo sea */
-    #rev-due-date {
-      cursor:default;
+    /* Contenedor para centrar el calendario inline */
+    #rev-calendar-container {
+      display:flex;
+      justify-content:center;
+      margin-top:.45rem;
+    }
+
+    /* Tema oscuro para Flatpickr integrado con la app */
+    .flatpickr-calendar {
+      background:#020617;
+      color:#e5e7eb;
+      border:1px solid rgba(148,163,184,0.4);
+      box-shadow:0 18px 40px rgba(0,0,0,0.8);
+    }
+    .flatpickr-calendar .flatpickr-months,
+    .flatpickr-calendar .flatpickr-weekdays {
+      background:#020617;
+      color:#e5e7eb;
+    }
+    .flatpickr-calendar .flatpickr-day {
+      color:#e5e7eb;
+    }
+    .flatpickr-calendar .flatpickr-day.flatpickr-disabled {
+      color:rgba(148,163,184,0.4);
+    }
+    .flatpickr-calendar .flatpickr-day.today {
+      border-color:#38bdf8;
+    }
+    .flatpickr-calendar .flatpickr-day.selected {
+      background:#22c55e;
+      border-color:#22c55e;
+      color:#020617;
+    }
+    .flatpickr-current-month input.cur-year {
+      color:#e5e7eb;
+    }
+    .flatpickr-monthDropdown-months {
+      background:#020617;
+      color:#e5e7eb;
     }
   </style>
 </head>
@@ -317,7 +302,7 @@
   <!-- MODAL APROBAR SOLICITUD -->
   <div id="rev-modal-backdrop" class="rev-modal-backdrop" style="display:none;">
     <div class="rev-modal">
-      <h3 style="margin-top:0;margin-bottom:.8rem;">Aprobar solicitud</h3>
+      <h3 style="margin-top:0;margin-bottom:.6rem;">Aprobar solicitud</h3>
       <form id="rev-form" class="rev-form">
         <div class="field">
           <label>Resumen</label>
@@ -331,8 +316,10 @@
         </div>
         <div class="field">
           <label>Fecha límite de entrega</label>
-          <!-- El input muestra la fecha; el calendario está siempre abierto debajo -->
-          <input id="rev-due-date" type="text" required autocomplete="off"/>
+          <!-- solo calendario inline, sin input de texto -->
+          <div id="rev-calendar-container">
+            <div id="rev-calendar"></div>
+          </div>
         </div>
 
         <div class="rev-modal-actions">
@@ -344,7 +331,7 @@
           </button>
         </div>
       </form>
-      <p class="help-text" style="margin-top:.6rem;">
+      <p class="help-text" style="margin-top:.5rem;">
         Una vez aprobada o rechazada, la decisión no se puede deshacer desde la aplicación.
       </p>
     </div>
@@ -381,7 +368,6 @@
 
       const orgStatus = await getOrgStatus();
       if (!orgStatus || !['daga','espada','admin'].includes(orgStatus)) {
-        // Revisión es solo para gente de Tesoro hacia arriba
         await supa.auth.signOut();
         window.location.href = './index.html';
         return;
@@ -477,20 +463,40 @@
       const revForm       = document.getElementById('rev-form');
       const revCancelBtn  = document.getElementById('rev-cancel');
       const revSummary    = document.getElementById('rev-summary');
-      const revDueDate    = document.getElementById('rev-due-date');
+
+      const calendarElem  = document.getElementById('rev-calendar');
+      let dueDatePicker   = null;
+      let selectedDueDate = null;
+
+      // Inicializar flatpickr inline en el contenedor
+      function initCalendar() {
+        const today = new Date();
+        const defaultDate = new Date();
+        defaultDate.setDate(today.getDate() + 7); // por defecto +7 días
+
+        if (dueDatePicker) {
+          dueDatePicker.destroy();
+        }
+
+        dueDatePicker = flatpickr(calendarElem, {
+          inline: true,
+          dateFormat: "Y-m-d",
+          minDate: "today",
+          defaultDate: defaultDate,
+          disableMobile: true,
+          onChange: function(selectedDates) {
+            selectedDueDate = selectedDates[0] || null;
+          }
+        });
+
+        // forzar valor inicial
+        selectedDueDate = defaultDate;
+      }
+
+      initCalendar();
 
       let pendingRequests = [];
       let currentRequest  = null; // la que se está aprobando
-
-      /* 🗓️ Flatpickr siempre visible dentro del popup */
-      const dueDatePicker = flatpickr(revDueDate, {
-        dateFormat: "Y-m-d",
-        minDate: "today",
-        defaultDate: "today",
-        inline: true,
-        clickOpens: false,
-        disableMobile: true
-      });
 
       function openModalForRequest(r, itemName, requesterName) {
         currentRequest = r;
@@ -504,9 +510,8 @@
         revSummary.value = resumen;
         warehouseSelect.value = '';
 
-        // reset fecha al abrir
-        dueDatePicker.set('minDate', 'today');
-        dueDatePicker.setDate(new Date(), true);
+        // reiniciar calendario cada vez que abrimos el modal
+        initCalendar();
 
         modalBackdrop.style.display = 'flex';
       }
@@ -607,9 +612,8 @@
 
           const tdStatus = document.createElement('td');
           const statusSpan = document.createElement('span');
-          const st = r.status || 'pendiente';
-          statusSpan.className = 'badge-status ' + st;
-          statusSpan.textContent = formatStatus(st);
+          statusSpan.className = 'badge-status ' + (r.status || 'pendiente');
+          statusSpan.textContent = formatStatus(r.status || 'pendiente');
           tdStatus.appendChild(statusSpan);
 
           const tdDetalle = document.createElement('td');
@@ -674,7 +678,7 @@
               return;
             }
 
-            // 🔔 Notificación al solicitante: solicitud rechazada
+            // Notificación al solicitante: solicitud rechazada
             if (r.requester_discord_id) {
               await supa.from('notifications').insert({
                 user_id: r.requester_discord_id,
@@ -719,12 +723,17 @@
         if (!currentRequest) return;
 
         const warehouseId = warehouseSelect.value;
-        const dueDate = revDueDate.value;
 
-        if (!warehouseId || !dueDate) {
-          alert('Debes seleccionar un almacén y una fecha límite.');
+        if (!warehouseId) {
+          alert('Debes seleccionar un almacén.');
           return;
         }
+        if (!selectedDueDate) {
+          alert('Debes seleccionar una fecha límite de entrega.');
+          return;
+        }
+
+        const dueDate = selectedDueDate.toISOString().split('T')[0];
 
         const { error } = await supa
           .from('requests')
@@ -743,7 +752,7 @@
           return;
         }
 
-        // 🔔 Notificación al solicitante: solicitud aprobada
+        // Notificación al solicitante: solicitud aprobada
         if (currentRequest.requester_discord_id) {
           await supa.from('notifications').insert({
             user_id: currentRequest.requester_discord_id,
