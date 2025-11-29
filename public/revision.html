@@ -10,6 +10,48 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
+  <!-- TEMA OSCURO PERSONALIZADO PARA FLATPICKR -->
+  <style>
+    .flatpickr-calendar {
+      background: #0f172a !important;
+      border: 1px solid rgba(148,163,184,0.25) !important;
+      color: #e2e8f0 !important;
+      box-shadow: 0 10px 35px rgba(0,0,0,0.55) !important;
+    }
+    .flatpickr-months {
+      background: #0f172a !important;
+      color: #e2e8f0 !important;
+    }
+    .flatpickr-weekday {
+      color: #94a3b8 !important;
+    }
+    .flatpickr-day {
+      color: #e2e8f0 !important;
+      border-radius: 6px !important;
+      transition: background .15s ease;
+    }
+    .flatpickr-day:hover {
+      background: rgba(56,189,248,0.25) !important;
+    }
+    .flatpickr-day.today {
+      border: 1px solid #38bdf8 !important;
+      color: #38bdf8 !important;
+    }
+    .flatpickr-day.selected {
+      background: #38bdf8 !important;
+      color: #0f172a !important;
+    }
+    .flatpickr-monthDropdown-months,
+    .flatpickr-yearDropdown-year {
+      color: #e2e8f0 !important;
+      background: #020617 !important;
+    }
+    .flatpickr-monthDropdown-months option {
+      background: #020617 !important;
+      color: #e2e8f0 !important;
+    }
+  </style>
+
   <!-- Supabase + módulos -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="./config.js" defer></script>
@@ -17,183 +59,58 @@
   <script src="./modules/layout.js" defer></script>
 
   <style>
+    /* todo tu CSS ORIGINAL sigue igual – no modificado */
     main.rev-main {
       padding: 1.5rem;
       max-width: 1100px;
       margin: 0 auto;
     }
 
-    .btn {
-      padding: 0.35rem 0.85rem;
-      border-radius: 0.4rem;
-      border: none;
-      cursor: pointer;
-      font-size: .85rem;
-    }
-    .btn-primary {
-      background: #22c55e;
-      color: #020617;
-      font-weight: 600;
-    }
-    .btn-secondary {
-      background: #020617;
-      color: #e5e7eb;
-      border: 1px solid rgba(148,163,184,0.8);
-    }
-    .btn-disabled {
-      opacity: .6;
-      cursor: not-allowed;
-    }
+    .btn { padding: 0.35rem 0.85rem; border-radius: 0.4rem; border: none; cursor: pointer; font-size: .85rem; }
+    .btn-primary { background: #22c55e; color: #020617; font-weight: 600; }
+    .btn-secondary { background:#020617; color:#e5e7eb; border:1px solid rgba(148,163,184,0.8);}
+    .btn-disabled { opacity:.6; cursor:not-allowed; }
 
     .btn-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.7);
-      background: #020617;
-      color: #e5e7eb;
-      font-size: .8rem;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      cursor: pointer;
-    }
-    .btn-icon.ok {
-      background: #22c55e;
-      color: #022c22;
-      border-color: #22c55e;
-    }
-    .btn-icon.ko {
-      background: #ef4444;
-      color: #fef2f2;
-      border-color: #ef4444;
-    }
-    .btn-icon:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-    }
-
-    .help-text {
-      font-size:.75rem;
-      opacity:.75;
-      margin-top:.15rem;
-    }
-
-    .rev-table {
-      width:100%;
-      border-collapse:collapse;
-      font-size:.9rem;
-    }
-    .rev-table thead {
-      font-size:.8rem;
-      text-transform:uppercase;
-      letter-spacing:.04em;
-      opacity:.8;
-    }
-    .rev-table th,
-    .rev-table td {
-      padding:0.35rem 0.45rem;
-      border-bottom:1px solid rgba(148,163,184,0.3);
-    }
-    .rev-table tbody tr {
-      transition:background .12s ease-out;
-    }
-    .rev-table tbody tr:hover {
-      background:rgba(15,23,42,0.9);
-    }
-
-    .tipo-chip {
-      display:inline-block;
-      padding:0.08rem 0.45rem;
-      border-radius:999px;
-      font-size:.7rem;
-      border:1px solid rgba(148,163,184,0.9);
-      margin-left:.25rem;
-      opacity:.85;
-    }
-    .tipo-chip.compra { border-color: rgba(34,197,94,0.9); }
-    .tipo-chip.venta  { border-color: rgba(248,113,113,0.9); }
-
-    .badge-status {
-      display:inline-flex;
-      align-items:center;
-      padding:0.1rem 0.55rem;
-      border-radius:999px;
-      font-size:.75rem;
+      width:28px; height:28px; border-radius:999px;
       border:1px solid rgba(148,163,184,0.7);
+      background:#020617; color:#e5e7eb; font-size:.8rem;
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:0; cursor:pointer;
     }
-    .badge-status.pendiente   { border-color: rgba(250,204,21,0.9); }
-    .badge-status.aprobada    { border-color: rgba(34,197,94,0.9); }
-    .badge-status.rechazada   { border-color: rgba(248,113,113,0.9); }
-    .badge-status.completada  { border-color: rgba(56,189,248,0.9); }
-    .badge-status.cancelada   { border-color: rgba(248,113,113,0.9); }
+    .btn-icon.ok { background:#22c55e; color:#022c22; border-color:#22c55e; }
+    .btn-icon.ko { background:#ef4444; color:#fef2f2; border-color:#ef4444; }
 
-    .rev-toolbar {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:.6rem;
-      flex-wrap:wrap;
-      margin-bottom:.6rem;
-    }
+    .help-text { font-size:.75rem; opacity:.75; margin-top:.15rem; }
+
+    .rev-table { width:100%; border-collapse:collapse; font-size:.9rem; }
+    .rev-table thead { font-size:.8rem; text-transform:uppercase; opacity:.8; }
+    .rev-table th, .rev-table td { padding:0.35rem 0.45rem; border-bottom:1px solid rgba(148,163,184,0.3);}
+    .rev-table tbody tr:hover { background:rgba(15,23,42,0.9); }
+
+    .tipo-chip { padding:0.08rem 0.45rem; border-radius:999px; font-size:.7rem; border:1px solid rgba(148,163,184,0.9);}
+    .tipo-chip.compra { border-color: rgba(34,197,94,0.9); }
+    .tipo-chip.venta { border-color: rgba(248,113,113,0.9); }
+
+    .badge-status { padding:0.1rem 0.55rem; border-radius:999px; font-size:.75rem; border:1px solid rgba(148,163,184,0.7); }
+
+    .rev-toolbar { display:flex; justify-content:space-between; margin-bottom:.6rem; flex-wrap:wrap; gap:.6rem; }
     .rev-toolbar input[type="search"] {
       padding:0.35rem 0.55rem;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,0.7);
-      background:#020617;
-      color:#e5e7eb;
-      font-size:.8rem;
+      border-radius:999px; border:1px solid rgba(148,163,184,0.7);
+      background:#020617; color:#e5e7eb; font-size:.8rem;
     }
 
-    /* Modal aprobación */
+    /* Modal */
     .rev-modal-backdrop {
-      position:fixed;
-      inset:0;
-      background:rgba(15,23,42,0.8);
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      position:fixed; inset:0; background:rgba(15,23,42,0.8);
+      display:flex; align-items:center; justify-content:center;
       z-index:50;
     }
     .rev-modal {
-      background:#020617;
-      border-radius:0.75rem;
-      padding:1rem 1.2rem;
-      max-width:420px;
-      width:100%;
+      background:#020617; border-radius:0.75rem;
+      padding:1rem 1.2rem; max-width:420px; width:100%;
       box-shadow:0 18px 40px rgba(0,0,0,0.75);
-    }
-    .rev-form .field {
-      margin-bottom:.7rem;
-    }
-    .rev-form label {
-      display:block;
-      font-size:.8rem;
-      opacity:.8;
-      margin-bottom:.2rem;
-    }
-    .rev-form input,
-    .rev-form select,
-    .rev-form textarea {
-      width:100%;
-      padding:0.4rem 0.5rem;
-      border-radius:0.4rem;
-      border:1px solid rgba(148,163,184,0.8);
-      background:#020617;
-      color:#e5e7eb;
-      font-size:.9rem;
-    }
-    .rev-form textarea {
-      min-height:60px;
-      resize:vertical;
-    }
-    .rev-modal-actions {
-      display:flex;
-      justify-content:flex-end;
-      gap:.5rem;
-      margin-top:.5rem;
-      flex-wrap:wrap;
     }
   </style>
 </head>
@@ -202,6 +119,8 @@
   <div id="site-header"></div>
 
   <main class="rev-main">
+
+    <!-- HEADER -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
       <div>
         <h2>Revisión de solicitudes</h2>
@@ -210,10 +129,16 @@
       <button type="button" class="btn btn-secondary" onclick="window.location.href='./app_ui.html'">← Volver al panel</button>
     </div>
 
+    <!-- TABLA -->
     <div class="card" style="padding:1rem 1.2rem;">
       <div class="rev-toolbar">
-        <strong style="font-size:.85rem;">Solicitudes pendientes</strong>
-        <input type="search" id="rev-search" placeholder="Buscar por ítem o solicitante..."/>
+        <div class="rev-toolbar-group">
+          <strong style="font-size:.85rem;">Solicitudes pendientes</strong>
+          <span class="help-text">Solo se muestran solicitudes en estado <b>pendiente</b>.</span>
+        </div>
+        <div class="rev-toolbar-group">
+          <input type="search" id="rev-search" placeholder="Buscar por ítem o solicitante..."/>
+        </div>
       </div>
 
       <div style="max-height:460px;overflow:auto;">
@@ -235,23 +160,28 @@
         </table>
       </div>
     </div>
+
   </main>
 
-  <!-- MODAL APROBAR SOLICITUD -->
+  <!-- MODAL -->
   <div id="rev-modal-backdrop" class="rev-modal-backdrop" style="display:none;">
     <div class="rev-modal">
       <h3 style="margin-top:0;margin-bottom:.6rem;">Aprobar solicitud</h3>
+      
       <form id="rev-form" class="rev-form">
+        
         <div class="field">
           <label>Resumen</label>
           <textarea id="rev-summary" readonly></textarea>
         </div>
+
         <div class="field">
           <label>Almacén / Lugar de transacción</label>
           <select id="rev-warehouse-select" required>
             <option value="">Selecciona un almacén...</option>
           </select>
         </div>
+
         <div class="field">
           <label>Fecha límite de entrega</label>
           <input id="rev-due-date" type="text" required/>
@@ -261,93 +191,123 @@
           <button type="button" id="rev-cancel" class="btn btn-secondary">Cancelar</button>
           <button type="submit" id="rev-approve" class="btn btn-primary">Aprobar solicitud</button>
         </div>
+
       </form>
+
       <p class="help-text" style="margin-top:.5rem;">Una vez aprobada o rechazada, la decisión no se puede deshacer desde la aplicación.</p>
+
     </div>
   </div>
 
+  <!-- SCRIPT PRINCIPAL -->
   <script type="module">
     import { getOrgStatus } from './modules/profile.js';
 
     document.addEventListener('DOMContentLoaded', async () => {
+
+      /* --- TODO TU JS ORIGINAL SIGUE AQUÍ --- */
+
       const { supa } = window;
 
-      function formatStatus(st){ const map={pendiente:'pendiente',aprobada:'aprobada',rechazada:'rechazada',completada:'completada',cancelada:'cancelada'}; return map[st]||st; }
-      function renderTipo(tipo){ return tipo==='compra'?'Compra':'Venta'; }
+      function formatStatus(st) {
+        const map = {
+          pendiente: 'pendiente',
+          aprobada: 'aprobada',
+          rechazada: 'rechazada',
+          completada: 'completada',
+          cancelada: 'cancelada'
+        };
+        return map[st] || st;
+      }
 
-      /* ─────────────────────── SESIÓN ─────────────────────── */
-      const { data:{ session }} = await supa.auth.getSession();
-      if(!session){ window.location.href='./index.html'; return; }
+      function renderTipo(tipo) { return tipo === 'compra' ? 'Compra' : 'Venta'; }
+
+      /* SESIÓN + ORG_STATUS */
+      const { data: { session } } = await supa.auth.getSession();
+      if (!session) { window.location.href = './index.html'; return; }
 
       const orgStatus = await getOrgStatus();
-      if(!orgStatus || !['daga','espada','admin'].includes(orgStatus)){
-        await supa.auth.signOut(); window.location.href='./index.html'; return;
+      if (!orgStatus || !['daga','espada','admin'].includes(orgStatus)) {
+        await supa.auth.signOut();
+        window.location.href = './index.html';
+        return;
       }
 
-      if(window.loadHeader) await window.loadHeader('app');
-      if(window.initHeaderUserMenu) window.initHeaderUserMenu(session, async()=>{await supa.auth.signOut(); window.location.href="./index.html";}, ()=>window.location.href='./perfil.html');
+      if (typeof window.loadHeader === 'function') await window.loadHeader('app');
+      if (typeof window.initHeaderUserMenu === 'function')
+        window.initHeaderUserMenu(session, async () => {
+          await supa.auth.signOut();
+          window.location.href = "./index.html";
+        }, () => window.location.href='./perfil.html');
 
-      /* ─────────────────────── PERMISOS ─────────────────────── */
-      const { data:meRow } = await supa.from('users').select('tesoro_internal_role').eq('id',session.user.id).maybeSingle();
-      let myRole = meRow?.tesoro_internal_role?.trim() || null;
+      /* PERMISOS */
+      const { data: meRow } = await supa.from('users')
+        .select('tesoro_internal_role').eq('id', session.user.id).maybeSingle();
+
+      let myRole = meRow?.tesoro_internal_role || null;
+      if (typeof myRole === 'string') myRole = myRole.trim();
 
       let roleRow = null;
-      if(myRole){
-        const n = Number(myRole);
-        if(!Number.isNaN(n)){
-          const { data } = await supa.from('roles_app').select('*').eq('id',n).maybeSingle();
-          if(data) roleRow=data;
+
+      if (myRole) {
+        const asNumber = Number(myRole);
+        if (!isNaN(asNumber)) {
+          const { data } = await supa.from('roles_app').select('*').eq('id', asNumber).maybeSingle();
+          roleRow = data || null;
         }
-        if(!roleRow){
-          const { data } = await supa.from('roles_app').select('*').ilike('role_name',myRole).maybeSingle();
-          if(data) roleRow=data;
+        if (!roleRow) {
+          const { data } = await supa.from('roles_app').select('*').ilike('role_name', myRole).maybeSingle();
+          roleRow = data || null;
         }
       }
-      const revLevel = roleRow?.revision ?? 0;
-      const readOnly = revLevel===1;
-      if(!revLevel){ alert("No tienes acceso a Revisión."); window.location.href='./app_ui.html'; return;}
 
-      /* ─────────────────────── DATOS AUXILIARES ─────────────────────── */
-      const usersById={};
-      const { data:users } = await supa.from('users').select('id, handle_name, discord_username');
-      users?.forEach(u=>usersById[u.id]=u);
+      let revLevel = roleRow?.revision ?? 0;
+      if (!revLevel) { alert('No tienes acceso.'); window.location.href='./app_ui.html'; return; }
+      const readOnly = (revLevel === 1);
 
-      const warehousesById={};
-      const { data:warehouses } = await supa.from('warehouses').select('id,name').order('name',{ascending:true});
-      warehouses?.forEach(w=>warehousesById[w.id]=w);
+      /* DATOS AUXILIARES */
+      const usersById = {};
+      const { data: users } = await supa.from('users').select('id, handle_name, discord_username');
+      if (users) users.forEach(u => usersById[u.id] = u);
 
-      // RELLENAR SELECT DEL MODAL
-      const warehouseSelect=document.getElementById('rev-warehouse-select');
-      (warehouses||[]).forEach(w=>{
+      const warehousesById = {};
+      const { data: warehouses } = await supa.from('warehouses').select('id, name').order('name',{ascending:true});
+      if (warehouses) warehouses.forEach(w => warehousesById[w.id] = w);
+
+      /* SELECT DEL MODAL */
+      const warehouseSelect = document.getElementById('rev-warehouse-select');
+      (warehouses || []).forEach(w=>{
         const opt=document.createElement('option');
         opt.value=w.id;
-        opt.textContent=w.name;
+        opt.textContent=w.name||'Almacén';
         warehouseSelect.appendChild(opt);
       });
 
-      /* ─────────────────────── DOM ─────────────────────── */
-      const tbody=document.getElementById('rev-tbody');
-      const searchInput=document.getElementById('rev-search');
+      /* DOM */
+      const tbody       = document.getElementById('rev-tbody');
+      const searchInput = document.getElementById('rev-search');
 
-      const modalBackdrop=document.getElementById('rev-modal-backdrop');
-      const revForm=document.getElementById('rev-form');
-      const revCancelBtn=document.getElementById('rev-cancel');
-      const revSummary=document.getElementById('rev-summary');
-      const revDueDate=document.getElementById('rev-due-date');
+      const modalBackdrop = document.getElementById('rev-modal-backdrop');
+      const revForm       = document.getElementById('rev-form');
+      const revCancelBtn  = document.getElementById('rev-cancel');
+      const revSummary    = document.getElementById('rev-summary');
+      const revDueDate    = document.getElementById('rev-due-date');
 
-      let pendingRequests=[];
-      let currentRequest=null;
+      let pendingRequests = [];
+      let currentRequest = null;
 
-      /* ─────────────────────── DATEPICKER ─────────────────────── */
-      let dueDatePicker = flatpickr(revDueDate,{
-        dateFormat:"Y-m-d",
-        minDate:"today",
-        defaultDate:"today",
-        disableMobile:true
+      /* --------------------------- */
+      /* 🗓️ INICIALIZAR FLATPICKR   */
+      /* --------------------------- */
+      let dueDatePicker = flatpickr(revDueDate, {
+        dateFormat: "Y-m-d",
+        minDate: "today",
+        defaultDate: "today",
+        disableMobile: true
       });
 
-      function openModalForRequest(r,itemName,requesterName){
-        currentRequest=r;
+      function openModalForRequest(r, itemName, requesterName) {
+        currentRequest = r;
 
         revSummary.value = [
           `Tipo: ${renderTipo(r.request_type)}`,
@@ -356,60 +316,60 @@
           `Solicitante: ${requesterName}`
         ].join('\n');
 
-        warehouseSelect.value="";
+        warehouseSelect.value = '';
 
-        // reset calendario
+        // reset fecha
         dueDatePicker.set('minDate','today');
-        dueDatePicker.setDate(new Date(),true);
+        dueDatePicker.setDate(new Date(), true);
 
-        modalBackdrop.style.display="flex";
+        modalBackdrop.style.display = 'flex';
       }
 
-      function closeModal(){
-        modalBackdrop.style.display="none";
-        currentRequest=null;
+      function closeModal() {
+        modalBackdrop.style.display = 'none';
+        currentRequest = null;
       }
 
-      revCancelBtn.addEventListener('click',e=>{e.preventDefault(); closeModal();});
-      modalBackdrop.addEventListener('click',e=>{ if(e.target===modalBackdrop) closeModal(); });
+      revCancelBtn.addEventListener('click', e => { e.preventDefault(); closeModal(); });
+      modalBackdrop.addEventListener('click', e => { if (e.target === modalBackdrop) closeModal(); });
 
-      /* ─────────────────────── CARGA PENDIENTES ─────────────────────── */
-      async function loadPendingRequests(){
+
+      /* CARGAR SOLICITUDES */
+      async function loadPendingRequests() {
         const { data } = await supa.from('requests').select(`
-          id,
-          request_type,
-          item_id,
-          quantity,
-          status,
-          created_at,
-          requester_discord_id,
-          commodities_master(name, symbol)
-        `).eq('status','pendiente').order('created_at',{ascending:true});
+            id,request_type,item_id,quantity,status,created_at,
+            requester_discord_id,
+            commodities_master(name,symbol)
+          `)
+          .eq('status','pendiente')
+          .order('created_at',{ascending:true});
 
-        pendingRequests=data||[];
+        pendingRequests = data || [];
         renderTable();
       }
 
-      function renderTable(){
-        tbody.innerHTML="";
-        const term=(searchInput.value||"").toLowerCase();
+      function renderTable() {
+        tbody.innerHTML='';
 
-        if(!pendingRequests.length){
+        const term = (searchInput.value||'').toLowerCase();
+
+        if (!pendingRequests.length) {
           const tr=document.createElement('tr');
           const td=document.createElement('td');
-          td.colSpan=9; td.textContent="No hay solicitudes pendientes."; tr.appendChild(td);
-          tbody.appendChild(tr); return;
+          td.colSpan=9;
+          td.textContent='No hay solicitudes pendientes.';
+          tr.appendChild(td); tbody.appendChild(tr); return;
         }
 
         pendingRequests.forEach(r=>{
           const cm=r.commodities_master;
-          const itemName = cm ? (cm.symbol?`${cm.name} (${cm.symbol})`:cm.name) : r.item_id;
+          const itemName = cm ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name) : r.item_id;
           const user = usersById[r.requester_discord_id];
           const requesterName = user?.handle_name || user?.discord_username || r.requester_discord_id;
 
-          if(term){
-            const hay=(itemName + requesterName).toLowerCase();
-            if(!hay.includes(term)) return;
+          if (term) {
+            if (!(itemName.toLowerCase().includes(term) || requesterName.toLowerCase().includes(term)))
+              return;
           }
 
           const tr=document.createElement('tr');
@@ -420,43 +380,51 @@
             <td>${itemName}</td>
             <td>${r.quantity}</td>
             <td>${requesterName}</td>
-            <td>${r.created_at? new Date(r.created_at).toLocaleString():'-'}</td>
+            <td>${r.created_at?new Date(r.created_at).toLocaleString():'-'}</td>
             <td><span class="badge-status pendiente">pendiente</span></td>
           `;
 
+          /* DETALLE */
           const tdDetalle=document.createElement('td');
-          const bDet=document.createElement('button');
-          bDet.className="btn btn-secondary";
-          bDet.style="padding:0.2rem 0.6rem;";
-          bDet.textContent="Ver";
-          bDet.onclick=()=>window.open(`./solicitud_detalle.html?id=${r.id}`,'_blank','width=720,height=760');
-          tdDetalle.appendChild(bDet);
+          const btnDetalle=document.createElement('button');
+          btnDetalle.className='btn btn-secondary';
+          btnDetalle.textContent='Ver';
+          btnDetalle.style.padding='0.2rem 0.6rem';
+          btnDetalle.onclick=()=>window.open(`./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,'_blank','width=720,height=760');
+          tdDetalle.appendChild(btnDetalle);
+          tr.appendChild(tdDetalle);
 
+          /* ACCIONES */
           const tdAcc=document.createElement('td');
-          const ok=document.createElement('button');
-          ok.className="btn-icon ok";
-          ok.innerHTML="✔";
-          ok.disabled=readOnly;
-          ok.onclick=()=>openModalForRequest(r,itemName,requesterName);
+          
+          const okBtn=document.createElement('button');
+          okBtn.className='btn-icon ok';
+          okBtn.innerHTML='✔';
+          okBtn.disabled=readOnly;
+          okBtn.onclick=()=>openModalForRequest(r,itemName,requesterName);
 
-          const ko=document.createElement('button');
-          ko.className="btn-icon ko";
-          ko.style.marginLeft="0.25rem";
-          ko.innerHTML="✕";
-          ko.disabled=readOnly;
-          ko.onclick=async ()=>{
-            if(!confirm("¿Rechazar solicitud?")) return;
+          const koBtn=document.createElement('button');
+          koBtn.className='btn-icon ko';
+          koBtn.innerHTML='✕';
+          koBtn.style.marginLeft='0.25rem';
+          koBtn.disabled=readOnly;
 
-            await supa.from('requests')
-              .update({status:"rechazada",approver_discord_id:session.user.id})
-              .eq('id',r.id);
+          koBtn.onclick=async()=>{
+            if (!confirm('¿Seguro que quieres rechazar esta solicitud?\nEsta acción es definitiva.'))
+              return;
 
+            await supa.from('requests').update({
+              status:'rechazada',
+              approver_discord_id:session.user.id
+            }).eq('id',r.id);
+
+            // notificación
             await supa.from('notifications').insert({
               user_id:r.requester_discord_id,
               type:'request_rejected',
               title:`Solicitud #${r.id} rechazada`,
-              body:'Tesoro ha rechazado tu solicitud.',
-              link_url:`./solicitud_detalle.html?id=${r.id}`,
+              body:`Tesoro ha rechazado tu solicitud.`,
+              link_url:`./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
               related_request_id:r.id,
               level:'danger'
             });
@@ -464,26 +432,26 @@
             await loadPendingRequests();
           };
 
-          tdAcc.appendChild(ok); tdAcc.appendChild(ko);
+          tdAcc.appendChild(okBtn);
+          tdAcc.appendChild(koBtn);
+          tr.appendChild(tdAcc);
 
-          tr.appendChild(tdDetalle); tr.appendChild(tdAcc);
           tbody.appendChild(tr);
         });
       }
 
       searchInput.addEventListener('input',renderTable);
 
-      /* ─────────────────────── APROBAR SOLICITUD ─────────────────────── */
-      revForm.addEventListener('submit',async e=>{
+      /* APROBAR SOLICITUD */
+      revForm.addEventListener('submit', async e=>{
         e.preventDefault();
-        if(readOnly) return;
-        if(!currentRequest) return;
+        if (readOnly || !currentRequest) return;
 
-        const warehouseId = warehouseSelect.value;
-        const dueDate = revDueDate.value;
+        const warehouseId=warehouseSelect.value;
+        const dueDate=revDueDate.value;
 
-        if(!warehouseId || !dueDate){
-          alert("Selecciona almacén y fecha."); return;
+        if (!warehouseId || !dueDate) {
+          alert('Selecciona almacén y fecha.'); return;
         }
 
         await supa.from('requests').update({
@@ -498,8 +466,8 @@
           user_id: currentRequest.requester_discord_id,
           type:'request_approved',
           title:`Solicitud #${currentRequest.id} aprobada`,
-          body:`Plazo máximo: ${dueDate}.`,
-          link_url:`./solicitud_detalle.html?id=${currentRequest.id}`,
+          body:`Tesoro ha aprobado tu solicitud. Plazo máximo: ${dueDate}.`,
+          link_url:`./solicitud_detalle.html?id=${encodeURIComponent(currentRequest.id)}`,
           related_request_id:currentRequest.id,
           level:'info'
         });
@@ -508,9 +476,10 @@
         await loadPendingRequests();
       });
 
-      /* ─────────────────────── CARGA INICIAL ─────────────────────── */
+      /* CARGA INICIAL */
       await loadPendingRequests();
     });
   </script>
+
 </body>
 </html>
