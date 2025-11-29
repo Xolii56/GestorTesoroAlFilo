@@ -432,7 +432,16 @@
 
         revSummary.value = resumen;
         warehouseSelect.value = '';
-        revDueDate.value = '';
+
+        // ⬇️ Configurar fecha mínima (hoy) y valor por defecto (hoy + 3 días)
+        const today = new Date();
+        const toIsoDate = (d) => d.toISOString().split('T')[0];
+
+        revDueDate.min = toIsoDate(today);
+
+        const defaultDate = new Date();
+        defaultDate.setDate(defaultDate.getDate() + 3); // cambia el +3 si quieres otro plazo
+        revDueDate.value = toIsoDate(defaultDate);
 
         modalBackdrop.style.display = 'flex';
       }
