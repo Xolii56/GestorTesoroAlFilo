@@ -191,7 +191,7 @@
       font-size:.9rem;
     }
     .rev-form textarea {
-      min-height:100px;   /* <-- más alto para no tener que estirarlo */
+      min-height:100px;   /* un pelín más alto */
       resize:vertical;
     }
     .rev-modal-actions {
@@ -207,40 +207,6 @@
       display:flex;
       justify-content:center;
       margin-top:.45rem;
-    }
-
-    /* Tema oscuro para Flatpickr integrado con la app */
-    .flatpickr-calendar {
-      background:#020617;
-      color:#e5e7eb;
-      border:1px solid rgba(148,163,184,0.4);
-      box-shadow:0 18px 40px rgba(0,0,0,0.8);
-    }
-    .flatpickr-calendar .flatpickr-months,
-    .flatpickr-calendar .flatpickr-weekdays {
-      background:#020617;
-      color:#e5e7eb;
-    }
-    .flatpickr-calendar .flatpickr-day {
-      color:#e5e7eb;
-    }
-    .flatpickr-calendar .flatpickr-day.flatpickr-disabled {
-      color:rgba(148,163,184,0.4);
-    }
-    .flatpickr-calendar .flatpickr-day.today {
-      border-color:#38bdf8;
-    }
-    .flatpickr-calendar .flatpickr-day.selected {
-      background:#22c55e;
-      border-color:#22c55e;
-      color:#020617;
-    }
-    .flatpickr-current-month input.cur-year {
-      color:#e5e7eb;
-    }
-    .flatpickr-monthDropdown-months {
-      background:#020617;
-      color:#e5e7eb;
     }
   </style>
 </head>
@@ -489,7 +455,6 @@
           }
         });
 
-        // forzar valor inicial
         selectedDueDate = defaultDate;
       }
 
@@ -510,8 +475,7 @@
         revSummary.value = resumen;
         warehouseSelect.value = '';
 
-        // reiniciar calendario cada vez que abrimos el modal
-        initCalendar();
+        initCalendar(); // reiniciar calendario al abrir
 
         modalBackdrop.style.display = 'flex';
       }
