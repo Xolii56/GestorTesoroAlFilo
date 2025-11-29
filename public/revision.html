@@ -6,6 +6,10 @@
   <title>Departamento del Tesoro — Revisión de solicitudes</title>
   <link rel="stylesheet" href="./style.css"/>
 
+  <!-- FLATPICKR (CALENDARIO REAL) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
   <!-- Supabase + módulos -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="./config.js" defer></script>
@@ -133,12 +137,6 @@
       flex-wrap:wrap;
       margin-bottom:.6rem;
     }
-    .rev-toolbar-group {
-      display:flex;
-      gap:.4rem;
-      flex-wrap:wrap;
-      align-items:center;
-    }
     .rev-toolbar input[type="search"] {
       padding:0.35rem 0.55rem;
       border-radius:999px;
@@ -207,28 +205,15 @@
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
       <div>
         <h2>Revisión de solicitudes</h2>
-        <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
-          Aprueba o rechaza las solicitudes pendientes del Tesoro.
-        </p>
+        <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">Aprueba o rechaza las solicitudes pendientes del Tesoro.</p>
       </div>
-      <button type="button"
-              class="btn btn-secondary"
-              onclick="window.location.href='./app_ui.html'">
-        ← Volver al panel
-      </button>
+      <button type="button" class="btn btn-secondary" onclick="window.location.href='./app_ui.html'">← Volver al panel</button>
     </div>
 
     <div class="card" style="padding:1rem 1.2rem;">
       <div class="rev-toolbar">
-        <div class="rev-toolbar-group">
-          <strong style="font-size:.85rem;">Solicitudes pendientes</strong>
-          <span class="help-text">
-            Solo se muestran solicitudes en estado <b>pendiente</b>.
-          </span>
-        </div>
-        <div class="rev-toolbar-group">
-          <input type="search" id="rev-search" placeholder="Buscar por ítem o solicitante..."/>
-        </div>
+        <strong style="font-size:.85rem;">Solicitudes pendientes</strong>
+        <input type="search" id="rev-search" placeholder="Buscar por ítem o solicitante..."/>
       </div>
 
       <div style="max-height:460px;overflow:auto;">
@@ -246,9 +231,7 @@
               <th>Acciones</th>
             </tr>
           </thead>
-          <tbody id="rev-tbody">
-            <!-- filas JS -->
-          </tbody>
+          <tbody id="rev-tbody"></tbody>
         </table>
       </div>
     </div>
@@ -271,21 +254,15 @@
         </div>
         <div class="field">
           <label>Fecha límite de entrega</label>
-          <input id="rev-due-date" type="date" required/>
+          <input id="rev-due-date" type="text" required/>
         </div>
 
         <div class="rev-modal-actions">
-          <button type="button" id="rev-cancel" class="btn btn-secondary">
-            Cancelar
-          </button>
-          <button type="submit" id="rev-approve" class="btn btn-primary">
-            Aprobar solicitud
-          </button>
+          <button type="button" id="rev-cancel" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" id="rev-approve" class="btn btn-primary">Aprobar solicitud</button>
         </div>
       </form>
-      <p class="help-text" style="margin-top:.5rem;">
-        Una vez aprobada o rechazada, la decisión no se puede deshacer desde la aplicación.
-      </p>
+      <p class="help-text" style="margin-top:.5rem;">Una vez aprobada o rechazada, la decisión no se puede deshacer desde la aplicación.</p>
     </div>
   </div>
 
@@ -295,406 +272,243 @@
     document.addEventListener('DOMContentLoaded', async () => {
       const { supa } = window;
 
-      function formatStatus(st) {
-        const map = {
-          pendiente: 'pendiente',
-          aprobada: 'aprobada',
-          rechazada: 'rechazada',
-          completada: 'completada',
-          cancelada: 'cancelada'
-        };
-        return map[st] || st;
-      }
+      function formatStatus(st){ const map={pendiente:'pendiente',aprobada:'aprobada',rechazada:'rechazada',completada:'completada',cancelada:'cancelada'}; return map[st]||st; }
+      function renderTipo(tipo){ return tipo==='compra'?'Compra':'Venta'; }
 
-      function renderTipo(tipo) {
-        if (!tipo) return '-';
-        return tipo === 'compra' ? 'Compra' : 'Venta';
-      }
-
-      /* ───── 1) Sesión + org_status ───── */
-      const { data: { session } } = await supa.auth.getSession();
-      if (!session) {
-        window.location.href = './index.html';
-        return;
-      }
+      /* ─────────────────────── SESIÓN ─────────────────────── */
+      const { data:{ session }} = await supa.auth.getSession();
+      if(!session){ window.location.href='./index.html'; return; }
 
       const orgStatus = await getOrgStatus();
-      if (!orgStatus || !['daga','espada','admin'].includes(orgStatus)) {
-        // Revisión es solo para gente de Tesoro hacia arriba
-        await supa.auth.signOut();
-        window.location.href = './index.html';
-        return;
+      if(!orgStatus || !['daga','espada','admin'].includes(orgStatus)){
+        await supa.auth.signOut(); window.location.href='./index.html'; return;
       }
 
-      if (typeof window.loadHeader === 'function') {
-        await window.loadHeader('app');
-      }
-      if (typeof window.initHeaderUserMenu === 'function') {
-        window.initHeaderUserMenu(
-          session,
-          async () => {
-            await supa.auth.signOut();
-            window.location.href = "./index.html";
-          },
-          () => window.location.href = './perfil.html'
-        );
-      }
+      if(window.loadHeader) await window.loadHeader('app');
+      if(window.initHeaderUserMenu) window.initHeaderUserMenu(session, async()=>{await supa.auth.signOut(); window.location.href="./index.html";}, ()=>window.location.href='./perfil.html');
 
-      /* ───── 2) Permisos módulo revisión ───── */
-      const { data: meRow, error: meError } = await supa
-        .from('users')
-        .select('tesoro_internal_role')
-        .eq('id', session.user.id)
-        .maybeSingle();
-
-      if (meError) console.error('Error leyendo rol interno:', meError);
-
-      let myRole = meRow?.tesoro_internal_role || null;
-      if (typeof myRole === 'string') myRole = myRole.trim();
+      /* ─────────────────────── PERMISOS ─────────────────────── */
+      const { data:meRow } = await supa.from('users').select('tesoro_internal_role').eq('id',session.user.id).maybeSingle();
+      let myRole = meRow?.tesoro_internal_role?.trim() || null;
 
       let roleRow = null;
-      if (myRole) {
-        const asNumber = Number(myRole);
-        if (!Number.isNaN(asNumber) && myRole !== '') {
-          const { data, error } = await supa
-            .from('roles_app')
-            .select('*')
-            .eq('id', asNumber)
-            .maybeSingle();
-          if (!error) roleRow = data;
+      if(myRole){
+        const n = Number(myRole);
+        if(!Number.isNaN(n)){
+          const { data } = await supa.from('roles_app').select('*').eq('id',n).maybeSingle();
+          if(data) roleRow=data;
         }
-        if (!roleRow) {
-          const { data, error } = await supa
-            .from('roles_app')
-            .select('*')
-            .ilike('role_name', myRole)
-            .maybeSingle();
-          if (!error) roleRow = data;
+        if(!roleRow){
+          const { data } = await supa.from('roles_app').select('*').ilike('role_name',myRole).maybeSingle();
+          if(data) roleRow=data;
         }
       }
+      const revLevel = roleRow?.revision ?? 0;
+      const readOnly = revLevel===1;
+      if(!revLevel){ alert("No tienes acceso a Revisión."); window.location.href='./app_ui.html'; return;}
 
-      let revLevel = roleRow?.revision ?? 0;
-      if (!revLevel || revLevel === 0) {
-        alert('No tienes acceso al módulo de Revisión.');
-        window.location.href = './app_ui.html';
-        return;
-      }
-      const readOnly = (revLevel === 1);
+      /* ─────────────────────── DATOS AUXILIARES ─────────────────────── */
+      const usersById={};
+      const { data:users } = await supa.from('users').select('id, handle_name, discord_username');
+      users?.forEach(u=>usersById[u.id]=u);
 
-      /* ───── 3) Datos auxiliares: usuarios + almacenes ───── */
-      const usersById = {};
-      const { data: users, error: usersError } = await supa
-        .from('users')
-        .select('id, handle_name, discord_username');
-      if (!usersError && users) {
-        users.forEach(u => { usersById[u.id] = u; });
-      }
+      const warehousesById={};
+      const { data:warehouses } = await supa.from('warehouses').select('id,name').order('name',{ascending:true});
+      warehouses?.forEach(w=>warehousesById[w.id]=w);
 
-      const warehousesById = {};
-      const { data: warehouses, error: whError } = await supa
-        .from('warehouses')
-        .select('id, name')
-        .order('name', { ascending: true });
-      if (whError) console.error('Error cargando almacenes:', whError);
-
-      (warehouses || []).forEach(w => { warehousesById[w.id] = w; });
-
-      /* Rellenar select del modal */
-      const warehouseSelect = document.getElementById('rev-warehouse-select');
-      (warehouses || []).forEach(w => {
-        const opt = document.createElement('option');
-        opt.value = w.id;
-        opt.textContent = w.name || 'Almacén';
+      // RELLENAR SELECT DEL MODAL
+      const warehouseSelect=document.getElementById('rev-warehouse-select');
+      (warehouses||[]).forEach(w=>{
+        const opt=document.createElement('option');
+        opt.value=w.id;
+        opt.textContent=w.name;
         warehouseSelect.appendChild(opt);
       });
 
-      /* ───── 4) DOM tabla + modal ───── */
-      const tbody       = document.getElementById('rev-tbody');
-      const searchInput = document.getElementById('rev-search');
+      /* ─────────────────────── DOM ─────────────────────── */
+      const tbody=document.getElementById('rev-tbody');
+      const searchInput=document.getElementById('rev-search');
 
-      const modalBackdrop = document.getElementById('rev-modal-backdrop');
-      const revForm       = document.getElementById('rev-form');
-      const revCancelBtn  = document.getElementById('rev-cancel');
-      const revSummary    = document.getElementById('rev-summary');
-      const revDueDate    = document.getElementById('rev-due-date');
+      const modalBackdrop=document.getElementById('rev-modal-backdrop');
+      const revForm=document.getElementById('rev-form');
+      const revCancelBtn=document.getElementById('rev-cancel');
+      const revSummary=document.getElementById('rev-summary');
+      const revDueDate=document.getElementById('rev-due-date');
 
-      let pendingRequests = [];
-      let currentRequest  = null; // la que se está aprobando
+      let pendingRequests=[];
+      let currentRequest=null;
 
-      function openModalForRequest(r, itemName, requesterName) {
-        currentRequest = r;
-        const resumen = [
+      /* ─────────────────────── DATEPICKER ─────────────────────── */
+      let dueDatePicker = flatpickr(revDueDate,{
+        dateFormat:"Y-m-d",
+        minDate:"today",
+        defaultDate:"today",
+        disableMobile:true
+      });
+
+      function openModalForRequest(r,itemName,requesterName){
+        currentRequest=r;
+
+        revSummary.value = [
           `Tipo: ${renderTipo(r.request_type)}`,
           `Ítem: ${itemName}`,
           `Cantidad: ${r.quantity}`,
           `Solicitante: ${requesterName}`
         ].join('\n');
 
-        revSummary.value = resumen;
-        warehouseSelect.value = '';
+        warehouseSelect.value="";
 
-        // ⬇️ Configurar fecha mínima (hoy) y valor por defecto (hoy + 3 días)
-        const today = new Date();
-        const toIsoDate = (d) => d.toISOString().split('T')[0];
+        // reset calendario
+        dueDatePicker.set('minDate','today');
+        dueDatePicker.setDate(new Date(),true);
 
-        revDueDate.min = toIsoDate(today);
-
-        const defaultDate = new Date();
-        defaultDate.setDate(defaultDate.getDate() + 3); // cambia el +3 si quieres otro plazo
-        revDueDate.value = toIsoDate(defaultDate);
-
-        modalBackdrop.style.display = 'flex';
+        modalBackdrop.style.display="flex";
       }
 
-      function closeModal() {
-        modalBackdrop.style.display = 'none';
-        currentRequest = null;
+      function closeModal(){
+        modalBackdrop.style.display="none";
+        currentRequest=null;
       }
 
-      revCancelBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        closeModal();
-      });
+      revCancelBtn.addEventListener('click',e=>{e.preventDefault(); closeModal();});
+      modalBackdrop.addEventListener('click',e=>{ if(e.target===modalBackdrop) closeModal(); });
 
-      modalBackdrop.addEventListener('click', (e) => {
-        if (e.target === modalBackdrop) {
-          closeModal();
-        }
-      });
+      /* ─────────────────────── CARGA PENDIENTES ─────────────────────── */
+      async function loadPendingRequests(){
+        const { data } = await supa.from('requests').select(`
+          id,
+          request_type,
+          item_id,
+          quantity,
+          status,
+          created_at,
+          requester_discord_id,
+          commodities_master(name, symbol)
+        `).eq('status','pendiente').order('created_at',{ascending:true});
 
-      /* ───── 5) Carga de solicitudes pendientes ───── */
-      async function loadPendingRequests() {
-        const { data, error } = await supa
-          .from('requests')
-          .select(`
-            id,
-            request_type,
-            item_id,
-            quantity,
-            status,
-            created_at,
-            due_date,
-            requester_discord_id,
-            commodities_master(name, symbol)
-          `)
-          .eq('status', 'pendiente')
-          .order('created_at', { ascending: true });
-
-        if (error) {
-          console.error('Error cargando solicitudes pendientes:', error);
-          return;
-        }
-
-        pendingRequests = data || [];
+        pendingRequests=data||[];
         renderTable();
       }
 
-      function renderTable() {
-        tbody.innerHTML = '';
+      function renderTable(){
+        tbody.innerHTML="";
+        const term=(searchInput.value||"").toLowerCase();
 
-        const term = (searchInput.value || '').toLowerCase();
-
-        if (!pendingRequests.length) {
-          const tr = document.createElement('tr');
-          const td = document.createElement('td');
-          td.colSpan = 9;
-          td.textContent = 'No hay solicitudes pendientes de revisión.';
-          tr.appendChild(td);
-          tbody.appendChild(tr);
-          return;
+        if(!pendingRequests.length){
+          const tr=document.createElement('tr');
+          const td=document.createElement('td');
+          td.colSpan=9; td.textContent="No hay solicitudes pendientes."; tr.appendChild(td);
+          tbody.appendChild(tr); return;
         }
 
-        pendingRequests.forEach(r => {
-          const cm = r.commodities_master;
-          const itemName = cm
-            ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
-            : (r.item_id || '');
-
+        pendingRequests.forEach(r=>{
+          const cm=r.commodities_master;
+          const itemName = cm ? (cm.symbol?`${cm.name} (${cm.symbol})`:cm.name) : r.item_id;
           const user = usersById[r.requester_discord_id];
           const requesterName = user?.handle_name || user?.discord_username || r.requester_discord_id;
 
-          if (term) {
-            const haystack = (itemName + ' ' + requesterName).toLowerCase();
-            if (!haystack.includes(term)) return;
+          if(term){
+            const hay=(itemName + requesterName).toLowerCase();
+            if(!hay.includes(term)) return;
           }
 
-          const tr = document.createElement('tr');
+          const tr=document.createElement('tr');
 
-          const tdId = document.createElement('td');
-          tdId.textContent = `#${r.id}`;
+          tr.innerHTML = `
+            <td>#${r.id}</td>
+            <td><span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span></td>
+            <td>${itemName}</td>
+            <td>${r.quantity}</td>
+            <td>${requesterName}</td>
+            <td>${r.created_at? new Date(r.created_at).toLocaleString():'-'}</td>
+            <td><span class="badge-status pendiente">pendiente</span></td>
+          `;
 
-          const tdTipo = document.createElement('td');
-          tdTipo.innerHTML = `<span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span>`;
+          const tdDetalle=document.createElement('td');
+          const bDet=document.createElement('button');
+          bDet.className="btn btn-secondary";
+          bDet.style="padding:0.2rem 0.6rem;";
+          bDet.textContent="Ver";
+          bDet.onclick=()=>window.open(`./solicitud_detalle.html?id=${r.id}`,'_blank','width=720,height=760');
+          tdDetalle.appendChild(bDet);
 
-          const tdItem = document.createElement('td');
-          tdItem.textContent = itemName;
+          const tdAcc=document.createElement('td');
+          const ok=document.createElement('button');
+          ok.className="btn-icon ok";
+          ok.innerHTML="✔";
+          ok.disabled=readOnly;
+          ok.onclick=()=>openModalForRequest(r,itemName,requesterName);
 
-          const tdQty = document.createElement('td');
-          tdQty.textContent = r.quantity;
+          const ko=document.createElement('button');
+          ko.className="btn-icon ko";
+          ko.style.marginLeft="0.25rem";
+          ko.innerHTML="✕";
+          ko.disabled=readOnly;
+          ko.onclick=async ()=>{
+            if(!confirm("¿Rechazar solicitud?")) return;
 
-          const tdReq = document.createElement('td');
-          tdReq.textContent = requesterName;
+            await supa.from('requests')
+              .update({status:"rechazada",approver_discord_id:session.user.id})
+              .eq('id',r.id);
 
-          const tdCreated = document.createElement('td');
-          tdCreated.textContent = r.created_at
-            ? new Date(r.created_at).toLocaleString()
-            : '-';
-
-          const tdStatus = document.createElement('td');
-          const statusSpan = document.createElement('span');
-          statusSpan.className = 'badge-status ' + (r.status || 'pendiente');
-          statusSpan.textContent = formatStatus(r.status || 'pendiente');
-          tdStatus.appendChild(statusSpan);
-
-          const tdDetalle = document.createElement('td');
-          const btnDetalle = document.createElement('button');
-          btnDetalle.type = 'button';
-          btnDetalle.className = 'btn btn-secondary';
-          btnDetalle.style.padding = '0.2rem 0.6rem';
-          btnDetalle.textContent = 'Ver';
-          btnDetalle.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            window.open(
-              `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
-              '_blank',
-              'width=720,height=760'
-            );
-          });
-          tdDetalle.appendChild(btnDetalle);
-
-          const tdAcc = document.createElement('td');
-          const canAct = !readOnly;
-
-          const okBtn = document.createElement('button');
-          okBtn.type = 'button';
-          okBtn.className = 'btn-icon ok';
-          okBtn.innerHTML = '✔';
-          okBtn.disabled = !canAct;
-          if (!canAct) okBtn.classList.add('btn-disabled');
-          okBtn.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            if (!canAct) return;
-            openModalForRequest(r, itemName, requesterName);
-          });
-
-          const koBtn = document.createElement('button');
-          koBtn.type = 'button';
-          koBtn.className = 'btn-icon ko';
-          koBtn.style.marginLeft = '0.25rem';
-          koBtn.innerHTML = '✕';
-          koBtn.disabled = !canAct;
-          if (!canAct) koBtn.classList.add('btn-disabled');
-          koBtn.addEventListener('click', async (ev) => {
-            ev.stopPropagation();
-            if (!canAct) return;
-
-            const okConfirm = confirm(
-              '¿Seguro que quieres rechazar esta solicitud?\n' +
-              'Esta acción no se puede deshacer.'
-            );
-            if (!okConfirm) return;
-
-            const { error } = await supa
-              .from('requests')
-              .update({
-                status: 'rechazada',
-                approver_discord_id: session.user.id
-              })
-              .eq('id', r.id);
-
-            if (error) {
-              console.error('Error rechazando solicitud:', error);
-              alert('No se ha podido rechazar la solicitud.');
-              return;
-            }
-
-            // 🔔 Notificación al solicitante: solicitud rechazada
-            if (r.requester_discord_id) {
-              await supa.from('notifications').insert({
-                user_id: r.requester_discord_id,
-                type: 'request_rejected',
-                title: `Solicitud #${r.id} rechazada`,
-                body: 'Tesoro ha rechazado tu solicitud en la fase de revisión.',
-                link_url: `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
-                related_request_id: r.id,
-                level: 'danger'
-              });
-            }
+            await supa.from('notifications').insert({
+              user_id:r.requester_discord_id,
+              type:'request_rejected',
+              title:`Solicitud #${r.id} rechazada`,
+              body:'Tesoro ha rechazado tu solicitud.',
+              link_url:`./solicitud_detalle.html?id=${r.id}`,
+              related_request_id:r.id,
+              level:'danger'
+            });
 
             await loadPendingRequests();
-          });
+          };
 
-          tdAcc.appendChild(okBtn);
-          tdAcc.appendChild(koBtn);
+          tdAcc.appendChild(ok); tdAcc.appendChild(ko);
 
-          tr.appendChild(tdId);
-          tr.appendChild(tdTipo);
-          tr.appendChild(tdItem);
-          tr.appendChild(tdQty);
-          tr.appendChild(tdReq);
-          tr.appendChild(tdCreated);
-          tr.appendChild(tdStatus);
-          tr.appendChild(tdDetalle);
-          tr.appendChild(tdAcc);
-
+          tr.appendChild(tdDetalle); tr.appendChild(tdAcc);
           tbody.appendChild(tr);
         });
       }
 
-      searchInput.addEventListener('input', renderTable);
+      searchInput.addEventListener('input',renderTable);
 
-      /* ───── 6) Envío del formulario de aprobación ───── */
-      revForm.addEventListener('submit', async (e) => {
+      /* ─────────────────────── APROBAR SOLICITUD ─────────────────────── */
+      revForm.addEventListener('submit',async e=>{
         e.preventDefault();
-        if (readOnly) {
-          alert('Tienes permisos de solo lectura en este módulo.');
-          return;
-        }
-        if (!currentRequest) return;
+        if(readOnly) return;
+        if(!currentRequest) return;
 
         const warehouseId = warehouseSelect.value;
         const dueDate = revDueDate.value;
 
-        if (!warehouseId || !dueDate) {
-          alert('Debes seleccionar un almacén y una fecha límite.');
-          return;
+        if(!warehouseId || !dueDate){
+          alert("Selecciona almacén y fecha."); return;
         }
 
-        const { error } = await supa
-          .from('requests')
-          .update({
-            status: 'aprobada',
-            warehouse_id: warehouseId,
-            due_date: dueDate,
-            approved_at: new Date().toISOString(),
-            approver_discord_id: session.user.id
-          })
-          .eq('id', currentRequest.id);
+        await supa.from('requests').update({
+          status:'aprobada',
+          warehouse_id:warehouseId,
+          due_date:dueDate,
+          approved_at:new Date().toISOString(),
+          approver_discord_id:session.user.id
+        }).eq('id',currentRequest.id);
 
-        if (error) {
-          console.error('Error aprobando solicitud:', error);
-          alert('No se ha podido aprobar la solicitud.');
-          return;
-        }
-
-        // 🔔 Notificación al solicitante: solicitud aprobada
-        if (currentRequest.requester_discord_id) {
-          await supa.from('notifications').insert({
-            user_id: currentRequest.requester_discord_id,
-            type: 'request_approved',
-            title: `Solicitud #${currentRequest.id} aprobada`,
-            body: `Tesoro ha aprobado tu solicitud. Plazo máx.: ${dueDate}.`,
-            link_url: `./solicitud_detalle.html?id=${encodeURIComponent(currentRequest.id)}`,
-            related_request_id: currentRequest.id,
-            level: 'info'
-          });
-        }
+        await supa.from('notifications').insert({
+          user_id: currentRequest.requester_discord_id,
+          type:'request_approved',
+          title:`Solicitud #${currentRequest.id} aprobada`,
+          body:`Plazo máximo: ${dueDate}.`,
+          link_url:`./solicitud_detalle.html?id=${currentRequest.id}`,
+          related_request_id:currentRequest.id,
+          level:'info'
+        });
 
         closeModal();
         await loadPendingRequests();
       });
 
-      /* ───── 7) Carga inicial ───── */
+      /* ─────────────────────── CARGA INICIAL ─────────────────────── */
       await loadPendingRequests();
     });
   </script>
