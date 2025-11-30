@@ -166,7 +166,7 @@
       background:#020617;
       border-radius:0.9rem;
       padding:1.1rem 1.3rem 0.9rem;
-      max-width:520px;
+      max-width:720px;
       width:100%;
       box-shadow:0 18px 40px rgba(0,0,0,0.75);
     }
@@ -191,7 +191,7 @@
       font-size:.9rem;
     }
     .rev-form textarea {
-      min-height:100px;   /* un pelín más alto */
+      min-height:100px;
       resize:vertical;
     }
     .rev-modal-actions {
@@ -202,20 +202,39 @@
       flex-wrap:wrap;
     }
 
-    /* Contenedor para centrar el calendario inline */
+    .rev-grid-2 {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:.75rem;
+    }
+
+    .rev-bottom-grid {
+      display:grid;
+      grid-template-columns: minmax(0,1.2fr) minmax(0,1.4fr);
+      gap:.9rem;
+      margin-top:.25rem;
+    }
+
+    @media (max-width: 720px) {
+      .rev-bottom-grid {
+        grid-template-columns:minmax(0,1fr);
+      }
+    }
+
+    /* Contenedor calendario inline centrado */
     #rev-calendar-container {
       display:flex;
       justify-content:center;
-      margin-top:.45rem;
+      margin-top:.2rem;
     }
 
-    /* Lista de stock por almacén en el popup */
+    /* Lista stock */
     .rev-stock-list {
       border-radius:0.5rem;
       border:1px solid rgba(148,163,184,0.8);
       background:#020617;
       padding:0.35rem 0.5rem;
-      max-height:150px;
+      max-height:260px;
       overflow:auto;
       font-size:.8rem;
     }
@@ -233,6 +252,17 @@
       text-transform:uppercase;
       letter-spacing:.04em;
       opacity:.8;
+    }
+    .rev-stock-table th:nth-child(2),
+    .rev-stock-table th:nth-child(3),
+    .rev-stock-table th:nth-child(4),
+    .rev-stock-table th:nth-child(5),
+    .rev-stock-table td:nth-child(2),
+    .rev-stock-table td:nth-child(3),
+    .rev-stock-table td:nth-child(4),
+    .rev-stock-table td:nth-child(5) {
+      text-align:right;
+      white-space:nowrap;
     }
   </style>
 </head>
@@ -296,18 +326,36 @@
     <div class="rev-modal">
       <h3 style="margin-top:0;margin-bottom:.6rem;">Aprobar solicitud</h3>
       <form id="rev-form" class="rev-form">
-        <div class="field">
-          <label>Resumen</label>
-          <textarea id="rev-summary" readonly></textarea>
-        </div>
 
-        <div class="field">
-          <label>Stock por almacén para este ítem</label>
-          <div id="rev-stock-list" class="rev-stock-list">
-            <!-- se rellena por JS -->
+        <!-- Resumen desglosado -->
+        <div class="rev-grid-2">
+          <div class="field">
+            <label>Tipo de solicitud</label>
+            <input id="rev-type" type="text" readonly>
+          </div>
+          <div class="field">
+            <label>Solicitante</label>
+            <input id="rev-requester" type="text" readonly>
           </div>
         </div>
 
+        <div class="rev-grid-2">
+          <div class="field">
+            <label>Ítem</label>
+            <input id="rev-item" type="text" readonly>
+          </div>
+          <div class="field">
+            <label>Cantidad</label>
+            <input id="rev-qty" type="text" readonly>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Preferencia de lugar de entrega</label>
+          <input id="rev-preferred" type="text" readonly>
+        </div>
+
+        <!-- Selección de almacén -->
         <div class="field">
           <label>Almacén / Lugar de transacción</label>
           <select id="rev-warehouse-select" required>
@@ -315,11 +363,20 @@
           </select>
         </div>
 
-        <div class="field">
-          <label>Fecha límite de entrega</label>
-          <!-- solo calendario inline, sin input de texto -->
-          <div id="rev-calendar-container">
-            <div id="rev-calendar"></div>
+        <!-- Fecha + stock en 2 columnas -->
+        <div class="rev-bottom-grid">
+          <div class="field">
+            <label>Fecha límite de entrega</label>
+            <div id="rev-calendar-container">
+              <div id="rev-calendar"></div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Stock por almacén para este ítem</label>
+            <div id="rev-stock-list" class="rev-stock-list">
+              <!-- tabla JS -->
+            </div>
           </div>
         </div>
 
@@ -463,30 +520,32 @@
       const modalBackdrop = document.getElementById('rev-modal-backdrop');
       const revForm       = document.getElementById('rev-form');
       const revCancelBtn  = document.getElementById('rev-cancel');
-      const revSummary    = document.getElementById('rev-summary');
+
+      const revType       = document.getElementById('rev-type');
+      const revRequester  = document.getElementById('rev-requester');
+      const revItem       = document.getElementById('rev-item');
+      const revQty        = document.getElementById('rev-qty');
+      const revPreferred  = document.getElementById('rev-preferred');
       const revStockList  = document.getElementById('rev-stock-list');
 
       const calendarElem  = document.getElementById('rev-calendar');
       let dueDatePicker   = null;
       let selectedDueDate = null;
 
-      // Inicializar flatpickr inline en el contenedor
       function initCalendar() {
         const today = new Date();
         const defaultDate = new Date();
-        defaultDate.setDate(today.getDate() + 7); // por defecto +7 días
+        defaultDate.setDate(today.getDate() + 7);
 
-        if (dueDatePicker) {
-          dueDatePicker.destroy();
-        }
+        if (dueDatePicker) dueDatePicker.destroy();
 
         dueDatePicker = flatpickr(calendarElem, {
           inline: true,
           dateFormat: "Y-m-d",
           minDate: "today",
-          defaultDate: defaultDate,
+          defaultDate,
           disableMobile: true,
-          onChange: function(selectedDates) {
+          onChange(selectedDates) {
             selectedDueDate = selectedDates[0] || null;
           }
         });
@@ -496,7 +555,7 @@
 
       initCalendar();
 
-      // Cargar stock por almacén para el ítem de la solicitud
+      // Stock por almacén para el ítem
       async function loadStockForItem(itemId) {
         if (!itemId) {
           revStockList.textContent = 'Ítem no reconocido.';
@@ -527,12 +586,18 @@
           return;
         }
 
-        // Render tabla sencilla
         const table = document.createElement('table');
         table.className = 'rev-stock-table';
 
         const thead = document.createElement('thead');
-        thead.innerHTML = '<tr><th>Almacén</th><th style="text-align:right;">Cant.</th></tr>';
+        thead.innerHTML = `
+          <tr>
+            <th>ALMACÉN</th>
+            <th>CANT.</th>
+            <th>ÚLT. SCU</th>
+            <th>MEDIA ALM.</th>
+            <th>MEDIA SIST.</th>
+          </tr>`;
         table.appendChild(thead);
 
         const tbodyEl = document.createElement('tbody');
@@ -545,11 +610,23 @@
           tdName.textContent = wName || '-';
 
           const tdQty = document.createElement('td');
-          tdQty.style.textAlign = 'right';
           tdQty.textContent = Number(r.quantity || 0);
+
+          const tdLast = document.createElement('td');
+          const tdAvgW = document.createElement('td');
+          const tdAvgS = document.createElement('td');
+
+          // De momento no tenemos datos → vacío
+          tdLast.textContent = '-';
+          tdAvgW.textContent = '-';
+          tdAvgS.textContent = '-';
 
           tr.appendChild(tdName);
           tr.appendChild(tdQty);
+          tr.appendChild(tdLast);
+          tr.appendChild(tdAvgW);
+          tr.appendChild(tdAvgS);
+
           tbodyEl.appendChild(tr);
         });
 
@@ -560,22 +637,26 @@
       }
 
       let pendingRequests = [];
-      let currentRequest  = null; // la que se está aprobando
+      let currentRequest  = null;
 
       async function openModalForRequest(r, itemName, requesterName) {
         currentRequest = r;
-        const resumen = [
-          `Tipo: ${renderTipo(r.request_type)}`,
-          `Ítem: ${itemName}`,
-          `Cantidad: ${r.quantity}`,
-          `Solicitante: ${requesterName}`
-        ].join('\n');
 
-        revSummary.value = resumen;
+        revType.value      = renderTipo(r.request_type);
+        revRequester.value = requesterName || '';
+        revItem.value      = itemName || '';
+        revQty.value       = r.quantity ?? '';
+
+        const preferredName = r.preferred_warehouse_id
+          ? (warehousesById[r.preferred_warehouse_id]?.name || 'Sin nombre (ID ' + r.preferred_warehouse_id + ')')
+          : 'Sin preferencia registrada';
+
+        revPreferred.value = preferredName;
+
         warehouseSelect.value = '';
 
-        initCalendar();              // reiniciar calendario
-        await loadStockForItem(r.item_id); // cargar stock del ítem
+        initCalendar();
+        await loadStockForItem(r.item_id);
 
         modalBackdrop.style.display = 'flex';
       }
@@ -591,9 +672,7 @@
       });
 
       modalBackdrop.addEventListener('click', (e) => {
-        if (e.target === modalBackdrop) {
-          closeModal();
-        }
+        if (e.target === modalBackdrop) closeModal();
       });
 
       /* ───── 5) Carga de solicitudes pendientes ───── */
@@ -609,6 +688,7 @@
             created_at,
             due_date,
             requester_discord_id,
+            preferred_warehouse_id,
             commodities_master(name, symbol)
           `)
           .eq('status', 'pendiente')
