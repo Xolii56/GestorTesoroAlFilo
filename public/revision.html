@@ -208,6 +208,32 @@
       justify-content:center;
       margin-top:.45rem;
     }
+
+    /* Lista de stock por almacén en el popup */
+    .rev-stock-list {
+      border-radius:0.5rem;
+      border:1px solid rgba(148,163,184,0.8);
+      background:#020617;
+      padding:0.35rem 0.5rem;
+      max-height:150px;
+      overflow:auto;
+      font-size:.8rem;
+    }
+    .rev-stock-table {
+      width:100%;
+      border-collapse:collapse;
+      font-size:.8rem;
+    }
+    .rev-stock-table th,
+    .rev-stock-table td {
+      padding:0.2rem 0.25rem;
+      border-bottom:1px solid rgba(148,163,184,0.25);
+    }
+    .rev-stock-table thead {
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      opacity:.8;
+    }
   </style>
 </head>
 
@@ -274,12 +300,21 @@
           <label>Resumen</label>
           <textarea id="rev-summary" readonly></textarea>
         </div>
+
+        <div class="field">
+          <label>Stock por almacén para este ítem</label>
+          <div id="rev-stock-list" class="rev-stock-list">
+            <!-- se rellena por JS -->
+          </div>
+        </div>
+
         <div class="field">
           <label>Almacén / Lugar de transacción</label>
           <select id="rev-warehouse-select" required>
             <option value="">Selecciona un almacén...</option>
           </select>
         </div>
+
         <div class="field">
           <label>Fecha límite de entrega</label>
           <!-- solo calendario inline, sin input de texto -->
@@ -422,13 +457,14 @@
       });
 
       /* ───── 4) DOM tabla + modal ───── */
-      const tbody       = document.getElementById('rev-tbody');
-      const searchInput = document.getElementById('rev-search');
+      const tbody         = document.getElementById('rev-tbody');
+      const searchInput   = document.getElementById('rev-search');
 
       const modalBackdrop = document.getElementById('rev-modal-backdrop');
       const revForm       = document.getElementById('rev-form');
       const revCancelBtn  = document.getElementById('rev-cancel');
       const revSummary    = document.getElementById('rev-summary');
+      const revStockList  = document.getElementById('rev-stock-list');
 
       const calendarElem  = document.getElementById('rev-calendar');
       let dueDatePicker   = null;
@@ -460,10 +496,73 @@
 
       initCalendar();
 
+      // Cargar stock por almacén para el ítem de la solicitud
+      async function loadStockForItem(itemId) {
+        if (!itemId) {
+          revStockList.textContent = 'Ítem no reconocido.';
+          return;
+        }
+
+        revStockList.textContent = 'Cargando stock...';
+
+        const { data, error } = await supa
+          .from('warehouse_items')
+          .select(`
+            warehouse_id,
+            quantity,
+            warehouses(name)
+          `)
+          .eq('commodity_id', itemId)
+          .order('warehouses(name)', { ascending: true });
+
+        if (error) {
+          console.error('Error cargando stock por almacén:', error);
+          revStockList.textContent = 'No se ha podido cargar el stock de los almacenes.';
+          return;
+        }
+
+        const rows = data || [];
+        if (!rows.length) {
+          revStockList.textContent = 'No hay stock registrado para este ítem en ningún almacén.';
+          return;
+        }
+
+        // Render tabla sencilla
+        const table = document.createElement('table');
+        table.className = 'rev-stock-table';
+
+        const thead = document.createElement('thead');
+        thead.innerHTML = '<tr><th>Almacén</th><th style="text-align:right;">Cant.</th></tr>';
+        table.appendChild(thead);
+
+        const tbodyEl = document.createElement('tbody');
+
+        rows.forEach(r => {
+          const tr = document.createElement('tr');
+          const wName = r.warehouses?.name || warehousesById[r.warehouse_id]?.name || r.warehouse_id;
+
+          const tdName = document.createElement('td');
+          tdName.textContent = wName || '-';
+
+          const tdQty = document.createElement('td');
+          tdQty.style.textAlign = 'right';
+          tdQty.textContent = Number(r.quantity || 0);
+
+          tr.appendChild(tdName);
+          tr.appendChild(tdQty);
+          tbodyEl.appendChild(tr);
+        });
+
+        table.appendChild(tbodyEl);
+
+        revStockList.innerHTML = '';
+        revStockList.appendChild(table);
+      }
+
       let pendingRequests = [];
       let currentRequest  = null; // la que se está aprobando
 
-      function openModalForRequest(r, itemName, requesterName) {
+      async function openModalForRequest(r, itemName, requesterName) {
         currentRequest = r;
         const resumen = [
           `Tipo: ${renderTipo(r.request_type)}`,
@@ -475,7 +574,8 @@
         revSummary.value = resumen;
         warehouseSelect.value = '';
 
-        initCalendar(); // reiniciar calendario al abrir
+        initCalendar();              // reiniciar calendario
+        await loadStockForItem(r.item_id); // cargar stock del ítem
 
         modalBackdrop.style.display = 'flex';
       }
@@ -605,10 +705,10 @@
           okBtn.innerHTML = '✔';
           okBtn.disabled = !canAct;
           if (!canAct) okBtn.classList.add('btn-disabled');
-          okBtn.addEventListener('click', (ev) => {
+          okBtn.addEventListener('click', async (ev) => {
             ev.stopPropagation();
             if (!canAct) return;
-            openModalForRequest(r, itemName, requesterName);
+            await openModalForRequest(r, itemName, requesterName);
           });
 
           const koBtn = document.createElement('button');
