@@ -166,7 +166,7 @@
       background:#020617;
       border-radius:0.9rem;
       padding:1.1rem 1.3rem 0.9rem;
-      max-width:720px;
+      max-width:1040px; /* <--- ANCHO AUMENTADO */
       width:100%;
       box-shadow:0 18px 40px rgba(0,0,0,0.75);
     }
@@ -235,7 +235,8 @@
       background:#020617;
       padding:0.35rem 0.5rem;
       max-height:260px;
-      overflow:auto;
+      overflow-y:auto;   /* solo vertical */
+      overflow-x:hidden; /* sin scroll horizontal */
       font-size:.8rem;
     }
     .rev-stock-table {
