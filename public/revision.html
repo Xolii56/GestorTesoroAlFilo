@@ -166,7 +166,7 @@
       background:#020617;
       border-radius:0.9rem;
       padding:1.1rem 1.3rem 0.9rem;
-      max-width:820px;        /* ENSANCHADO PARA QUE QUEPA LA TABLA SIN SCROLL */
+      max-width:820px;            /* ancho amplio para tabla sin scroll */
       width:100%;
       box-shadow:0 18px 40px rgba(0,0,0,0.75);
     }
@@ -265,73 +265,82 @@
       white-space:nowrap;
     }
 
-    /* ================== FLATPICKR DARK FIX =================== */
-
+    /* ==== FLATPICKR DARK TUNING ==== */
     .flatpickr-calendar {
-      background:#0f172a !important;
-      border:1px solid rgba(148,163,184,0.35) !important;
-      color:#e5e7eb !important;
-      box-shadow:0 4px 25px rgba(0,0,0,0.55) !important;
+      background:#020617;
+      border:1px solid rgba(148,163,184,0.7);
+      box-shadow:0 12px 30px rgba(0,0,0,0.8);
+      color:#e5e7eb;
+    }
+    .flatpickr-months,
+    .flatpickr-current-month {
+      background:#020617;
+      color:#e5e7eb;
+    }
+    .flatpickr-current-month .flatpickr-monthDropdown-months,
+    .flatpickr-current-month input.cur-year {
+      background:#020617;
+      color:#e5e7eb;
+      border:none;
     }
 
-    .flatpickr-months .flatpickr-month {
-      background:transparent !important;
-      color:#e5e7eb !important;
-    }
-
-    .flatpickr-monthDropdown-months,
-    .flatpickr-months input.numInput.cur-year {
-      background:#111827 !important;
-      color:#e5e7eb !important;
-      border:1px solid rgba(148,163,184,0.35) !important;
-    }
-
-    .flatpickr-prev-month,
-    .flatpickr-next-month {
-      color:#e5e7eb !important;
-      fill:#e5e7eb !important;
-      opacity:0.85 !important;
-    }
-    .flatpickr-prev-month:hover,
-    .flatpickr-next-month:hover {
-      opacity:1 !important;
-      transform:scale(1.15);
-    }
-
+    .flatpickr-weekdays,
     .flatpickr-weekday {
-      color:rgba(229,231,235,0.7) !important;
-      font-weight:500 !important;
+      background:#020617;
+      color:#cbd5f5;
+      font-weight:500;
     }
 
     .flatpickr-day {
-      background:transparent !important;
-      border-radius:0.45rem !important;
-      color:#e5e7eb !important;
+      color:#e5e7eb;
     }
-
-    .flatpickr-day.today {
-      border-color:#22c55e !important;
-      color:#22c55e !important;
+    .flatpickr-day.inRange,
+    .flatpickr-day.nextMonthDay,
+    .flatpickr-day.prevMonthDay {
+      color:rgba(148,163,184,0.7);
+    }
+    .flatpickr-day.disabled,
+    .flatpickr-day.disabled:hover {
+      color:rgba(148,163,184,0.25) !important;
+      cursor:not-allowed !important;
     }
 
     .flatpickr-day.selected,
-    .flatpickr-day.selected:hover {
-      background:#22c55e !important;
-      border-color:#22c55e !important;
-      color:#020617 !important;
-      font-weight:600;
+    .flatpickr-day.startRange,
+    .flatpickr-day.endRange {
+      background:#22c55e;
+      border-color:#22c55e;
+      color:#022c22;
     }
 
-    .flatpickr-day.flatpickr-disabled,
-    .flatpickr-day.prevMonthDay,
-    .flatpickr-day.nextMonthDay {
-      color:rgba(229,231,235,0.25) !important;
-      cursor:default !important;
+    .flatpickr-day.today:not(.selected) {
+      border-color:#38bdf8;
     }
 
-    .flatpickr-day:hover {
-      background:rgba(34,197,94,0.25) !important;
-      border-color:rgba(34,197,94,0.25) !important;
+    /* Flechas mes anterior / siguiente */
+    .flatpickr-prev-month svg,
+    .flatpickr-next-month svg {
+      fill:#e5e7eb;
+    }
+    .flatpickr-prev-month:hover svg,
+    .flatpickr-next-month:hover svg {
+      fill:#38bdf8;
+    }
+
+    /* === FIX VISIBILIDAD FLECHAS SELECTOR DE AÑO (spinner numérico) === */
+    .flatpickr-months input.numInput::-webkit-inner-spin-button,
+    .flatpickr-months input.numInput::-webkit-outer-spin-button {
+      filter: invert(1);
+      opacity: 0.85;
+      cursor: pointer;
+    }
+    .flatpickr-months input.numInput:hover::-webkit-inner-spin-button,
+    .flatpickr-months input.numInput:hover::-webkit-outer-spin-button {
+      opacity: 1;
+      filter: invert(1) brightness(1.35);
+    }
+    .flatpickr-months input.numInput {
+      color-scheme: dark;
     }
   </style>
 </head>
@@ -685,7 +694,7 @@
           const tdAvgW = document.createElement('td');
           const tdAvgS = document.createElement('td');
 
-          // De momento no tenemos datos → vacío
+          // Aún sin datos → vacío
           tdLast.textContent = '-';
           tdAvgW.textContent = '-';
           tdAvgS.textContent = '-';
