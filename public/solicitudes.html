@@ -148,6 +148,20 @@
       border-bottom: 1px solid rgba(148,163,184,0.26);
     }
 
+    /* Centrar desde CANT. hasta la última columna */
+    .sol-table th:nth-child(4),
+    .sol-table th:nth-child(5),
+    .sol-table th:nth-child(6),
+    .sol-table th:nth-child(7),
+    .sol-table th:nth-child(8),
+    .sol-table td:nth-child(4),
+    .sol-table td:nth-child(5),
+    .sol-table td:nth-child(6),
+    .sol-table td:nth-child(7),
+    .sol-table td:nth-child(8) {
+      text-align: center;
+    }
+
     .sol-table tbody tr {
       transition: background .12s ease-out;
     }
@@ -890,7 +904,6 @@
         const currentQty = Number(wiRow.quantity || 0);
         const qty = Number(reqRow.quantity || 0);
 
-        // MISMA LÓGICA QUE EN ALMACENES:
         // COMPRA → el almacén vende → pierde stock → delta negativo
         // VENTA  → el almacén compra → gana stock → delta positivo
         const delta = reqRow.request_type === 'venta'
