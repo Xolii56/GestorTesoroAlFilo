@@ -210,10 +210,40 @@ function initNotifications(session) {
     }
   }
 
-  // Cargar una vez al entrar (para badge)
+  // Carga inicial + suscripción realtime
   (async () => {
     const rows = await fetchNotifications();
     updateBadge(rows);
+  
+    // ────────────────────────────────────────────────────────────────
+    // 🔴 SUSCRIPCIÓN REALTIME A LA TABLA NOTIFICATIONS PARA ESTE USER
+    // ────────────────────────────────────────────────────────────────
+    try {
+      const channel = supa
+        .channel(`notif-realtime-${userId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",                          // INSERT / UPDATE / DELETE
+            schema: "public",
+            table: "notifications",
+            filter: `user_id=eq.${userId}`
+          },
+          async (payload) => {
+            // Cuando llega una notificación nueva o se actualiza:
+            const updatedRows = await fetchNotifications();
+            updateBadge(updatedRows);
+  
+            // Si está abierto el panel → refrescar lista sin cerrar
+            if (panel.classList.contains("open")) {
+              renderList(updatedRows);
+            }
+          }
+        )
+        .subscribe();
+    } catch (err) {
+      console.error("Error inicializando realtime de notificaciones:", err);
+    }
   })();
 
   // Abrir/cerrar panel
