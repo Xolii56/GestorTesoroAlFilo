@@ -1,4 +1,4 @@
-<!doctype html>
+<!doctype html> 
 <html lang="es">
 <head>
   <meta charset="utf-8"/>
@@ -15,7 +15,7 @@
   <style>
     main.alm-main {
       padding: 1.5rem;
-      max-width: 1440px; /* más ancho para evitar scroll horizontal */
+      max-width: 1680px; /* más ancho para evitar scroll horizontal en tablas */
       margin: 0 auto;
     }
 
@@ -165,7 +165,8 @@
 
     .alm-detail-body {
       display:grid;
-      grid-template-columns:minmax(0,1.6fr) minmax(0,1.4fr); /* inventario más ancho que solicitudes */
+      /* inventario algo más estrecho, solicitudes más ancho */
+      grid-template-columns:minmax(0,1.3fr) minmax(0,1.7fr);
       gap:1rem;
     }
 
@@ -262,6 +263,23 @@
       background:rgba(15,23,42,0.9);
     }
 
+    /* ⬇️ Centramos columnas: Tipo(2), Solicitante(5),
+       Plazo máx.(6), Estado(7), Detalle(8), Acciones(9) */
+    .alm-req-table th:nth-child(2),
+    .alm-req-table td:nth-child(2),
+    .alm-req-table th:nth-child(5),
+    .alm-req-table td:nth-child(5),
+    .alm-req-table th:nth-child(6),
+    .alm-req-table td:nth-child(6),
+    .alm-req-table th:nth-child(7),
+    .alm-req-table td:nth-child(7),
+    .alm-req-table th:nth-child(8),
+    .alm-req-table td:nth-child(8),
+    .alm-req-table th:nth-child(9),
+    .alm-req-table td:nth-child(9) {
+      text-align:center;
+    }
+
     .badge-status {
       display:inline-flex;
       align-items:center;
@@ -275,6 +293,19 @@
     .badge-status.rechazada   { border-color:rgba(248,113,113,0.9); }
     .badge-status.completada  { border-color:rgba(56,189,248,0.9); }
     .badge-status.cancelada   { border-color:rgba(248,113,113,0.9); }
+
+    /* Chips de tipo (compra / venta, igual que en otros módulos) */
+    .tipo-chip {
+      display:inline-block;
+      padding:0.08rem 0.45rem;
+      border-radius:999px;
+      font-size:.7rem;
+      border:1px solid rgba(148,163,184,0.9);
+      margin-left:.25rem;
+      opacity:.85;
+    }
+    .tipo-chip.compra { border-color: rgba(34,197,94,0.9); }
+    .tipo-chip.venta  { border-color: rgba(248,113,113,0.9); }
 
     /* Modal genérico (almacén) */
     .alm-modal-backdrop {
@@ -820,6 +851,9 @@
         if (error) {
           console.error('Error cargando solicitudes de almacén:', error);
           reqTbody.innerHTML = '<tr><td colspan="9">No se han podido cargar las solicitudes de este almacén.</td></tr>';
+       
+
+
           return;
         }
 
@@ -846,7 +880,11 @@
           tdId.textContent = `#${r.id}`;
 
           const tdTipo = document.createElement('td');
-          tdTipo.textContent = r.request_type === 'venta' ? 'Venta' : 'Compra';
+          const spanTipo = document.createElement('span');
+          const tipoKey = r.request_type === 'venta' ? 'venta' : 'compra';
+          spanTipo.className = 'tipo-chip ' + tipoKey;
+          spanTipo.textContent = r.request_type === 'venta' ? 'Venta' : 'Compra';
+          tdTipo.appendChild(spanTipo);
 
           const tdItem = document.createElement('td');
           tdItem.textContent = itemName;
