@@ -103,6 +103,29 @@
       background:rgba(15,23,42,0.9);
     }
 
+    /* ⬇️ Centramos columnas concretas:
+       2: Tipo
+       5: Solicitante
+       6: Creada
+       7: Estado
+       8: Detalle
+       9: Acciones
+    */
+    .rev-table th:nth-child(2),
+    .rev-table td:nth-child(2),
+    .rev-table th:nth-child(5),
+    .rev-table td:nth-child(5),
+    .rev-table th:nth-child(6),
+    .rev-table td:nth-child(6),
+    .rev-table th:nth-child(7),
+    .rev-table td:nth-child(7),
+    .rev-table th:nth-child(8),
+    .rev-table td:nth-child(8),
+    .rev-table th:nth-child(9),
+    .rev-table td:nth-child(9) {
+      text-align: center;
+    }
+
     .tipo-chip {
       display:inline-block;
       padding:0.08rem 0.45rem;
