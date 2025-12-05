@@ -6,7 +6,7 @@
   <title>Departamento del Tesoro — Registro</title>
   <link rel="stylesheet" href="./style.css"/>
 
-  <!-- Supabase + módulos -->
+  <!-- Supabase -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="./config.js" defer></script>
   <script src="./modules/db.js" defer></script>
@@ -15,87 +15,70 @@
   <style>
     main.reg-main {
       padding: 1.5rem;
-      max-width: 1200px;
+      max-width: 1300px;
       margin: 0 auto;
     }
 
-    .reg-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
-      gap: 1.3rem;
-    }
-
-    @media (max-width: 900px) {
-      .reg-layout {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-
     .reg-toolbar {
-      display: flex;
-      justify-content: space-between;
-      gap: .75rem;
-      flex-wrap: wrap;
-      margin-bottom: .6rem;
-      align-items: center;
+      display:flex;
+      justify-content:space-between;
+      gap:.75rem;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:.8rem;
     }
 
     .reg-toolbar select,
     .reg-toolbar input[type="search"] {
-      padding: 0.35rem 0.5rem;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.7);
-      background: #020617;
-      color: #e5e7eb;
-      font-size: .85rem;
+      padding:0.35rem 0.55rem;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.7);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.85rem;
     }
 
     .reg-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .9rem;
+      width:100%;
+      border-collapse:collapse;
+      font-size:.9rem;
     }
 
     .reg-table thead {
-      font-size: .8rem;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-      opacity: .8;
+      font-size:.8rem;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      opacity:.8;
     }
 
     .reg-table th,
     .reg-table td {
-      padding: 0.35rem 0.4rem;
-      border-bottom: 1px solid rgba(148,163,184,0.25);
+      padding:0.4rem 0.45rem;
+      border-bottom:1px solid rgba(148,163,184,0.25);
     }
 
     .reg-table tbody tr {
-      cursor: pointer;
-      transition: background .12s ease-out;
+      transition:background .12s ease-out;
     }
 
     .reg-table tbody tr:hover {
-      background: rgba(15,23,42,0.9);
+      background:rgba(15,23,42,0.85);
     }
 
-    .reg-table tbody tr.selected {
-      background: rgba(56,189,248,0.18);
+    /* Centrado columnas específicas */
+    .reg-table th:nth-child(2),
+    .reg-table td:nth-child(2), /* Tipo */
+    .reg-table th:nth-child(4),
+    .reg-table td:nth-child(4), /* Cant */
+    .reg-table th:nth-child(6),
+    .reg-table td:nth-child(6), /* Estado */
+    .reg-table th:nth-child(7),
+    .reg-table td:nth-child(7), /* Cerrada */
+    .reg-table th:nth-child(8),
+    .reg-table td:nth-child(8)  /* Detalle */
+    {
+      text-align:center;
     }
-
-    .badge-status {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.1rem 0.55rem;
-      border-radius: 999px;
-      font-size: .75rem;
-      border: 1px solid rgba(148,163,184,0.7);
-    }
-
-    .badge-status.pendiente { border-color: rgba(250,204,21,0.9); }
-    .badge-status.aprobada  { border-color: rgba(34,197,94,0.9); }
-    .badge-status.rechazada { border-color: rgba(248,113,113,0.9); }
-    .badge-status.completada{ border-color: rgba(56,189,248,0.9); }
-    .badge-status.cancelada { border-color: rgba(248,113,113,0.9); }
 
     .tipo-chip {
       display:inline-block;
@@ -103,50 +86,24 @@
       border-radius:999px;
       font-size:.7rem;
       border:1px solid rgba(148,163,184,0.9);
-      margin-left:.25rem;
       opacity:.85;
     }
-
     .tipo-chip.compra { border-color: rgba(34,197,94,0.9); }
     .tipo-chip.venta  { border-color: rgba(248,113,113,0.9); }
 
-    .reg-detail .field {
-      margin-bottom: .7rem;
+    .badge-status {
+      display:inline-flex;
+      align-items:center;
+      padding:0.1rem 0.55rem;
+      border-radius:999px;
+      font-size:.75rem;
+      border:1px solid rgba(148,163,184,0.7);
     }
-
-    .reg-detail label {
-      display: block;
-      font-size: .8rem;
-      opacity: .8;
-      margin-bottom: .2rem;
-    }
-
-    .reg-detail input,
-    .reg-detail textarea {
-      width: 100%;
-      padding: 0.4rem 0.5rem;
-      border-radius: 0.4rem;
-      border: 1px solid rgba(148,163,184,0.8);
-      background: #020617;
-      color: #e5e7eb;
-      font-size: .9rem;
-    }
-
-    .reg-detail textarea {
-      min-height: 70px;
-      resize: vertical;
-    }
-
-    .reg-detail input[readonly],
-    .reg-detail textarea[readonly] {
-      opacity:.85;
-    }
-
-    .help-text {
-      font-size: .75rem;
-      opacity: .7;
-      margin-top: .2rem;
-    }
+    .badge-status.pendiente   { border-color:rgba(250,204,21,0.9); }
+    .badge-status.aprobada    { border-color:rgba(34,197,94,0.9); }
+    .badge-status.rechazada   { border-color:rgba(248,113,113,0.9); }
+    .badge-status.completada  { border-color:rgba(56,189,248,0.9); }
+    .badge-status.cancelada   { border-color:rgba(248,113,113,0.9); }
   </style>
 </head>
 
@@ -158,7 +115,7 @@
     <div>
       <h2>Registro de solicitudes</h2>
       <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
-        Log histórico de todas las solicitudes del Tesoro (abiertas y cerradas). Solo lectura.
+        Historial completo de todas las solicitudes del Tesoro.
       </p>
     </div>
     <button type="button" class="btn btn-secondary" onclick="window.location.href='./app_ui.html'">
@@ -166,251 +123,143 @@
     </button>
   </div>
 
-  <div class="reg-layout">
-    <!-- LISTA -->
-    <div class="card">
-      <div class="reg-toolbar">
-        <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;">
-          <select id="filtro-estado">
-            <option value="todas">Todas</option>
-            <option value="pendiente">Pendientes</option>
-            <option value="aprobada">Aprobadas</option>
-            <option value="rechazada">Rechazadas</option>
-            <option value="completada">Completadas</option>
-            <option value="cancelada">Canceladas</option>
-          </select>
-          <input type="search" id="buscador" placeholder="Filtrar por ítem o usuario..."/>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;">
-          <span class="help-text">Solo lectura — log completo.</span>
-          <span class="help-text" id="reg-debug" style="font-style:italic;"></span>
-        </div>
+  <div class="card" style="padding:1rem 1.2rem;">
+    <div class="reg-toolbar">
+      <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;">
+        <select id="filtro-estado">
+          <option value="todas">Todas</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="aprobada">Aprobadas</option>
+          <option value="rechazada">Rechazadas</option>
+          <option value="completada">Completadas</option>
+          <option value="cancelada">Canceladas</option>
+        </select>
+
+        <input type="search" id="buscador" placeholder="Buscar por ítem o usuario...">
       </div>
 
-      <div style="max-height:460px;overflow:auto;">
-        <table class="reg-table">
-          <thead>
-          <tr>
-            <th>ID</th>
-            <th>Tipo</th>
-            <th>Ítem</th>
-            <th>Cant.</th>
-            <th>Solicitante</th>
-            <th>Estado</th>
-            <th>Creada</th>
-          </tr>
-          </thead>
-          <tbody id="reg-tbody"></tbody>
-        </table>
-      </div>
+      <span class="help-text" id="reg-debug" style="font-style:italic;"></span>
     </div>
 
-    <!-- DETALLE (solo lectura) -->
-    <div class="card reg-detail">
-      <h3 style="margin-top:0;">Detalle de solicitud</h3>
-      <p id="reg-empty" class="help-text">
-        Selecciona una solicitud en la tabla para ver los detalles.
-      </p>
-
-      <div id="reg-detail-panel" style="display:none;">
-        <div class="field">
-          <label>Tipo de solicitud</label>
-          <input id="d_type" type="text" readonly/>
-        </div>
-        <div class="field">
-          <label>Ítem</label>
-          <input id="d_item" type="text" readonly/>
-        </div>
-        <div class="field">
-          <label>Cantidad</label>
-          <input id="d_quantity" type="number" readonly/>
-        </div>
-        <div class="field">
-          <label>Solicitante</label>
-          <input id="d_requester" type="text" readonly/>
-        </div>
-        <div class="field">
-          <label>Estado actual</label>
-          <input id="d_status" type="text" readonly/>
-        </div>
-        <div class="field">
-          <label>Fechas</label>
-          <div id="d_dates" class="help-text"></div>
-        </div>
-        <div class="field">
-          <label>Almacén / Lugar de transacción</label>
-          <input id="d_warehouse" type="text" readonly/>
-        </div>
-        <div class="field">
-          <label>Plazo máximo de entrega</label>
-          <input id="d_due_date" type="text" readonly/>
-        </div>
-        <div class="field">
-          <label>Firmas</label>
-          <textarea id="d_signatures" readonly></textarea>
-        </div>
-      </div>
+    <div style="max-height:520px;overflow:auto;">
+      <table class="reg-table">
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tipo</th>
+          <th>Ítem</th>
+          <th>Cant.</th>
+          <th>Solicitante</th>
+          <th>Estado</th>
+          <th>Cerrada</th>
+          <th>Detalle</th>
+        </tr>
+        </thead>
+        <tbody id="reg-tbody"></tbody>
+      </table>
     </div>
   </div>
 </main>
 
 <script type="module">
-  import { getOrgStatus } from './modules/profile.js';
+  import { getOrgStatus } from "./modules/profile.js";
 
-  document.addEventListener('DOMContentLoaded', async () => {
+  document.addEventListener("DOMContentLoaded", async () => {
     const { supa } = window;
 
     function formatStatus(st) {
-      const map = {
-        pendiente: 'pendiente',
-        aprobada: 'aprobada',
-        rechazada: 'rechazada',
-        completada: 'completada',
-        cancelada: 'cancelada'
-      };
-      return map[st] || st;
+      return {
+        pendiente: "pendiente",
+        aprobada: "aprobada",
+        rechazada: "rechazada",
+        completada: "completada",
+        cancelada: "cancelada"
+      }[st] || st;
     }
 
-    function humanSignText(v) {
-      const val = v || 'pendiente';
-      if (val === 'ok') return 'Firmada en positivo';
-      if (val === 'ko') return 'Rechazada';
-      return 'Pendiente';
+    function renderTipo(tipo) {
+      return tipo === "venta" ? "Venta" : "Compra";
     }
 
-    // 1) Sesión
+    // ------------------- SESIÓN -------------------
     const { data: { session } } = await supa.auth.getSession();
-    if (!session) {
-      window.location.href = './index.html';
-      return;
-    }
+    if (!session) return (window.location.href = "./index.html");
 
-    // 2) org_status
     const orgStatus = await getOrgStatus();
-    if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
+    if (!orgStatus || !["miembro","daga","espada","admin"].includes(orgStatus)) {
       await supa.auth.signOut();
-      window.location.href = './index.html';
-      return;
+      return (window.location.href = "./index.html");
     }
 
-    // 3) Header
-    await loadHeader('app');
+    await loadHeader("app");
     initHeaderUserMenu(
       session,
       async () => {
         await supa.auth.signOut();
         window.location.href = "./index.html";
       },
-      () => window.location.href = './perfil.html'
+      () => window.location.href = "./perfil.html"
     );
 
-    // 4) Permisos de módulo (roles_app.registro)
-    const { data: meRow, error: meError } = await supa
-      .from('users')
-      .select('tesoro_internal_role')
-      .eq('id', session.user.id)
+    // ------------------- PERMISOS -------------------
+    const { data: meRow } = await supa
+      .from("users")
+      .select("tesoro_internal_role")
+      .eq("id", session.user.id)
       .maybeSingle();
-    if (meError) console.error('Error leyendo rol interno:', meError);
 
-    let myRole = meRow?.tesoro_internal_role || null;
-    if (typeof myRole === 'string') myRole = myRole.trim();
+    let myRole = meRow?.tesoro_internal_role;
+    if (typeof myRole === "string") myRole = myRole.trim();
 
     let roleRow = null;
-    const asNumber = Number(myRole);
-    if (!Number.isNaN(asNumber)) {
-      const { data, error } = await supa
-        .from('roles_app')
-        .select('*')
-        .eq('id', asNumber)
-        .maybeSingle();
-      if (!error) roleRow = data;
+    if (!isNaN(Number(myRole))) {
+      const { data } = await supa.from("roles_app").select("*").eq("id", Number(myRole)).maybeSingle();
+      roleRow = data;
     }
     if (!roleRow && myRole) {
-      const { data, error } = await supa
-        .from('roles_app')
-        .select('*')
-        .ilike('role_name', myRole)
-        .maybeSingle();
-      if (!error) roleRow = data;
+      const { data } = await supa.from("roles_app").select("*").ilike("role_name", myRole).maybeSingle();
+      roleRow = data;
     }
 
-    let regLevel = roleRow?.registro ?? 0;
-    if (!regLevel) {
-      alert('No tienes acceso al módulo de Registro.');
-      window.location.href = './app_ui.html';
-      return;
+    if (!roleRow?.registro) {
+      alert("No tienes acceso al módulo de Registro.");
+      return (window.location.href = "./app_ui.html");
     }
 
-    const permsLabel = document.getElementById('reg-perms-label');
-    if (permsLabel) {
-      permsLabel.textContent = 'Permisos: solo lectura del historial.';
-    }
+    // ------------------- USUARIOS -------------------
+    const { data: users } = await supa
+      .from("users")
+      .select("id, handle_name, discord_username, discord_user_id");
 
-    // 5) Datos auxiliares: usuarios + almacenes
-    const { data: users, error: usersError } = await supa
-      .from('users')
-      .select('id, handle_name, discord_username, discord_user_id');
-    if (usersError) console.error('Error leyendo usuarios:', usersError);
-
-    const usersByDiscordId = {};
     const usersById = {};
+    const usersByDiscord = {};
     (users || []).forEach(u => {
       usersById[u.id] = u;
-      if (u.discord_user_id) {
-        usersByDiscordId[String(u.discord_user_id)] = u;
-      }
+      if (u.discord_user_id) usersByDiscord[String(u.discord_user_id)] = u;
     });
 
-    const { data: warehouses, error: whError } = await supa
-      .from('warehouses')
-      .select('id, name')
-      .order('name', { ascending: true });
-    if (whError) console.error('Error leyendo almacenes:', whError);
+    function resolveUser(id) {
+      const idStr = id ? String(id) : "";
+      const u = usersByDiscord[idStr] || usersById[idStr];
+      return u?.handle_name || u?.discord_username || idStr || "-";
+    }
 
+    // ------------------- WAREHOUSES -------------------
+    const { data: warehouses } = await supa.from("warehouses").select("id,name");
     const warehousesById = {};
-    (warehouses || []).forEach(w => { warehousesById[w.id] = w; });
+    (warehouses || []).forEach(w => warehousesById[w.id] = w);
 
-    // 6) Referencias DOM
-    const tbody     = document.getElementById('reg-tbody');
-    const filtro    = document.getElementById('filtro-estado');
-    const buscador  = document.getElementById('buscador');
-
-    const regEmpty  = document.getElementById('reg-empty');
-    const regPanel  = document.getElementById('reg-detail-panel');
-
-    const dType        = document.getElementById('d_type');
-    const dItem        = document.getElementById('d_item');
-    const dQty         = document.getElementById('d_quantity');
-    const dReq         = document.getElementById('d_requester');
-    const dStatus      = document.getElementById('d_status');
-    const dWh          = document.getElementById('d_warehouse');
-    const dDates       = document.getElementById('d_dates');
-    const dDueDate     = document.getElementById('d_due_date');
-    const dSignatures  = document.getElementById('d_signatures');
+    // ------------------- DOM -------------------
+    const tbody = document.getElementById("reg-tbody");
+    const filtro = document.getElementById("filtro-estado");
+    const buscador = document.getElementById("buscador");
 
     let allRequests = [];
-    let selectedId = null;
 
-    function renderTipo(tipo) {
-      if (!tipo) return '-';
-      return tipo === 'compra' ? 'Compra' : 'Venta';
-    }
-
-    function resolveUserNameFromRequesterId(requesterId) {
-      const key = requesterId ? String(requesterId) : '';
-      const byDiscord = usersByDiscordId[key];
-      const byId      = usersById[key];
-
-      const u = byDiscord || byId;
-      if (!u) return requesterId || '';
-
-      return u.handle_name || u.discord_username || requesterId || '';
-    }
-
-    // 7) Cargar todas las solicitudes
+    // ------------------- LOAD REQUESTS -------------------
     async function loadRequests() {
-      const { data: reqs, error: reqError } = await supa
-        .from('requests')
+      const { data } = await supa
+        .from("requests")
         .select(`
           id,
           request_type,
@@ -423,167 +272,75 @@
           due_date,
           approved_at,
           completed_at,
-          warehouse_sign_result,
-          warehouse_sign_at,
-          warehouse_sign_user,
-          requester_sign_result,
           requester_sign_at,
-          requester_sign_user,
-          commodities_master ( name, symbol )
+          warehouse_sign_at,
+          commodities_master(name,symbol)
         `)
-        .order('created_at', { ascending: false });
+        .order("created_at", { ascending: false });
 
-      if (reqError) {
-        console.error('Error cargando solicitudes (registro):', reqError);
-        return;
-      }
-
-      allRequests = reqs || [];
+      allRequests = data || [];
       renderTable();
     }
 
+    function calcFechaCerrada(r) {
+      const st = r.status;
+
+      if (st === "completada") return r.completed_at || r.requester_sign_at || r.warehouse_sign_at;
+      if (st === "cancelada") return r.requester_sign_at || r.warehouse_sign_at;
+      if (st === "rechazada") return r.approved_at || r.created_at;
+
+      return null;
+    }
+
     function renderTable() {
-      tbody.innerHTML = '';
-      const estado = filtro.value;
-      const term   = (buscador.value || '').toLowerCase();
+      tbody.innerHTML = "";
+
+      const est = filtro.value;
+      const term = (buscador.value || "").toLowerCase();
 
       allRequests.forEach(r => {
-        const st = r.status || 'pendiente';
-        if (estado !== 'todas' && st !== estado) return;
+        if (est !== "todas" && r.status !== est) return;
 
         const cm = r.commodities_master;
-        const itemName = cm
-          ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
-          : (r.item_id || '');
+        const itemName = cm ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name) : r.item_id;
 
-        const reqName = resolveUserNameFromRequesterId(r.requester_discord_id);
-
-        // nombre de almacén solo para búsqueda (no como columna)
-        const whName = r.warehouse_id
-          ? (warehousesById[r.warehouse_id]?.name || r.warehouse_id)
-          : '';
+        const requester = resolveUser(r.requester_discord_id);
 
         if (term) {
-          const search = (itemName + ' ' + reqName + ' ' + whName).toLowerCase();
-          if (!search.includes(term)) return;
+          const searchable = `${itemName} ${requester}`.toLowerCase();
+          if (!searchable.includes(term)) return;
         }
 
-        const tr = document.createElement('tr');
-        tr.dataset.id = r.id;
+        const tr = document.createElement("tr");
 
-        const labelEstado = formatStatus(st);
+        const fechaCierre = calcFechaCerrada(r);
 
         tr.innerHTML = `
           <td>#${r.id}</td>
           <td><span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span></td>
           <td>${itemName}</td>
           <td>${r.quantity}</td>
-          <td>${reqName}</td>
-          <td><span class="badge-status ${st}">${labelEstado}</span></td>
-          <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
+          <td>${requester}</td>
+          <td><span class="badge-status ${r.status}">${formatStatus(r.status)}</span></td>
+          <td>${fechaCierre ? new Date(fechaCierre).toLocaleString() : "-"}</td>
+          <td>
+            <button class="btn btn-secondary" style="padding:0.2rem 0.6rem;"
+              onclick="window.open('./solicitud_detalle.html?id=${encodeURIComponent(r.id)}','_blank','width=720,height=760')">
+              Ver
+            </button>
+          </td>
         `;
-
-        tr.addEventListener('click', () => {
-          // detalle interno (por si lo quieres seguir usando)
-          selectedId = r.id;
-          [...tbody.querySelectorAll('tr')].forEach(row => row.classList.remove('selected'));
-          tr.classList.add('selected');
-          showDetail(r);
-        
-          // popup estándar
-          window.open(
-            `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
-            '_blank',
-            'width=720,height=760'
-          );
-        });
-
 
         tbody.appendChild(tr);
       });
     }
 
-    function showDetail(r) {
-      regEmpty.style.display = 'none';
-      regPanel.style.display = 'block';
-
-      const cm = r.commodities_master;
-      const itemName = cm
-        ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
-        : (r.item_id || '');
-
-      const reqName = resolveUserNameFromRequesterId(r.requester_discord_id);
-      const whName = r.warehouse_id
-        ? (warehousesById[r.warehouse_id]?.name || r.warehouse_id)
-        : '-';
-
-      dType.value   = renderTipo(r.request_type);
-      dItem.value   = itemName;
-      dQty.value    = r.quantity;
-      dReq.value    = reqName;
-      dStatus.value = formatStatus(r.status || 'pendiente');
-      dWh.value     = whName;
-
-      const creado     = r.created_at   ? new Date(r.created_at).toLocaleString()   : 'desconocido';
-      const aprobado   = r.approved_at  ? new Date(r.approved_at).toLocaleString()  : null;
-      const completado = r.completed_at ? new Date(r.completed_at).toLocaleString() : null;
-
-      let timeline = `Creada: ${creado}`;
-      if (aprobado)   timeline += ` · Aprobada: ${aprobado}`;
-      if (completado) timeline += ` · Completada: ${completado}`;
-      dDates.textContent = timeline;
-
-      dDueDate.value = r.due_date || '';
-
-      // Firmas detalladas
-      const wSignVal   = r.warehouse_sign_result || 'pendiente';
-      const wSignUserN = r.warehouse_sign_user
-        ? resolveUserNameFromRequesterId(r.warehouse_sign_user)
-        : null;
-      const wSignDate  = r.warehouse_sign_at
-        ? new Date(r.warehouse_sign_at).toLocaleString()
-        : null;
-
-      const rqSignVal   = r.requester_sign_result || 'pendiente';
-      const rqSignUserN = r.requester_sign_user
-        ? resolveUserNameFromRequesterId(r.requester_sign_user)
-        : null;
-      const rqSignDate  = r.requester_sign_at
-        ? new Date(r.requester_sign_at).toLocaleString()
-        : null;
-
-      const lines = [];
-
-      // Tesoro
-      let tesoroLine = `Tesoro: ${humanSignText(wSignVal)}`;
-      {
-        const parts = [];
-        if (wSignUserN) parts.push(wSignUserN);
-        if (wSignDate)  parts.push(wSignDate);
-        if (parts.length) tesoroLine += ' — ' + parts.join(' · ');
-      }
-      lines.push(tesoroLine);
-
-      // Solicitante
-      let solLine = `Solicitante: ${humanSignText(rqSignVal)}`;
-      {
-        const parts = [];
-        if (rqSignUserN) parts.push(rqSignUserN);
-        if (rqSignDate)  parts.push(rqSignDate);
-        if (parts.length) solLine += ' — ' + parts.join(' · ');
-      }
-      lines.push(solLine);
-
-      dSignatures.value = lines.join('\n');
-    }
-
-    filtro.addEventListener('change', renderTable);
-    buscador.addEventListener('input', renderTable);
+    filtro.addEventListener("change", renderTable);
+    buscador.addEventListener("input", renderTable);
 
     await loadRequests();
   });
 </script>
-
 
 </body>
 </html>
