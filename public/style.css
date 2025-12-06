@@ -214,7 +214,7 @@ input,select{
 .notif-panel {
   position: fixed;
   top: 0;
-  right: -360px;             /* oculto por defecto */
+  right: -360px;
   width: 320px;
   max-width: 90vw;
   height: 100vh;
@@ -251,7 +251,7 @@ input,select{
 .notif-list {
   padding: 0.5rem 0.75rem 0.75rem;
   overflow-y: auto;
-  flex: 1; /* deja espacio para el footer abajo */
+  flex: 1;
 }
 
 .notif-item {
@@ -294,13 +294,15 @@ input,select{
   padding: 0.5rem 0.3rem;
 }
 
-/* Footer con botones de limpieza */
+/* ========== FOOTER — BOTONES DE LIMPIEZA ========== */
 
 #notif-footer {
-  padding: 0.5rem 0.75rem 0.75rem;
+  padding: 0.65rem 0.9rem 0.8rem;
   border-top: 1px solid rgba(148,163,184,0.3);
   display: flex;
-  gap: 0.4rem;
+  justify-content: center;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .notif-clear-btn {
@@ -309,11 +311,14 @@ input,select{
   border: 1px solid rgba(148,163,184,0.7);
   background: #020617;
   color: #e5e7eb;
-  font-size: 0.75rem;
-  padding: 0.35rem 0.6rem;
+  font-size: 0.78rem;
+  padding: 0.45rem 0.9rem;
   cursor: pointer;
-  text-align: center;
   white-space: nowrap;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .notif-clear-btn:hover {
