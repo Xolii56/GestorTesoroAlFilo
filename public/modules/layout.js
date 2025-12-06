@@ -45,9 +45,9 @@ window.initHeaderUserMenu = function (session, onLogout, onProfile) {
   if (avatarImg && avatar) avatarImg.src = avatar;
   if (userNameDiv) userNameDiv.textContent = name;
 
-  const avatarBtn = document.getElementById('avatar-button');
-  const dropdown  = document.getElementById('user-dropdown');
-  const logoutBtn = document.getElementById('logout-btn');
+  const avatarBtn  = document.getElementById('avatar-button');
+  const dropdown   = document.getElementById('user-dropdown');
+  const logoutBtn  = document.getElementById('logout-btn');
   const profileBtn = document.getElementById('profile-btn');
 
   if (avatarBtn && dropdown) {
@@ -105,7 +105,8 @@ function initNotifications(session) {
   const listEl    = document.getElementById('notif-list');
   const closeBtn  = document.getElementById('notif-close');
 
-  const footer    = document.getElementById('notif-footer');
+  // 👇 OJO: en tu header es class="notif-footer", NO id
+  const footer    = document.querySelector('.notif-footer');
 
   if (!bell || !panel || !listEl) return;
 
@@ -113,7 +114,7 @@ function initNotifications(session) {
   let clearAllBtn = null;
 
   if (footer) {
-    // Vaciar todo lo que hubiera (adiós "Limpiar leídas" y compañía)
+    // Volamos todo lo que hubiera dentro (adiós "Limpiar leídas")
     footer.innerHTML = '';
 
     clearAllBtn = document.createElement('button');
@@ -322,7 +323,7 @@ function initNotifications(session) {
     });
   }
 
-  // Botón "Borrar todas" (el único que queda)
+  // Botón "Borrar todas" (el único que dejamos en el footer)
   if (clearAllBtn) {
     clearAllBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
