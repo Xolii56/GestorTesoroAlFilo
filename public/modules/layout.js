@@ -91,6 +91,7 @@ window.initHeaderUserMenu = function (session, onLogout, onProfile) {
  * - Abre/cierra panel lateral.
  * - Marca como leídas al abrir.
  * - Borra automáticamente las leídas de hace > 1 día.
+ * - Botones para limpiar leídas y limpiar todo.
  */
 function initNotifications(session) {
   const supa = window.supa;
@@ -104,8 +105,8 @@ function initNotifications(session) {
   const listEl    = document.getElementById('notif-list');
   const closeBtn  = document.getElementById('notif-close');
 
-  const clearOldBtn = document.getElementById('notif-clear-old');
-  const clearAllBtn = document.getElementById('notif-clear-all');
+  const clearOldBtn = document.getElementById('notif-clear-old'); // limpiar leídas
+  const clearAllBtn = document.getElementById('notif-clear-all'); // limpiar todo
 
   // Si no hay estructura de notificaciones en el DOM, no hacemos nada
   if (!bell || !panel || !listEl) return;
@@ -215,7 +216,7 @@ function initNotifications(session) {
     }
   }
 
-  // Borra notificaciones LEÍDAS con más de 1 día
+  // Borra notificaciones LEÍDAS con más de 1 día (limpieza automática)
   async function deleteOldReadNotifications() {
     const MS_PER_DAY = 24 * 60 * 60 * 1000;
     const oneDayAgoIso = new Date(Date.now() - MS_PER_DAY).toISOString();
@@ -229,6 +230,19 @@ function initNotifications(session) {
 
     if (error) {
       console.error('Error borrando notificaciones antiguas leídas:', error);
+    }
+  }
+
+  // Borra TODAS las notificaciones LEÍDAS (para el botón "limpiar leídas")
+  async function clearReadNotifications() {
+    const { error } = await supa
+      .from('notifications')
+      .delete()
+      .eq('user_id', userId)
+      .not('read_at', 'is', null); // cualquier read_at no nulo
+
+    if (error) {
+      console.error('Error borrando notificaciones leídas:', error);
     }
   }
 
@@ -305,16 +319,18 @@ function initNotifications(session) {
     });
   }
 
-  // Botones de limpieza manual
+  // Botón "Limpiar leídas" (notif-clear-old)
   if (clearOldBtn) {
     clearOldBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      await deleteOldReadNotifications();
+      await clearReadNotifications();
       const rows = await fetchNotifications();
       renderList(rows);
+      updateBadge(rows);
     });
   }
 
+  // Botón "Borrar todas" (notif-clear-all)
   if (clearAllBtn) {
     clearAllBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
