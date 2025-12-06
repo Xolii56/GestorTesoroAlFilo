@@ -90,9 +90,7 @@ window.initHeaderUserMenu = function (session, onLogout, onProfile) {
  * - Muestra badge de no leídas.
  * - Abre/cierra panel lateral.
  * - Marca como leídas al abrir.
- * - Limpia leídas antiguas.
- * - Botones "Limpiar leídas" y "Borrar todo".
- * - Realtime con Supabase.
+ * - Permite limpiar leídas / borrar todas (solo a nivel interfaz usando localStorage).
  */
 function initNotifications(session) {
   const supa = window.supa;
@@ -106,13 +104,52 @@ function initNotifications(session) {
   const listEl    = document.getElementById('notif-list');
   const closeBtn  = document.getElementById('notif-close');
 
+  // Botones footer
+  const clearReadBtn = document.getElementById('notif-clear-read');
+  const clearAllBtn  = document.getElementById('notif-clear-all');
+
   if (!bell || !panel || !listEl) return;
 
-  // Cuántos días conservar notis leídas
-  const DAYS_TO_KEEP_READ = 30;
+  // Claves de localStorage para controlar “hasta cuándo” se limpió
+  const LS_KEY_ALL  = `notif_cleared_all_${userId}`;
+  const LS_KEY_READ = `notif_cleared_read_${userId}`;
 
-  // Cache local
-  let currentRows = [];
+  function getCutoff(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      const t = new Date(raw).getTime();
+      return Number.isNaN(t) ? null : t;
+    } catch {
+      return null;
+    }
+  }
+
+  function setCutoff(key, date = new Date()) {
+    try {
+      localStorage.setItem(key, date.toISOString());
+    } catch {
+      // si peta localStorage, no pasa nada grave
+    }
+  }
+
+  function applyFilters(rows) {
+    const allCutoff  = getCutoff(LS_KEY_ALL);
+    const readCutoff = getCutoff(LS_KEY_READ);
+
+    return (rows || []).filter(n => {
+      const createdTs = n.created_at ? new Date(n.created_at).getTime() : 0;
+      const readTs    = n.read_at ? new Date(n.read_at).getTime() : null;
+
+      // Si pulsó "Borrar todas" en algún momento → no mostramos nada anterior a esa fecha
+      if (allCutoff && createdTs <= allCutoff) return false;
+
+      // Si pulsó "Limpiar leídas" → ocultamos las leídas cuya read_at sea anterior a ese corte
+      if (readCutoff && readTs && readTs <= readCutoff) return false;
+
+      return true;
+    });
+  }
 
   async function fetchNotifications() {
     const { data, error } = await supa
@@ -126,8 +163,7 @@ function initNotifications(session) {
       console.error('Error cargando notificaciones:', error);
       return [];
     }
-    currentRows = data || [];
-    return currentRows;
+    return data || [];
   }
 
   function updateBadge(rows) {
@@ -220,97 +256,43 @@ function initNotifications(session) {
     }
   }
 
-  // Borrar todas las notificaciones leídas del usuario
-  async function deleteReadNotifications() {
-    const { error } = await supa
-      .from('notifications')
-      .delete()
-      .eq('user_id', userId)
-      .not('read_at', 'is', null);
-
-    if (error) {
-      console.error('Error borrando notificaciones leídas:', error);
-    }
-  }
-
-  // Limpieza automática de leídas con más de X días
-  async function cleanupOldReadNotifications() {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - DAYS_TO_KEEP_READ);
-    const iso = cutoff.toISOString();
-
-    const { error } = await supa
-      .from('notifications')
-      .delete()
-      .eq('user_id', userId)
-      .not('read_at', 'is', null)
-      .lt('created_at', iso);
-
-    if (error) {
-      console.error('Error limpiando notificaciones antiguas:', error);
-    }
-  }
-
-  // Footer con botones "Limpiar leídas" y "Borrar todo"
-  function ensureFooterButtons() {
-    let footer = document.getElementById('notif-footer');
-    if (!footer) {
-      footer = document.createElement('div');
-      footer.id = 'notif-footer';
-      footer.className = 'notif-footer';
-      panel.appendChild(footer);
-    } else {
-      footer.innerHTML = '';
-    }
-
-    const clearReadBtn = document.createElement('button');
-    clearReadBtn.type = 'button';
-    clearReadBtn.className = 'notif-clear-btn';
-    clearReadBtn.textContent = 'Limpiar leídas';
-
-    clearReadBtn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      await deleteReadNotifications();
-      const rows = await fetchNotifications();
-      renderList(rows);
-    });
-
-    const clearAllBtn = document.createElement('button');
-    clearAllBtn.type = 'button';
-    clearAllBtn.className = 'notif-clear-btn';
-    clearAllBtn.textContent = 'Borrar todo';
-
-    clearAllBtn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const ok = confirm('Esto eliminará TODAS tus notificaciones. ¿Seguro?');
-      if (!ok) return;
-
-      const { error } = await supa
-        .from('notifications')
-        .delete()
-        .eq('user_id', userId);
-
-      if (error) {
-        console.error('Error borrando todas las notificaciones:', error);
-        return;
-      }
-
-      currentRows = [];
-      renderList(currentRows);
-    });
-
-    footer.appendChild(clearReadBtn);
-    footer.appendChild(clearAllBtn);
-  }
-
-  // Carga inicial + limpieza de antiguas
+  // Carga inicial + suscripción realtime
   (async () => {
-    await cleanupOldReadNotifications();
-    const rows = await fetchNotifications();
-    updateBadge(rows);
-  })();
+    const rawRows = await fetchNotifications();
+    const visibleRows = applyFilters(rawRows);
+    updateBadge(visibleRows);
 
-  ensureFooterButtons();
+    // ────────────────────────────────────────────────────────────────
+    // 🔴 SUSCRIPCIÓN REALTIME A LA TABLA NOTIFICATIONS PARA ESTE USER
+    // ────────────────────────────────────────────────────────────────
+    try {
+      const channel = supa
+        .channel(`notif-realtime-${userId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",                          // INSERT / UPDATE / DELETE
+            schema: "public",
+            table: "notifications",
+            filter: `user_id=eq.${userId}`
+          },
+          async (_payload) => {
+            // Cuando llega una notificación nueva o se actualiza:
+            const updatedRaw = await fetchNotifications();
+            const updatedVisible = applyFilters(updatedRaw);
+            updateBadge(updatedVisible);
+
+            // Si está abierto el panel → refrescar lista sin cerrar
+            if (panel.classList.contains("open")) {
+              renderList(updatedVisible);
+            }
+          }
+        )
+        .subscribe();
+    } catch (err) {
+      console.error("Error inicializando realtime de notificaciones:", err);
+    }
+  })();
 
   // Abrir/cerrar panel
   bell.addEventListener('click', async (e) => {
@@ -318,11 +300,13 @@ function initNotifications(session) {
     const willOpen = !panel.classList.contains('open');
     if (willOpen) {
       panel.classList.add('open');
-      const rows = await fetchNotifications();
-      renderList(rows);
-      // Al abrir, consideramos vistas → marcamos como leídas
+      const rawRows = await fetchNotifications();
+      const visibleRows = applyFilters(rawRows);
+      renderList(visibleRows);
+      // Al abrir, podemos considerarlas vistas → marcamos como leídas
       await markAllRead();
-      updateBadge([]); // quitar badge
+      // Badge se actualiza en siguiente refresco, pero lo podemos limpiar ya
+      updateBadge([]);
     } else {
       panel.classList.remove('open');
     }
@@ -334,6 +318,37 @@ function initNotifications(session) {
     });
   }
 
+  // Botón "Limpiar leídas": marca todas como leídas y oculta las leídas anteriores a ahora
+  if (clearReadBtn) {
+    clearReadBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      await markAllRead();
+      setCutoff(LS_KEY_READ, new Date());
+
+      const rawRows = await fetchNotifications();
+      const visibleRows = applyFilters(rawRows);
+      renderList(visibleRows);
+      updateBadge(visibleRows);
+    });
+  }
+
+  // Botón "Borrar todas": oculta todo lo anterior a ahora (leerán como “panel limpio”)
+  if (clearAllBtn) {
+    clearAllBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      setCutoff(LS_KEY_ALL, new Date());
+
+      const rawRows = await fetchNotifications();
+      const visibleRows = applyFilters(rawRows);
+      renderList(visibleRows);
+      updateBadge(visibleRows);
+    });
+  }
+
   // Cerrar al hacer click fuera del panel
   document.addEventListener('click', (e) => {
     if (!panel.classList.contains('open')) return;
@@ -341,34 +356,4 @@ function initNotifications(session) {
     if (panel.contains(target) || target === bell) return;
     panel.classList.remove('open');
   });
-
-  // ───────── Realtime: nuevas / cambiadas ─────────
-  (async () => {
-    try {
-      const channel = supa
-        .channel(`notif-realtime-${userId}`)
-        .on(
-          'postgres_changes',
-          {
-            event: '*', // INSERT / UPDATE / DELETE
-            schema: 'public',
-            table: 'notifications',
-            filter: `user_id=eq.${userId}`
-          },
-          async () => {
-            const updatedRows = await fetchNotifications();
-            updateBadge(updatedRows);
-            if (panel.classList.contains('open')) {
-              renderList(updatedRows);
-            }
-          }
-        )
-        .subscribe();
-
-      // No hace falta guardar channel, la página recarga y se limpia
-      void channel;
-    } catch (err) {
-      console.error('Error inicializando realtime de notificaciones:', err);
-    }
-  })();
 }
