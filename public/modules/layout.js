@@ -86,8 +86,8 @@ window.initHeaderUserMenu = function (session, onLogout, onProfile) {
 
 /**
  * Inicializa sistema de notificaciones en el header.
- * - Muestra badge de no leídas.
- * - Abre/cierra panel lateral.
+ * - Badge de no leídas.
+ * - Panel lateral.
  * - Marca como leídas al abrir.
  * - Borra leídas > 24h automáticamente.
  * - Botón "Borrar todas" que las elimina DEFINITIVAMENTE.
@@ -104,15 +104,44 @@ function initNotifications(session) {
   const listEl    = document.getElementById('notif-list');
   const closeBtn  = document.getElementById('notif-close');
 
-  const footer        = document.getElementById('notif-footer');
-  const clearOldBtn   = document.getElementById('notif-clear-old'); // botón viejo
-  const clearAllBtn   = document.getElementById('notif-clear-all'); // botón bueno
+  const footer = document.getElementById('notif-footer');
 
   if (!bell || !panel || !listEl) return;
 
-  // Eliminar del DOM el botón "Limpiar leídas" si existe
-  if (clearOldBtn && clearOldBtn.parentNode) {
-    clearOldBtn.parentNode.removeChild(clearOldBtn);
+  // ───────────────── BOTONES DEL FOOTER ─────────────────
+  // Nos da igual cómo se llamen en header.html: buscamos, borramos el de "limpiar"
+  // y nos quedamos con un solo botón "Borrar todas".
+
+  let clearAllBtn = null;
+
+  if (footer) {
+    const btns = footer.querySelectorAll('button');
+
+    btns.forEach((btn) => {
+      const txt = (btn.textContent || '').toLowerCase();
+
+      // Cualquier botón que huela a "limpiar" lo volamos
+      if (txt.includes('limpiar')) {
+        btn.remove();
+        return;
+      }
+
+      // El primero que no sea "limpiar" lo usamos como "Borrar todas"
+      if (!clearAllBtn) clearAllBtn = btn;
+    });
+
+    // Si no había ningún botón útil, creamos uno
+    if (!clearAllBtn) {
+      clearAllBtn = document.createElement('button');
+      clearAllBtn.id = 'notif-clear-all';
+      clearAllBtn.className = 'notif-clear-btn';
+      clearAllBtn.textContent = 'Borrar todas';
+      footer.appendChild(clearAllBtn);
+    } else {
+      clearAllBtn.textContent = 'Borrar todas';
+      clearAllBtn.id = clearAllBtn.id || 'notif-clear-all';
+      clearAllBtn.classList.add('notif-clear-btn');
+    }
   }
 
   // ───────────────── Auxiliares ─────────────────
@@ -128,12 +157,12 @@ function initNotifications(session) {
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Error borrando notificaciones antiguas leídas:', error);
+      console.error('Error borrando notificaciones leídas antiguas:', error);
     }
   }
 
   async function fetchNotifications() {
-    // Primero limpieza automática de leídas viejas
+    // Limpieza automática de leídas viejas
     await cleanupOldReadNotifications();
 
     const { data, error } = await supa
@@ -198,13 +227,11 @@ function initNotifications(session) {
       item.appendChild(meta);
 
       item.addEventListener('click', async () => {
-        // Marcar como leída si no lo está
         if (!n.read_at) {
           await markAsRead(n.id);
           item.classList.remove('unread');
           item.classList.add('read');
         }
-        // Navegación opcional si hay link
         if (n.link_url) {
           window.location.href = n.link_url;
         }
@@ -242,7 +269,7 @@ function initNotifications(session) {
     }
   }
 
-  // BORRAR TODAS LAS NOTIFICACIONES DEL USUARIO (para siempre)
+  // BORRAR TODAS LAS NOTIFICACIONES DEL USUARIO (definitivo)
   async function deleteAllNotifications() {
     const { error } = await supa
       .from('notifications')
@@ -255,7 +282,6 @@ function initNotifications(session) {
       return;
     }
 
-    // Vaciar lista en UI y badge
     renderList([]);
     updateBadge([]);
   }
@@ -265,21 +291,19 @@ function initNotifications(session) {
     const rows = await fetchNotifications();
     updateBadge(rows);
 
-    // Realtime para este usuario
     try {
       supa
         .channel(`notif-realtime-${userId}`)
         .on(
           'postgres_changes',
           {
-            event: '*',          // INSERT / UPDATE / DELETE
+            event: '*',
             schema: 'public',
             table: 'notifications',
             filter: `user_id=eq.${userId}`
           },
           async () => {
             const updatedRows = await fetchNotifications();
-            // Si el panel está abierto refrescamos lista
             if (panel.classList.contains('open')) {
               renderList(updatedRows);
             } else {
@@ -302,9 +326,8 @@ function initNotifications(session) {
       panel.classList.add('open');
       const rows = await fetchNotifications();
       renderList(rows);
-      // Al abrir las consideramos vistas
       await markAllRead();
-      updateBadge([]);  // quitamos badge
+      updateBadge([]);
     } else {
       panel.classList.remove('open');
     }
@@ -316,9 +339,8 @@ function initNotifications(session) {
     });
   }
 
-  // Botón "Borrar todas" (el único que queremos)
+  // Botón "Borrar todas" (el único que queda)
   if (footer && clearAllBtn) {
-    clearAllBtn.textContent = 'Borrar todas';
     clearAllBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const ok = confirm(
