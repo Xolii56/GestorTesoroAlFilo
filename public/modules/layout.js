@@ -39,7 +39,7 @@ window.initHeaderUserMenu = function (session, onLogout, onProfile) {
     meta.picture ||
     '';
 
-  const avatarImg = document.getElementById('avatar');
+  const avatarImg   = document.getElementById('avatar');
   const userNameDiv = document.getElementById('user-name');
 
   if (avatarImg && avatar) avatarImg.src = avatar;
@@ -75,6 +75,7 @@ window.initHeaderUserMenu = function (session, onLogout, onProfile) {
       if (typeof onProfile === 'function') {
         onProfile();
       } else {
+        // Comportamiento por defecto: ir a la página de perfil
         window.location.href = './perfil.html';
       }
     });
@@ -104,44 +105,24 @@ function initNotifications(session) {
   const listEl    = document.getElementById('notif-list');
   const closeBtn  = document.getElementById('notif-close');
 
-  const footer = document.getElementById('notif-footer');
+  const footer    = document.getElementById('notif-footer');
 
   if (!bell || !panel || !listEl) return;
 
-  // ───────────────── BOTONES DEL FOOTER ─────────────────
-  // Nos da igual cómo se llamen en header.html: buscamos, borramos el de "limpiar"
-  // y nos quedamos con un solo botón "Borrar todas".
-
+  // ───────────────── FOOTER: SOLO UN BOTÓN "BORRAR TODAS" ─────────────────
   let clearAllBtn = null;
 
   if (footer) {
-    const btns = footer.querySelectorAll('button');
+    // Vaciar todo lo que hubiera (adiós "Limpiar leídas" y compañía)
+    footer.innerHTML = '';
 
-    btns.forEach((btn) => {
-      const txt = (btn.textContent || '').toLowerCase();
+    clearAllBtn = document.createElement('button');
+    clearAllBtn.type = 'button';
+    clearAllBtn.id = 'notif-clear-all';
+    clearAllBtn.className = 'notif-clear-btn';
+    clearAllBtn.textContent = 'Borrar todas';
 
-      // Cualquier botón que huela a "limpiar" lo volamos
-      if (txt.includes('limpiar')) {
-        btn.remove();
-        return;
-      }
-
-      // El primero que no sea "limpiar" lo usamos como "Borrar todas"
-      if (!clearAllBtn) clearAllBtn = btn;
-    });
-
-    // Si no había ningún botón útil, creamos uno
-    if (!clearAllBtn) {
-      clearAllBtn = document.createElement('button');
-      clearAllBtn.id = 'notif-clear-all';
-      clearAllBtn.className = 'notif-clear-btn';
-      clearAllBtn.textContent = 'Borrar todas';
-      footer.appendChild(clearAllBtn);
-    } else {
-      clearAllBtn.textContent = 'Borrar todas';
-      clearAllBtn.id = clearAllBtn.id || 'notif-clear-all';
-      clearAllBtn.classList.add('notif-clear-btn');
-    }
+    footer.appendChild(clearAllBtn);
   }
 
   // ───────────────── Auxiliares ─────────────────
@@ -227,11 +208,13 @@ function initNotifications(session) {
       item.appendChild(meta);
 
       item.addEventListener('click', async () => {
+        // Marcar como leída si no lo está
         if (!n.read_at) {
           await markAsRead(n.id);
           item.classList.remove('unread');
           item.classList.add('read');
         }
+        // Navegación opcional si hay link
         if (n.link_url) {
           window.location.href = n.link_url;
         }
@@ -321,11 +304,11 @@ function initNotifications(session) {
   bell.addEventListener('click', async (e) => {
     e.stopPropagation();
     const willOpen = !panel.classList.contains('open');
-
     if (willOpen) {
       panel.classList.add('open');
       const rows = await fetchNotifications();
       renderList(rows);
+      // Al abrir, se marcan como leídas
       await markAllRead();
       updateBadge([]);
     } else {
@@ -340,14 +323,13 @@ function initNotifications(session) {
   }
 
   // Botón "Borrar todas" (el único que queda)
-  if (footer && clearAllBtn) {
+  if (clearAllBtn) {
     clearAllBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const ok = confirm(
         'Esto borrará DEFINITIVAMENTE todas tus notificaciones. ¿Continuar?'
       );
       if (!ok) return;
-
       await deleteAllNotifications();
     });
   }
