@@ -46,7 +46,7 @@ window.initHeaderUserMenu = function (session, onLogout, onProfile) {
   if (userNameDiv) userNameDiv.textContent = name;
 
   const avatarBtn = document.getElementById('avatar-button');
-  const dropdown = document.getElementById('user-dropdown');
+  const dropdown  = document.getElementById('user-dropdown');
   const logoutBtn = document.getElementById('logout-btn');
   const profileBtn = document.getElementById('profile-btn');
 
@@ -75,7 +75,6 @@ window.initHeaderUserMenu = function (session, onLogout, onProfile) {
       if (typeof onProfile === 'function') {
         onProfile();
       } else {
-        // Comportamiento por defecto: ir a la página de perfil
         window.location.href = './perfil.html';
       }
     });
@@ -90,12 +89,12 @@ window.initHeaderUserMenu = function (session, onLogout, onProfile) {
  * - Muestra badge de no leídas.
  * - Abre/cierra panel lateral.
  * - Marca como leídas al abrir.
- * - Borra automáticamente las leídas de hace > 1 día.
- * - Botón "Borrar todas" que las elimina para siempre.
+ * - Borra leídas > 24h automáticamente.
+ * - Botón "Borrar todas" que las elimina DEFINITIVAMENTE.
  */
 function initNotifications(session) {
   const supa = window.supa;
-  if (!supa || !session?.user?.id) return;  // sin supabase o sin sesión → salimos
+  if (!supa || !session?.user?.id) return;
 
   const userId = session.user.id;
 
@@ -105,12 +104,38 @@ function initNotifications(session) {
   const listEl    = document.getElementById('notif-list');
   const closeBtn  = document.getElementById('notif-close');
 
-  const clearAllBtn = document.getElementById('notif-clear-all'); // único botón que dejamos
+  const footer        = document.getElementById('notif-footer');
+  const clearOldBtn   = document.getElementById('notif-clear-old'); // botón viejo
+  const clearAllBtn   = document.getElementById('notif-clear-all'); // botón bueno
 
-  // Si no hay estructura de notificaciones en el DOM, no hacemos nada
   if (!bell || !panel || !listEl) return;
 
+  // Eliminar del DOM el botón "Limpiar leídas" si existe
+  if (clearOldBtn && clearOldBtn.parentNode) {
+    clearOldBtn.parentNode.removeChild(clearOldBtn);
+  }
+
+  // ───────────────── Auxiliares ─────────────────
+
+  // Borra en BBDD las notificaciones leídas hace más de 24h
+  async function cleanupOldReadNotifications() {
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    const { error } = await supa
+      .from('notifications')
+      .delete()
+      .lt('read_at', cutoff)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error borrando notificaciones antiguas leídas:', error);
+    }
+  }
+
   async function fetchNotifications() {
+    // Primero limpieza automática de leídas viejas
+    await cleanupOldReadNotifications();
+
     const { data, error } = await supa
       .from('notifications')
       .select('*')
@@ -144,7 +169,7 @@ function initNotifications(session) {
       p.className = 'notif-empty';
       p.textContent = 'No tienes notificaciones.';
       listEl.appendChild(p);
-      updateBadge(rows);
+      updateBadge([]);
       return;
     }
 
@@ -192,9 +217,11 @@ function initNotifications(session) {
   }
 
   async function markAllRead() {
+    const nowIso = new Date().toISOString();
+
     const { error } = await supa
       .from('notifications')
-      .update({ read_at: new Date().toISOString() })
+      .update({ read_at: nowIso })
       .is('read_at', null)
       .eq('user_id', userId);
 
@@ -215,25 +242,8 @@ function initNotifications(session) {
     }
   }
 
-  // Borra notificaciones LEÍDAS con más de 1 día (limpieza automática)
-  async function deleteOldReadNotifications() {
-    const MS_PER_DAY = 24 * 60 * 60 * 1000;
-    const oneDayAgoIso = new Date(Date.now() - MS_PER_DAY).toISOString();
-
-    const { error } = await supa
-      .from('notifications')
-      .delete()
-      .eq('user_id', userId)
-      .not('read_at', 'is', null)      // solo las que tienen read_at
-      .lt('read_at', oneDayAgoIso);    // anteriores a hace 1 día
-
-    if (error) {
-      console.error('Error borrando notificaciones antiguas leídas:', error);
-    }
-  }
-
-  // Borra TODAS las notificaciones del usuario (para siempre)
-  async function clearAllNotifications() {
+  // BORRAR TODAS LAS NOTIFICACIONES DEL USUARIO (para siempre)
+  async function deleteAllNotifications() {
     const { error } = await supa
       .from('notifications')
       .delete()
@@ -241,41 +251,39 @@ function initNotifications(session) {
 
     if (error) {
       console.error('Error borrando todas las notificaciones:', error);
-      alert('No se han podido borrar las notificaciones.\n\n' + error.message);
-      return false;
+      alert('No se han podido borrar las notificaciones.');
+      return;
     }
-    return true;
+
+    // Vaciar lista en UI y badge
+    renderList([]);
+    updateBadge([]);
   }
 
-  // Carga inicial + suscripción realtime
+  // ───────────── Carga inicial + realtime ─────────────
   (async () => {
     const rows = await fetchNotifications();
     updateBadge(rows);
 
-    // limpieza automática de leídas > 1 día
-    await deleteOldReadNotifications();
-
-    // ────────────────────────────────────────────────────────────────
-    // 🔴 SUSCRIPCIÓN REALTIME A LA TABLA NOTIFICATIONS PARA ESTE USER
-    // ────────────────────────────────────────────────────────────────
+    // Realtime para este usuario
     try {
       supa
         .channel(`notif-realtime-${userId}`)
         .on(
           'postgres_changes',
           {
-            event: '*',               // INSERT / UPDATE / DELETE
+            event: '*',          // INSERT / UPDATE / DELETE
             schema: 'public',
             table: 'notifications',
             filter: `user_id=eq.${userId}`
           },
           async () => {
             const updatedRows = await fetchNotifications();
-            updateBadge(updatedRows);
-
-            // Si está abierto el panel → refrescar lista sin cerrar
+            // Si el panel está abierto refrescamos lista
             if (panel.classList.contains('open')) {
               renderList(updatedRows);
+            } else {
+              updateBadge(updatedRows);
             }
           }
         )
@@ -289,15 +297,14 @@ function initNotifications(session) {
   bell.addEventListener('click', async (e) => {
     e.stopPropagation();
     const willOpen = !panel.classList.contains('open');
+
     if (willOpen) {
       panel.classList.add('open');
       const rows = await fetchNotifications();
       renderList(rows);
-      // Al abrir, podemos considerarlas vistas → marcamos como leídas
+      // Al abrir las consideramos vistas
       await markAllRead();
-      updateBadge([]); // quitar badge
-      // Limpieza extra: por si alguna se acaba de marcar leída y ya pasa de 1 día
-      await deleteOldReadNotifications();
+      updateBadge([]);  // quitamos badge
     } else {
       panel.classList.remove('open');
     }
@@ -309,30 +316,21 @@ function initNotifications(session) {
     });
   }
 
-  // Botón "Borrar todas" (notif-clear-all)
-  if (clearAllBtn) {
+  // Botón "Borrar todas" (el único que queremos)
+  if (footer && clearAllBtn) {
+    clearAllBtn.textContent = 'Borrar todas';
     clearAllBtn.addEventListener('click', async (e) => {
-      e.preventDefault();
       e.stopPropagation();
-
-      const ok = confirm('Esto borrará TODAS tus notificaciones para siempre. ¿Seguro?');
+      const ok = confirm(
+        'Esto borrará DEFINITIVAMENTE todas tus notificaciones. ¿Continuar?'
+      );
       if (!ok) return;
 
-      const success = await clearAllNotifications();
-      if (!success) return;
-
-      // Si ha ido bien → vaciamos lista y badge
-      listEl.innerHTML = '';
-      const p = document.createElement('p');
-      p.className = 'notif-empty';
-      p.textContent = 'No tienes notificaciones.';
-      listEl.appendChild(p);
-
-      updateBadge([]);
+      await deleteAllNotifications();
     });
   }
 
-  // Cerrar al hacer click fuera del panel
+  // Cerrar panel al hacer click fuera
   document.addEventListener('click', (e) => {
     if (!panel.classList.contains('open')) return;
     const target = e.target;
