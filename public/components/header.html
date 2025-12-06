@@ -1,42 +1,52 @@
 <header class="topbar">
   <div class="topbar-left">
-    <img src="./assets/logo.png" alt="logo" class="logo"/>
+    <a href="./app_ui.html">
+      <img src="./assets/logo.png" alt="Tesoro al Filo" class="logo">
+    </a>
   </div>
 
   <div class="topbar-center">
-    <h3>TESORO DE ALFILO</h3>
+    <h3>DEPARTAMENTO DEL TESORO</h3>
   </div>
 
   <div class="topbar-right">
-    <!-- NOTIFICACIONES -->
+    <!-- Zona notificaciones -->
     <div class="notif-area">
-      <button class="notif-bell" id="notif-bell" type="button">
+      <button type="button" id="notif-bell" class="notif-bell">
         🔔
         <span id="notif-count" class="notif-count" style="display:none;">0</span>
       </button>
     </div>
 
-    <!-- MENÚ USUARIO -->
+    <!-- Menú usuario -->
     <div class="user-menu">
-      <button class="avatar-button" id="avatar-button">
-        <img src="./assets/logo.png" alt="avatar" id="avatar"/>
+      <button type="button" id="avatar-button" class="avatar-button">
+        <img id="avatar" src="./assets/default-avatar.png" alt="Avatar usuario">
       </button>
-      <div class="user-menu-dropdown" id="user-dropdown">
-        <div class="user-menu-name" id="user-name"></div>
+      <div id="user-dropdown" class="user-menu-dropdown">
+        <div id="user-name" class="user-menu-name">Usuario</div>
         <button type="button" id="profile-btn">Perfil</button>
         <button type="button" id="logout-btn">Cerrar sesión</button>
       </div>
     </div>
   </div>
-
-  <!-- PANEL LATERAL DE NOTIFICACIONES -->
-  <div id="notif-panel" class="notif-panel">
-    <div class="notif-panel-header">
-      <span>Notificaciones</span>
-      <button type="button" id="notif-close" class="notif-close">✕</button>
-    </div>
-    <div id="notif-list" class="notif-list">
-      <!-- items vía JS -->
-    </div>
-  </div>
 </header>
+
+<!-- PANEL LATERAL DE NOTIFICACIONES -->
+<div id="notif-panel" class="notif-panel">
+  <div class="notif-panel-header">
+    <span>Notificaciones</span>
+    <button type="button" id="notif-close" class="notif-close">✕</button>
+  </div>
+
+  <!-- Lista -->
+  <div id="notif-list" class="notif-list">
+    <!-- items JS -->
+  </div>
+
+  <!-- 🔴 AQUÍ LOS BOTONES NUEVOS -->
+  <div class="notif-footer">
+    <button type="button" id="notif-clear-read">Limpiar leídas</button>
+    <button type="button" id="notif-clear-all">Borrar todas</button>
+  </div>
+</div>
