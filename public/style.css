@@ -214,7 +214,7 @@ input,select{
 .notif-panel {
   position: fixed;
   top: 0;
-  right: -360px;
+  right: -360px;             /* oculto por defecto */
   width: 320px;
   max-width: 90vw;
   height: 100vh;
@@ -251,7 +251,7 @@ input,select{
 .notif-list {
   padding: 0.5rem 0.75rem 0.75rem;
   overflow-y: auto;
-  flex: 1;
+  flex: 1; /* deja espacio para el footer abajo */
 }
 
 .notif-item {
@@ -294,33 +294,38 @@ input,select{
   padding: 0.5rem 0.3rem;
 }
 
-/* ========== FOOTER — BOTONES DE LIMPIEZA ========== */
+/* Footer con botones de limpieza */
 
 #notif-footer {
-  padding: 0.65rem 0.9rem 0.8rem;
+  padding: 0.55rem 0.75rem 0.75rem;
   border-top: 1px solid rgba(148,163,184,0.3);
   display: flex;
-  justify-content: center;
+  gap: 0.5rem;
   align-items: center;
-  gap: 0.6rem;
+  justify-content: space-between;
 }
 
-.notif-clear-btn {
+/* Estilo común para los botones de limpieza, por clase o por id */
+.notif-clear-btn,
+#notif-clear-old,
+#notif-clear-all {
   flex: 1;
   border-radius: 999px;
   border: 1px solid rgba(148,163,184,0.7);
   background: #020617;
   color: #e5e7eb;
   font-size: 0.78rem;
-  padding: 0.45rem 0.9rem;
+  padding: 0.45rem 0.8rem;
   cursor: pointer;
+  text-align: center;
   white-space: nowrap;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-.notif-clear-btn:hover {
+.notif-clear-btn:hover,
+#notif-clear-old:hover,
+#notif-clear-all:hover {
   background: #0f172a;
 }
