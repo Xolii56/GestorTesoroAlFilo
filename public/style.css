@@ -81,7 +81,9 @@ input,select{
   align-items: center;
 }
 
-.topbar-left { flex: 0 0 auto; }
+.topbar-left {
+  flex: 0 0 auto;
+}
 
 .topbar-center {
   flex: 1 1 auto;
@@ -102,10 +104,14 @@ input,select{
   justify-content: flex-end;
 }
 
-.logo { height: 36px; }
+.logo {
+  height: 36px;
+}
 
 /* Menú usuario */
-.user-menu { position: relative; }
+.user-menu {
+  position: relative;
+}
 
 .avatar-button {
   border: none;
@@ -136,7 +142,9 @@ input,select{
   z-index: 20;
 }
 
-.user-menu-dropdown.open { display: block; }
+.user-menu-dropdown.open {
+  display: block;
+}
 
 .user-menu-name {
   font-size: 0.8rem;
@@ -155,7 +163,9 @@ input,select{
   cursor: pointer;
 }
 
-.user-menu-dropdown button:hover { background:#1e293b; }
+.user-menu-dropdown button:hover {
+  background: #1e293b;
+}
 
 /* ========== NOTIFICACIONES HEADER ========== */
 
@@ -179,7 +189,9 @@ input,select{
   font-size: 1rem;
 }
 
-.notif-bell:hover { background:#0f172a; }
+.notif-bell:hover {
+  background: #0f172a;
+}
 
 .notif-count {
   position: absolute;
@@ -202,7 +214,7 @@ input,select{
 .notif-panel {
   position: fixed;
   top: 0;
-  right: -360px; /* oculto */
+  right: -360px;             /* oculto por defecto */
   width: 320px;
   max-width: 90vw;
   height: 100vh;
@@ -215,7 +227,9 @@ input,select{
   transition: right 0.18s ease-out;
 }
 
-.notif-panel.open { right: 0; }
+.notif-panel.open {
+  right: 0;
+}
 
 .notif-panel-header {
   padding: 0.75rem 0.9rem;
@@ -237,19 +251,19 @@ input,select{
 .notif-list {
   padding: 0.5rem 0.75rem 0.75rem;
   overflow-y: auto;
-  flex: 1;
+  flex: 1; /* deja espacio para el footer abajo */
 }
 
 .notif-item {
-  padding: 0.55rem 0.75rem;
+  padding: 0.5rem 0.55rem;
   border-radius: 0.5rem;
   border: 1px solid rgba(148,163,184,0.2);
-  margin-bottom: 0.5rem;
-  font-size: 0.82rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.8rem;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 0.18rem;
+  gap: 0.15rem;
 }
 
 .notif-item.unread {
@@ -261,9 +275,13 @@ input,select{
   background: rgba(15,23,42,0.85);
 }
 
-.notif-title { font-weight: 600; }
+.notif-title {
+  font-weight: 600;
+}
 
-.notif-body { opacity: 0.85; }
+.notif-body {
+  opacity: 0.85;
+}
 
 .notif-meta {
   font-size: 0.7rem;
@@ -276,38 +294,36 @@ input,select{
   padding: 0.5rem 0.3rem;
 }
 
-/* === FOOTER NOTIFICACIONES (BOTÓN ÚNICO Y CENTRADO) === */
+/* Footer con botón de borrado */
 
 #notif-footer {
-  padding: 0.75rem 0.9rem 1rem;
-  border-top: 1px solid rgba(148,163,184,0.25);
+  padding: 0.75rem 1rem 1rem;
+  border-top: 1px solid rgba(148,163,184,0.3);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* Ocultar botón viejo si aún está en el HTML */
-#notif-clear-old {
-  display: none !important;
-}
-
-/* Botón principal para BORRAR TODAS */
+/* Botón "Borrar todas" */
+.notif-clear-btn,
 #notif-clear-all {
   width: 100%;
-  max-width: 240px;
+  max-width: 260px;
   border-radius: 999px;
   border: 1px solid rgba(148,163,184,0.7);
-  background: #1e293b;
+  background: #020617;
   color: #e5e7eb;
-  font-size: 0.78rem;
-  padding: 0.55rem 1rem;
+  font-size: 0.8rem;
+  padding: 0.5rem 0.9rem;
   cursor: pointer;
   text-align: center;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
+.notif-clear-btn:hover,
 #notif-clear-all:hover {
-  background:#334155;
+  background: #0f172a;
 }
