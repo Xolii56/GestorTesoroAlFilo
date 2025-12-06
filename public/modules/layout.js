@@ -39,15 +39,15 @@ window.initHeaderUserMenu = function (session, onLogout, onProfile) {
     meta.picture ||
     '';
 
-  const avatarImg   = document.getElementById('avatar');
+  const avatarImg = document.getElementById('avatar');
   const userNameDiv = document.getElementById('user-name');
 
   if (avatarImg && avatar) avatarImg.src = avatar;
   if (userNameDiv) userNameDiv.textContent = name;
 
-  const avatarBtn  = document.getElementById('avatar-button');
-  const dropdown   = document.getElementById('user-dropdown');
-  const logoutBtn  = document.getElementById('logout-btn');
+  const avatarBtn = document.getElementById('avatar-button');
+  const dropdown = document.getElementById('user-dropdown');
+  const logoutBtn = document.getElementById('logout-btn');
   const profileBtn = document.getElementById('profile-btn');
 
   if (avatarBtn && dropdown) {
@@ -87,66 +87,27 @@ window.initHeaderUserMenu = function (session, onLogout, onProfile) {
 
 /**
  * Inicializa sistema de notificaciones en el header.
- * - Badge de no leídas.
- * - Panel lateral.
+ * - Muestra badge de no leídas.
+ * - Abre/cierra panel lateral.
  * - Marca como leídas al abrir.
- * - Borra leídas > 24h automáticamente.
- * - Botón "Borrar todas" que las elimina DEFINITIVAMENTE.
+ * - Permite borrar TODAS las notificaciones del usuario.
  */
 function initNotifications(session) {
   const supa = window.supa;
   if (!supa || !session?.user?.id) return;
 
-  const userId = session.user.id;
+  const userId = session.user.id; // ← UUID del usuario autenticado
 
-  const bell      = document.getElementById('notif-bell');
-  const countSpan = document.getElementById('notif-count');
-  const panel     = document.getElementById('notif-panel');
-  const listEl    = document.getElementById('notif-list');
-  const closeBtn  = document.getElementById('notif-close');
-
-  // 👇 OJO: en tu header es class="notif-footer", NO id
-  const footer    = document.querySelector('.notif-footer');
+  const bell        = document.getElementById('notif-bell');
+  const countSpan   = document.getElementById('notif-count');
+  const panel       = document.getElementById('notif-panel');
+  const listEl      = document.getElementById('notif-list');
+  const closeBtn    = document.getElementById('notif-close');
+  const clearAllBtn = document.getElementById('notif-clear-all');
 
   if (!bell || !panel || !listEl) return;
 
-  // ───────────────── FOOTER: SOLO UN BOTÓN "BORRAR TODAS" ─────────────────
-  let clearAllBtn = null;
-
-  if (footer) {
-    // Volamos todo lo que hubiera dentro (adiós "Limpiar leídas")
-    footer.innerHTML = '';
-
-    clearAllBtn = document.createElement('button');
-    clearAllBtn.type = 'button';
-    clearAllBtn.id = 'notif-clear-all';
-    clearAllBtn.className = 'notif-clear-btn';
-    clearAllBtn.textContent = 'Borrar todas';
-
-    footer.appendChild(clearAllBtn);
-  }
-
-  // ───────────────── Auxiliares ─────────────────
-
-  // Borra en BBDD las notificaciones leídas hace más de 24h
-  async function cleanupOldReadNotifications() {
-    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
-    const { error } = await supa
-      .from('notifications')
-      .delete()
-      .lt('read_at', cutoff)
-      .eq('user_id', userId);
-
-    if (error) {
-      console.error('Error borrando notificaciones leídas antiguas:', error);
-    }
-  }
-
   async function fetchNotifications() {
-    // Limpieza automática de leídas viejas
-    await cleanupOldReadNotifications();
-
     const { data, error } = await supa
       .from('notifications')
       .select('*')
@@ -169,6 +130,7 @@ function initNotifications(session) {
       countSpan.textContent = unread > 99 ? '99+' : String(unread);
     } else {
       countSpan.style.display = 'none';
+      countSpan.textContent = '0';
     }
   }
 
@@ -180,7 +142,7 @@ function initNotifications(session) {
       p.className = 'notif-empty';
       p.textContent = 'No tienes notificaciones.';
       listEl.appendChild(p);
-      updateBadge([]);
+      updateBadge(rows);
       return;
     }
 
@@ -228,11 +190,9 @@ function initNotifications(session) {
   }
 
   async function markAllRead() {
-    const nowIso = new Date().toISOString();
-
     const { error } = await supa
       .from('notifications')
-      .update({ read_at: nowIso })
+      .update({ read_at: new Date().toISOString() })
       .is('read_at', null)
       .eq('user_id', userId);
 
@@ -253,45 +213,48 @@ function initNotifications(session) {
     }
   }
 
-  // BORRAR TODAS LAS NOTIFICACIONES DEL USUARIO (definitivo)
-  async function deleteAllNotifications() {
+  // Limpia automáticamente las notificaciones leídas de más de 1 día
+  async function cleanupOldRead() {
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
     const { error } = await supa
       .from('notifications')
       .delete()
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .lt('read_at', cutoff);
 
     if (error) {
-      console.error('Error borrando todas las notificaciones:', error);
-      alert('No se han podido borrar las notificaciones.');
-      return;
+      console.error('Error borrando notificaciones antiguas:', error);
     }
-
-    renderList([]);
-    updateBadge([]);
   }
 
-  // ───────────── Carga inicial + realtime ─────────────
+  // Carga inicial + limpieza + suscripción realtime
   (async () => {
+    await cleanupOldRead();
     const rows = await fetchNotifications();
     updateBadge(rows);
 
+    // ────────────────────────────────────────────────────────────────
+    // 🔴 SUSCRIPCIÓN REALTIME A LA TABLA NOTIFICATIONS PARA ESTE USER
+    // ────────────────────────────────────────────────────────────────
     try {
       supa
         .channel(`notif-realtime-${userId}`)
         .on(
           'postgres_changes',
           {
-            event: '*',
+            event: '*',                          // INSERT / UPDATE / DELETE
             schema: 'public',
             table: 'notifications',
             filter: `user_id=eq.${userId}`
           },
           async () => {
             const updatedRows = await fetchNotifications();
+            updateBadge(updatedRows);
+
+            // Si está abierto el panel → refrescar lista sin cerrar
             if (panel.classList.contains('open')) {
               renderList(updatedRows);
-            } else {
-              updateBadge(updatedRows);
             }
           }
         )
@@ -309,9 +272,9 @@ function initNotifications(session) {
       panel.classList.add('open');
       const rows = await fetchNotifications();
       renderList(rows);
-      // Al abrir, se marcan como leídas
+      // Al abrir, podemos considerarlas vistas → marcamos como leídas
       await markAllRead();
-      updateBadge([]);
+      updateBadge([]); // quitar badge
     } else {
       panel.classList.remove('open');
     }
@@ -323,19 +286,44 @@ function initNotifications(session) {
     });
   }
 
-  // Botón "Borrar todas" (el único que dejamos en el footer)
+  // Botón BORRAR TODAS: borra físicamente todas las notificaciones del usuario
   if (clearAllBtn) {
     clearAllBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      const ok = confirm(
-        'Esto borrará DEFINITIVAMENTE todas tus notificaciones. ¿Continuar?'
-      );
+      const ok = confirm('Se borrarán todas tus notificaciones. ¿Continuar?');
       if (!ok) return;
-      await deleteAllNotifications();
+
+      try {
+        const { error } = await supa
+          .from('notifications')
+          .delete()
+          .eq('user_id', userId);   // ← BORRADO REAL PARA ESTE UUID
+
+        if (error) {
+          console.error('Error borrando notificaciones:', error);
+          alert('No se han podido borrar las notificaciones.');
+          return;
+        }
+
+        // Limpiar UI
+        listEl.innerHTML = '';
+        const p = document.createElement('p');
+        p.className = 'notif-empty';
+        p.textContent = 'No tienes notificaciones.';
+        listEl.appendChild(p);
+
+        if (countSpan) {
+          countSpan.style.display = 'none';
+          countSpan.textContent = '0';
+        }
+      } catch (err) {
+        console.error('Excepción borrando notificaciones:', err);
+        alert('No se han podido borrar las notificaciones.');
+      }
     });
   }
 
-  // Cerrar panel al hacer click fuera
+  // Cerrar al hacer click fuera del panel
   document.addEventListener('click', (e) => {
     if (!panel.classList.contains('open')) return;
     const target = e.target;
