@@ -19,12 +19,6 @@
       margin: 0 auto;
     }
 
-    .tesoro-layout {
-      display: flex;
-      align-items: flex-start;
-      gap: 1.5rem;
-    }
-
     .tesoro-sections {
       flex: 1 1 auto;
       min-width: 0;
@@ -98,26 +92,11 @@
       opacity: 0.9;
     }
 
-    /* Lateral admin */
-    .admin-sidebar {
-      flex: 0 0 260px;
-      position: sticky;
-      top: 1rem;
-      align-self: flex-start;
-    }
-
-    @media (max-width: 900px) {
-      .tesoro-layout {
-        flex-direction: column;
-      }
-      .admin-sidebar {
-        width: 100%;
-        position: static;
-      }
-    }
-
+    /* PANEL ADMIN ABAJO (no ocupa espacio de los módulos) */
     #admin-tools {
-      margin-top: 0;
+      display: none;
+      margin: 2rem auto 0;
+      max-width: 420px;
     }
 
     .admin-tag {
@@ -225,113 +204,110 @@
   <div id="site-header"></div>
 
   <main class="tesoro-main">
-    <div class="tesoro-layout">
 
-      <div class="tesoro-sections">
+    <div class="tesoro-sections">
 
-        <!-- SOLICITUDES -->
-        <section class="modules-group">
-          <h2 class="group-title">Solicitudes</h2>
-          <p class="group-subtitle">Módulos de petición de operaciones al Tesoro.</p>
+      <!-- SOLICITUDES -->
+      <section class="modules-group">
+        <h2 class="group-title">Solicitudes</h2>
+        <p class="group-subtitle">Módulos de petición de operaciones al Tesoro.</p>
 
-          <div class="modules-grid">
-            <div class="card module-card" data-module="solicitudes">
-              <span class="module-chip">Solicitudes</span>
-              <h3>Commodities</h3>
-              <p>Crea solicitudes de compra o venta de commodities y consulta su estado.</p>
-            </div>
-
-            <div class="card module-card" data-module="sol_prestamo">
-              <span class="module-chip">Solicitudes</span>
-              <h3>Préstamo</h3>
-              <p>Solicitudes de préstamo de fondos o material a la Tesorería.</p>
-            </div>
-
-            <div class="card module-card" data-module="sol_taller">
-              <span class="module-chip">Solicitudes</span>
-              <h3>Taller</h3>
-              <p>Gestión de solicitudes de reparación, mantenimiento y taller.</p>
-            </div>
-
-            <div class="card module-card" data-module="sol_armeria">
-              <span class="module-chip">Solicitudes</span>
-              <h3>Armería</h3>
-              <p>Solicitudes relacionadas con armas, equipamiento y munición.</p>
-            </div>
+        <div class="modules-grid">
+          <div class="card module-card" data-module="solicitudes">
+            <span class="module-chip">Solicitudes</span>
+            <h3>Commodities</h3>
+            <p>Crea solicitudes de compra o venta de commodities y consulta su estado.</p>
           </div>
-        </section>
 
-        <!-- TESORO -->
-        <section class="modules-group">
-          <h2 class="group-title">Tesoro</h2>
-          <p class="group-subtitle">Gestión interna del Tesoro y control de stock.</p>
-
-          <div class="modules-grid">
-            <div class="card module-card" data-module="revision">
-              <span class="module-chip">Encargados</span>
-              <h3>Revisión</h3>
-              <p>Bandeja para aprobar, denegar o modificar solicitudes.</p>
-            </div>
-
-            <div class="card module-card" data-module="inventario">
-              <span class="module-chip">Stock</span>
-              <h3>Inventario</h3>
-              <p>Listado y estado del stock general del Tesoro. (Pendiente de UI)</p>
-            </div>
-
-            <div class="card module-card" data-module="almacenes">
-              <span class="module-chip">Logística</span>
-              <h3>Almacenes</h3>
-              <p>Gestión de ubicaciones, hangares y contenedores.</p>
-            </div>
-
-            <div class="card module-card" data-module="registro">
-              <span class="module-chip">Auditoría</span>
-              <h3>Registro</h3>
-              <p>Histórico de movimientos y trazabilidad completa.</p>
-            </div>
-
-            <div class="card module-card" data-module="calendario">
-              <span class="module-chip">Planificación</span>
-              <h3>Calendario</h3>
-              <p>Vista de calendario con los movimientos distribuidos por día. (Pendiente de UI)</p>
-            </div>
+          <div class="card module-card" data-module="sol_prestamo">
+            <span class="module-chip">Solicitudes</span>
+            <h3>Préstamo</h3>
+            <p>Solicitudes de préstamo de fondos o material a la Tesorería.</p>
           </div>
-        </section>
 
-        <!-- RRHH -->
-        <section class="modules-group">
-          <h2 class="group-title">RRHH</h2>
-          <p class="group-subtitle">Gestión de usuarios internos del Tesoro.</p>
-
-          <div class="modules-grid">
-            <div class="card module-card" data-module="usuarios">
-              <span class="module-chip">Administración</span>
-              <h3>Usuarios</h3>
-              <p>Gestión de usuarios, permisos internos del Tesoro y datos de cada miembro.</p>
-            </div>
+          <div class="card module-card" data-module="sol_taller">
+            <span class="module-chip">Solicitudes</span>
+            <h3>Taller</h3>
+            <p>Gestión de solicitudes de reparación, mantenimiento y taller.</p>
           </div>
-        </section>
 
-      </div>
-
-      <!-- LATERAL ADMIN -->
-      <aside id="admin-tools" class="admin-sidebar" style="display:none;">
-        <div class="admin-tag">ADMIN · MANTENIMIENTO</div>
-        <div class="admin-box">
-          <p style="margin:0 0 .4rem;">
-            Herramientas peligrosas para resetear el sistema de pruebas.
-          </p>
-          <button type="button" id="admin-reset-open" class="btn btn-danger" style="width:100%;margin-top:.3rem;">
-            Mantenimiento / Reset BD
-          </button>
-          <p class="help-text" style="margin-top:.4rem;">
-            Solo deberías usar esto en entornos de test. En producción esto sería una catástrofe nuclear.
-          </p>
+          <div class="card module-card" data-module="sol_armeria">
+            <span class="module-chip">Solicitudes</span>
+            <h3>Armería</h3>
+            <p>Solicitudes relacionadas con armas, equipamiento y munición.</p>
+          </div>
         </div>
-      </aside>
+      </section>
 
+      <!-- TESORO -->
+      <section class="modules-group">
+        <h2 class="group-title">Tesoro</h2>
+        <p class="group-subtitle">Gestión interna del Tesoro y control de stock.</p>
+
+        <div class="modules-grid">
+          <div class="card module-card" data-module="revision">
+            <span class="module-chip">Encargados</span>
+            <h3>Revisión</h3>
+            <p>Bandeja para aprobar, denegar o modificar solicitudes.</p>
+          </div>
+
+          <div class="card module-card" data-module="inventario">
+            <span class="module-chip">Stock</span>
+            <h3>Inventario</h3>
+            <p>Listado y estado del stock general del Tesoro. (Pendiente de UI)</p>
+          </div>
+
+          <div class="card module-card" data-module="almacenes">
+            <span class="module-chip">Logística</span>
+            <h3>Almacenes</h3>
+            <p>Gestión de ubicaciones, hangares y contenedores.</p>
+          </div>
+
+          <div class="card module-card" data-module="registro">
+            <span class="module-chip">Auditoría</span>
+            <h3>Registro</h3>
+            <p>Histórico de movimientos y trazabilidad completa.</p>
+          </div>
+
+          <div class="card module-card" data-module="calendario">
+            <span class="module-chip">Planificación</span>
+            <h3>Calendario</h3>
+            <p>Vista de calendario con los movimientos distribuidos por día. (Pendiente de UI)</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- RRHH -->
+      <section class="modules-group">
+        <h2 class="group-title">RRHH</h2>
+        <p class="group-subtitle">Gestión de usuarios internos del Tesoro.</p>
+
+        <div class="modules-grid">
+          <div class="card module-card" data-module="usuarios">
+            <span class="module-chip">Administración</span>
+            <h3>Usuarios</h3>
+            <p>Gestión de usuarios, permisos internos del Tesoro y datos de cada miembro.</p>
+          </div>
+        </div>
+      </section>
     </div>
+
+    <!-- PANEL ADMIN AL FINAL (solo admin interno del Tesoro) -->
+    <section id="admin-tools">
+      <div class="admin-tag">ADMIN · MANTENIMIENTO</div>
+      <div class="admin-box">
+        <p style="margin:0 0 .4rem;">
+          Herramientas peligrosas para resetear el sistema de pruebas.
+        </p>
+        <button type="button" id="admin-reset-open" class="btn btn-danger" style="width:100%;margin-top:.3rem;">
+          Mantenimiento / Reset BD
+        </button>
+        <p class="help-text" style="margin-top:.4rem;">
+          Solo deberías usar esto en entornos de test. En producción esto sería una catástrofe nuclear.
+        </p>
+      </div>
+    </section>
+
   </main>
 
   <!-- MODAL ADMIN RESET -->
