@@ -96,7 +96,7 @@ function initNotifications(session) {
   const supa = window.supa;
   if (!supa || !session?.user?.id) return;
 
-  const userId = session.user.id; // ← UUID del usuario autenticado
+  const userId = session.user.id; // UUID del usuario
 
   const bell        = document.getElementById('notif-bell');
   const countSpan   = document.getElementById('notif-count');
@@ -234,16 +234,14 @@ function initNotifications(session) {
     const rows = await fetchNotifications();
     updateBadge(rows);
 
-    // ────────────────────────────────────────────────────────────────
-    // 🔴 SUSCRIPCIÓN REALTIME A LA TABLA NOTIFICATIONS PARA ESTE USER
-    // ────────────────────────────────────────────────────────────────
+    // Realtime notifications para este user
     try {
       supa
         .channel(`notif-realtime-${userId}`)
         .on(
           'postgres_changes',
           {
-            event: '*',                          // INSERT / UPDATE / DELETE
+            event: '*',
             schema: 'public',
             table: 'notifications',
             filter: `user_id=eq.${userId}`
@@ -251,8 +249,6 @@ function initNotifications(session) {
           async () => {
             const updatedRows = await fetchNotifications();
             updateBadge(updatedRows);
-
-            // Si está abierto el panel → refrescar lista sin cerrar
             if (panel.classList.contains('open')) {
               renderList(updatedRows);
             }
@@ -272,9 +268,9 @@ function initNotifications(session) {
       panel.classList.add('open');
       const rows = await fetchNotifications();
       renderList(rows);
-      // Al abrir, podemos considerarlas vistas → marcamos como leídas
+      // Al abrir, consideramos vistas → marcamos como leídas
       await markAllRead();
-      updateBadge([]); // quitar badge
+      updateBadge([]);
     } else {
       panel.classList.remove('open');
     }
@@ -297,24 +293,21 @@ function initNotifications(session) {
         const { error } = await supa
           .from('notifications')
           .delete()
-          .eq('user_id', userId);   // ← BORRADO REAL PARA ESTE UUID
+          .eq('user_id', userId);
 
         if (error) {
           console.error('Error borrando notificaciones:', error);
-          alert('No se han podido borrar las notificaciones.');
+          alert('No se han podido borrar las notificaciones:\n' + error.message);
           return;
         }
 
-        // Limpiar UI
-        listEl.innerHTML = '';
-        const p = document.createElement('p');
-        p.className = 'notif-empty';
-        p.textContent = 'No tienes notificaciones.';
-        listEl.appendChild(p);
+        // Verificamos que realmente se han ido
+        const after = await fetchNotifications();
+        renderList(after);
+        updateBadge(after);
 
-        if (countSpan) {
-          countSpan.style.display = 'none';
-          countSpan.textContent = '0';
+        if (after.length > 0) {
+          console.warn('DELETE no ha borrado nada, revisa RLS de notifications');
         }
       } catch (err) {
         console.error('Excepción borrando notificaciones:', err);
