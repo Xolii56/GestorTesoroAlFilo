@@ -90,20 +90,20 @@ window.initHeaderUserMenu = function (session, onLogout, onProfile) {
  * - Muestra badge de no leídas.
  * - Abre/cierra panel lateral.
  * - Marca como leídas al abrir.
- * - Permite borrar TODAS las notificaciones del usuario.
+ * - Borrado real de notificaciones del usuario.
  */
 function initNotifications(session) {
   const supa = window.supa;
   if (!supa || !session?.user?.id) return;
 
-  const userId = session.user.id; // UUID del usuario
+  const userId = session.user.id;
 
-  const bell        = document.getElementById('notif-bell');
-  const countSpan   = document.getElementById('notif-count');
-  const panel       = document.getElementById('notif-panel');
-  const listEl      = document.getElementById('notif-list');
-  const closeBtn    = document.getElementById('notif-close');
-  const clearAllBtn = document.getElementById('notif-clear-all');
+  const bell      = document.getElementById('notif-bell');
+  const countSpan = document.getElementById('notif-count');
+  const panel     = document.getElementById('notif-panel');
+  const listEl    = document.getElementById('notif-list');
+  const closeBtn  = document.getElementById('notif-close');
+  const clearAllBtn = document.getElementById('notif-clear-all'); // 👈 solo este botón
 
   if (!bell || !panel || !listEl) return;
 
@@ -130,7 +130,6 @@ function initNotifications(session) {
       countSpan.textContent = unread > 99 ? '99+' : String(unread);
     } else {
       countSpan.style.display = 'none';
-      countSpan.textContent = '0';
     }
   }
 
@@ -213,28 +212,35 @@ function initNotifications(session) {
     }
   }
 
-  // Limpia automáticamente las notificaciones leídas de más de 1 día
+  // Borra automáticamente notificaciones leídas con más de 1 día
   async function cleanupOldRead() {
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-    const { error } = await supa
+    const { data, error } = await supa
       .from('notifications')
       .delete()
       .eq('user_id', userId)
-      .lt('read_at', cutoff);
+      .lt('read_at', cutoff)
+      .select('id');  // 👈 ahora sí sabemos cuántas borra
 
     if (error) {
       console.error('Error borrando notificaciones antiguas:', error);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      console.log(`Auto-cleanup: borradas ${data.length} notificaciones leídas de hace > 24h`);
     }
   }
 
-  // Carga inicial + limpieza + suscripción realtime
+  // Carga inicial + suscripción realtime
   (async () => {
     await cleanupOldRead();
+
     const rows = await fetchNotifications();
     updateBadge(rows);
 
-    // Realtime notifications para este user
+    // Suscripción realtime por si llegan notificaciones nuevas
     try {
       supa
         .channel(`notif-realtime-${userId}`)
@@ -248,10 +254,8 @@ function initNotifications(session) {
           },
           async () => {
             const updatedRows = await fetchNotifications();
+            renderList(updatedRows);
             updateBadge(updatedRows);
-            if (panel.classList.contains('open')) {
-              renderList(updatedRows);
-            }
           }
         )
         .subscribe();
@@ -270,7 +274,8 @@ function initNotifications(session) {
       renderList(rows);
       // Al abrir, consideramos vistas → marcamos como leídas
       await markAllRead();
-      updateBadge([]);
+      const rowsAfter = await fetchNotifications();
+      updateBadge(rowsAfter);
     } else {
       panel.classList.remove('open');
     }
@@ -282,37 +287,30 @@ function initNotifications(session) {
     });
   }
 
-  // Botón BORRAR TODAS: borra físicamente todas las notificaciones del usuario
+  // Botón: BORRAR TODAS (real, DELETE en la tabla)
   if (clearAllBtn) {
     clearAllBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      const ok = confirm('Se borrarán todas tus notificaciones. ¿Continuar?');
+      const ok = confirm('Se borrarán TODAS tus notificaciones. ¿Continuar?');
       if (!ok) return;
 
-      try {
-        const { error } = await supa
-          .from('notifications')
-          .delete()
-          .eq('user_id', userId);
+      const { data, error } = await supa
+        .from('notifications')
+        .delete()
+        .eq('user_id', userId)
+        .select('id');   // 👈 devuelve IDs borrados
 
-        if (error) {
-          console.error('Error borrando notificaciones:', error);
-          alert('No se han podido borrar las notificaciones:\n' + error.message);
-          return;
-        }
-
-        // Verificamos que realmente se han ido
-        const after = await fetchNotifications();
-        renderList(after);
-        updateBadge(after);
-
-        if (after.length > 0) {
-          console.warn('DELETE no ha borrado nada, revisa RLS de notifications');
-        }
-      } catch (err) {
-        console.error('Excepción borrando notificaciones:', err);
-        alert('No se han podido borrar las notificaciones.');
+      if (error) {
+        console.error('Error borrando notificaciones:', error);
+        alert('No se han podido borrar las notificaciones:\n' + error.message);
+        return;
       }
+
+      console.log(`Borradas ${data ? data.length : 0} notificaciones para el usuario`, userId);
+
+      const rows = await fetchNotifications();
+      renderList(rows);
+      updateBadge(rows);
     });
   }
 
