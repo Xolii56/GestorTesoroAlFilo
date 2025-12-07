@@ -4,18 +4,15 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Departamento del Tesoro — Panel</title>
-
   <link rel="stylesheet" href="./style.css"/>
 
-  <!-- Supabase -->
+  <!-- Supabase + módulos -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="./config.js"></script>
-  <script src="./modules/db.js"></script>
-  <script src="./modules/layout.js"></script>
+  <script src="./config.js" defer></script>
+  <script src="./modules/db.js" defer></script>
+  <script src="./modules/layout.js" defer></script>
 
   <style>
-    /* --------- Ajustes específicos del panel --------- */
-
     main.tesoro-main {
       padding: 1.5rem;
       max-width: 1200px;
@@ -59,20 +56,20 @@
       margin-top: 0.8rem;
     }
 
-    .module-card {
+    .card.module-card {
       cursor: pointer;
       transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, border-color 0.12s ease-out;
       position: relative;
       overflow: hidden;
     }
 
-    .module-card:hover {
+    .card.module-card:hover {
       transform: translateY(-2px);
       box-shadow: 0 18px 40px rgba(0,0,0,0.45);
       border-color: #334155;
     }
 
-    .module-card.disabled {
+    .card.module-card.disabled {
       opacity: 0.45;
       cursor: not-allowed;
       filter: grayscale(0.2);
@@ -101,8 +98,7 @@
       opacity: 0.9;
     }
 
-    /* --------- Lateral admin --------- */
-
+    /* Lateral admin */
     .admin-sidebar {
       flex: 0 0 260px;
       position: sticky;
@@ -126,37 +122,31 @@
 
     .admin-tag {
       font-size: .75rem;
-      font-weight: 600;
+      padding: .12rem .55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(248,250,252,0.9);
       text-transform: uppercase;
       letter-spacing: .08em;
-      border-radius: 999px;
-      padding: 0.2rem 0.6rem;
-      background: rgba(248,250,252,0.08);
-      border: 1px solid rgba(248,250,252,0.18);
+      opacity: .85;
       display: inline-block;
       margin-bottom: .35rem;
     }
 
     .admin-box {
-      padding: .75rem .8rem;
+      padding: .9rem 1rem;
       border-radius: .75rem;
       border: 1px solid rgba(248,250,252,0.16);
       background: radial-gradient(circle at top left, rgba(248,250,252,0.08), rgba(15,23,42,0.95));
       font-size: .8rem;
     }
 
-    .admin-box p {
-      margin: 0;
-    }
-
     .help-text {
       font-size: 0.75rem;
-      opacity: 0.75;
+      opacity: 0.8;
     }
 
-    /* --------- Modal mantenimiento --------- */
-
-    .modal-backdrop {
+    /* Modal admin */
+    .admin-modal-backdrop {
       position: fixed;
       inset: 0;
       background: rgba(15,23,42,0.82);
@@ -166,11 +156,11 @@
       z-index: 80;
     }
 
-    .modal-backdrop.open {
+    .admin-modal-backdrop.open {
       display: flex;
     }
 
-    .modal {
+    .admin-modal {
       background: #020617;
       border-radius: 16px;
       border: 1px solid #1f2937;
@@ -181,27 +171,27 @@
       font-size: 0.9rem;
     }
 
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.75rem;
-    }
-
-    .modal-header h3 {
-      margin: 0;
+    .admin-modal h3 {
+      margin-top: 0;
+      margin-bottom: .4rem;
       font-size: 1rem;
     }
 
-    .modal-body p {
-      margin: 0.2rem 0;
-    }
-
-    .modal-footer {
-      margin-top: 1rem;
+    .admin-modal-actions {
       display: flex;
       justify-content: flex-end;
-      gap: 0.5rem;
+      gap: .5rem;
+      margin-top: .9rem;
+      flex-wrap: wrap;
+    }
+
+    .admin-warning {
+      border-radius:.6rem;
+      border:1px solid rgba(248,113,113,0.7);
+      padding:.55rem .7rem;
+      font-size:.8rem;
+      margin-top:.5rem;
+      background:rgba(127,29,29,0.35);
     }
 
     .btn {
@@ -214,79 +204,55 @@
       font-size: 0.85rem;
     }
 
-    .btn:hover {
-      filter: brightness(1.1);
-    }
-
-    .btn-secondary {
+    .btn.btn-secondary {
       background: transparent;
     }
 
-    .btn-danger {
+    .btn.btn-danger {
       border-color: #b91c1c;
       background: #7f1d1d;
     }
 
-    .btn-danger:hover {
-      filter: brightness(1.15);
-    }
-
-    .danger-text {
-      color: #fecaca;
-      font-size: 0.8rem;
-    }
-
-    ul.reset-list {
-      margin: 0.4rem 0 0.6rem 1.2rem;
-      padding: 0;
-      font-size: 0.8rem;
-      opacity: 0.9;
-    }
-
-    ul.reset-list li {
-      margin-bottom: 0.2rem;
+    .btn:hover {
+      filter: brightness(1.1);
     }
   </style>
 </head>
 
 <body>
-  <!-- Header común (se carga vía layout.js) -->
+
+  <!-- Header -->
   <div id="site-header"></div>
 
   <main class="tesoro-main">
     <div class="tesoro-layout">
 
-      <!-- ZONA PRINCIPAL: APARTADOS -->
       <div class="tesoro-sections">
 
-        <!-- APARTADO: SOLICITUDES -->
+        <!-- SOLICITUDES -->
         <section class="modules-group">
           <h2 class="group-title">Solicitudes</h2>
           <p class="group-subtitle">Módulos de petición de operaciones al Tesoro.</p>
 
           <div class="modules-grid">
-            <!-- Commodities (por ahora sigue apuntando a solicitudes.html) -->
             <div class="card module-card" data-module="solicitudes">
               <span class="module-chip">Solicitudes</span>
               <h3>Commodities</h3>
               <p>Crea solicitudes de compra o venta de commodities y consulta su estado.</p>
             </div>
 
-            <!-- Préstamo -->
             <div class="card module-card" data-module="sol_prestamo">
               <span class="module-chip">Solicitudes</span>
               <h3>Préstamo</h3>
               <p>Solicitudes de préstamo de fondos o material a la Tesorería.</p>
             </div>
 
-            <!-- Taller -->
             <div class="card module-card" data-module="sol_taller">
               <span class="module-chip">Solicitudes</span>
               <h3>Taller</h3>
               <p>Gestión de solicitudes de reparación, mantenimiento y taller.</p>
             </div>
 
-            <!-- Armería -->
             <div class="card module-card" data-module="sol_armeria">
               <span class="module-chip">Solicitudes</span>
               <h3>Armería</h3>
@@ -295,41 +261,36 @@
           </div>
         </section>
 
-        <!-- APARTADO: TESORO -->
+        <!-- TESORO -->
         <section class="modules-group">
           <h2 class="group-title">Tesoro</h2>
           <p class="group-subtitle">Gestión interna del Tesoro y control de stock.</p>
 
           <div class="modules-grid">
-            <!-- Revisión -->
             <div class="card module-card" data-module="revision">
               <span class="module-chip">Encargados</span>
               <h3>Revisión</h3>
               <p>Bandeja para aprobar, denegar o modificar solicitudes.</p>
             </div>
 
-            <!-- Inventario (placeholder de momento) -->
             <div class="card module-card" data-module="inventario">
               <span class="module-chip">Stock</span>
               <h3>Inventario</h3>
               <p>Listado y estado del stock general del Tesoro. (Pendiente de UI)</p>
             </div>
 
-            <!-- Almacenes -->
             <div class="card module-card" data-module="almacenes">
               <span class="module-chip">Logística</span>
               <h3>Almacenes</h3>
               <p>Gestión de ubicaciones, hangares y contenedores.</p>
             </div>
 
-            <!-- Registro -->
             <div class="card module-card" data-module="registro">
               <span class="module-chip">Auditoría</span>
               <h3>Registro</h3>
               <p>Histórico de movimientos y trazabilidad completa.</p>
             </div>
 
-            <!-- Calendario (placeholder de momento) -->
             <div class="card module-card" data-module="calendario">
               <span class="module-chip">Planificación</span>
               <h3>Calendario</h3>
@@ -338,13 +299,12 @@
           </div>
         </section>
 
-        <!-- APARTADO: RRHH -->
+        <!-- RRHH -->
         <section class="modules-group">
           <h2 class="group-title">RRHH</h2>
           <p class="group-subtitle">Gestión de usuarios internos del Tesoro.</p>
 
           <div class="modules-grid">
-            <!-- Usuarios -->
             <div class="card module-card" data-module="usuarios">
               <span class="module-chip">Administración</span>
               <h3>Usuarios</h3>
@@ -352,73 +312,59 @@
             </div>
           </div>
         </section>
+
       </div>
 
-      <!-- LATERAL ADMIN SOLO ADMIN TESORO -->
+      <!-- LATERAL ADMIN -->
       <aside id="admin-tools" class="admin-sidebar" style="display:none;">
         <div class="admin-tag">ADMIN · MANTENIMIENTO</div>
         <div class="admin-box">
-          <p>
+          <p style="margin:0 0 .4rem;">
             Herramientas peligrosas para resetear el sistema de pruebas.
           </p>
-
-          <button type="button"
-                  id="admin-reset-open"
-                  class="btn btn-danger"
-                  style="width:100%;margin-top:.45rem;">
+          <button type="button" id="admin-reset-open" class="btn btn-danger" style="width:100%;margin-top:.3rem;">
             Mantenimiento / Reset BD
           </button>
-
-          <p class="help-text" style="margin-top:.6rem;">
-            Solo deberías usar esto en entornos de test.  
-            En producción esto sería una catástrofe nuclear.
+          <p class="help-text" style="margin-top:.4rem;">
+            Solo deberías usar esto en entornos de test. En producción esto sería una catástrofe nuclear.
           </p>
         </div>
       </aside>
+
     </div>
   </main>
 
-  <!-- MODAL MANTENIMIENTO / RESET BD -->
-  <div id="admin-reset-modal-backdrop" class="modal-backdrop">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>Reset del sistema de Tesoro</h3>
+  <!-- MODAL ADMIN RESET -->
+  <div id="admin-reset-modal-backdrop" class="admin-modal-backdrop">
+    <div class="admin-modal">
+      <h3>Reset del sistema de Tesoro</h3>
+      <p style="font-size:.9rem;opacity:.9;">
+        Elige qué parte quieres resetear. Estas operaciones son <strong>destructivas</strong> y no se pueden deshacer.
+      </p>
+
+      <div class="admin-warning">
+        ⚠️ <strong>IMPORTANTE:</strong> estas acciones solo deben ejecutarse en entorno de pruebas.
+        Borran datos reales de la base de datos.
+      </div>
+
+      <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:.4rem;">
+        <button type="button" id="btn-reset-requests" class="btn btn-danger">
+          Resetear solicitudes (vaciar tabla requests)
+        </button>
+        <span class="help-text">
+          Borra todas las solicitudes y resetea el contador de IDs.
+        </span>
+
+        <button type="button" id="btn-reset-warehouses" class="btn btn-secondary">
+          Poner a 0 el stock de todos los almacenes
+        </button>
+        <span class="help-text">
+          No borra almacenes ni commodities, solo pone la cantidad a 0 en <code>warehouse_items</code>.
+        </span>
+      </div>
+
+      <div class="admin-modal-actions">
         <button type="button" id="admin-reset-close" class="btn btn-secondary">
-          ✕
-        </button>
-      </div>
-
-      <div class="modal-body">
-        <p>
-          Elige qué parte quieres resetear. Estas operaciones son destructivas y
-          no se pueden deshacer.
-        </p>
-        <p class="danger-text">
-          ⚠️ IMPORTANTE: estas acciones solo deben ejecutarse en entorno de pruebas.
-          Borran datos reales de la base de datos.
-        </p>
-
-        <ul class="reset-list">
-          <li>
-            <strong>Resetear solicitudes (vaciar tabla requests)</strong> ·
-            Borra todas las solicitudes y resetea el contador de IDs.
-          </li>
-          <li>
-            <strong>Poner a 0 el stock de todos los almacenes</strong> ·
-            No borra almacenes ni commodities, solo pone la cantidad a 0 en
-            <code>warehouse_items</code>.
-          </li>
-        </ul>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" id="admin-reset-requests" class="btn btn-danger">
-          Resetear solicitudes
-        </button>
-        <button type="button" id="admin-reset-stock" class="btn btn-danger">
-          Poner stock a 0
-        </button>
-        <button type="button" id="admin-reset-cancel" class="btn btn-secondary">
           Cerrar
         </button>
       </div>
@@ -438,19 +384,16 @@
         return;
       }
 
-      // 2) Asegurar perfil en tabla users
+      // 2) Perfil básico y estado de organización
       await ensureProfile();
-
-      // 3) Comprobar estado en la organización
-      const orgStatus = await getOrgStatus();
-      if (!orgStatus || !['miembro', 'daga', 'espada', 'admin'].includes(orgStatus)) {
-        alert('No tienes permisos para acceder al Tesoro.');
+      const status = await getOrgStatus();
+      if (!status || !['miembro','daga','espada','admin'].includes(status)) {
         await supa.auth.signOut();
         window.location.href = './index.html';
         return;
       }
 
-      // 4) Header + menú usuario
+      // 3) Header y menú usuario
       if (typeof window.loadHeader === 'function') {
         await window.loadHeader('app');
       }
@@ -467,20 +410,89 @@
         );
       }
 
-      // 5) Mostrar panel admin solo si org_status = 'admin'
-      const adminBox = document.getElementById('admin-tools');
-      if (orgStatus === 'admin' && adminBox) {
-        adminBox.style.display = '';
+      // 4) Rol interno de Tesoro
+      const { data: userRow, error: userError } = await supa
+        .from('users')
+        .select('tesoro_internal_role')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (userError) {
+        console.error('Error leyendo tesoro_internal_role:', userError);
       }
 
-      // 6) Navegación por módulos
+      let internalRole = userRow?.tesoro_internal_role || null;
+      if (typeof internalRole === 'string') internalRole = internalRole.trim();
+
+      // 5) Permisos desde roles_app
+      let roleRow = null;
+
+      if (internalRole) {
+        const numericId = Number(internalRole);
+        if (!Number.isNaN(numericId)) {
+          const { data, error } = await supa
+            .from('roles_app')
+            .select('*')
+            .eq('id', numericId)
+            .maybeSingle();
+          if (!error) roleRow = data;
+        }
+
+        if (!roleRow) {
+          const { data, error } = await supa
+            .from('roles_app')
+            .select('*')
+            .ilike('role_name', internalRole)
+            .maybeSingle();
+          if (!error) roleRow = data;
+        }
+      }
+
+      const permsByModule = {};
+      if (roleRow) {
+        for (const [key, value] of Object.entries(roleRow)) {
+          if (['id', 'role_name', 'created_at', 'updated_at'].includes(key)) continue;
+          const normKey = key.toLowerCase();
+          permsByModule[normKey] = value;
+        }
+      }
+
+      const moduleAliasForPerms = {
+        sol_prestamo: 'solicitudes',
+        sol_taller: 'solicitudes',
+        sol_armeria: 'solicitudes'
+      };
+
+      function getPermLevelForModule(normMod) {
+        if (permsByModule.hasOwnProperty(normMod)) {
+          return permsByModule[normMod] ?? 0;
+        }
+        const alias = moduleAliasForPerms[normMod];
+        if (alias && permsByModule.hasOwnProperty(alias)) {
+          return permsByModule[alias] ?? 0;
+        }
+        return 0;
+      }
+
+      // 6) Aplicar permisos + navegación
       document.querySelectorAll('.module-card').forEach(card => {
         const mod = card.getAttribute('data-module');
+        const normMod = mod.toLowerCase();
+
+        const level = getPermLevelForModule(normMod);
+
+        if (!level || level === 0) {
+          card.classList.add('disabled');
+        }
 
         card.addEventListener('click', () => {
-          if (!mod) return;
+          const currentLevel = getPermLevelForModule(normMod);
 
-          // Rutas reales según módulo
+          if (!currentLevel || currentLevel === 0) {
+            alert('No tienes acceso a este módulo.');
+            return;
+          }
+
           if (mod === 'solicitudes') {
             window.location.href = './solicitudes.html';
             return;
@@ -513,10 +525,8 @@
             window.location.href = './registro.html';
             return;
           }
-
-          // De momento Inventario y Calendario no tienen página propia
           if (mod === 'inventario' || mod === 'calendario') {
-            alert(`El módulo "${mod}" todavía no está implementado en la interfaz.`);
+            alert(`El módulo "${mod}" todavía no está implementado.`);
             return;
           }
 
@@ -524,51 +534,82 @@
         });
       });
 
-      // 7) Lógica modal mantenimiento (AHORA MISMO STUB, SIN TOCAR BD)
-      const backdrop = document.getElementById('admin-reset-modal-backdrop');
-      const openBtn = document.getElementById('admin-reset-open');
-      const closeBtn = document.getElementById('admin-reset-close');
-      const cancelBtn = document.getElementById('admin-reset-cancel');
-      const resetReqBtn = document.getElementById('admin-reset-requests');
-      const resetStockBtn = document.getElementById('admin-reset-stock');
+      // 7) Bloque admin: solo rol interno "admin"
+      const isAdmin =
+        internalRole &&
+        internalRole.toString().toLowerCase() === 'admin';
 
-      function openModal() {
-        if (backdrop) backdrop.classList.add('open');
-      }
-      function closeModal() {
-        if (backdrop) backdrop.classList.remove('open');
-      }
+      const adminTools = document.getElementById('admin-tools');
+      const adminModalBackdrop = document.getElementById('admin-reset-modal-backdrop');
+      const adminOpenBtn = document.getElementById('admin-reset-open');
+      const adminCloseBtn = document.getElementById('admin-reset-close');
+      const btnResetReq = document.getElementById('btn-reset-requests');
+      const btnResetWh = document.getElementById('btn-reset-warehouses');
 
-      if (openBtn && orgStatus === 'admin') {
-        openBtn.addEventListener('click', openModal);
-      }
-      if (closeBtn) closeBtn.addEventListener('click', closeModal);
-      if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
-
-      if (resetReqBtn) {
-        resetReqBtn.addEventListener('click', async () => {
-          const ok = confirm('Esto debería resetear TODAS las solicitudes (tabla requests). ¿Seguro? (Ahora mismo solo es un stub / simulación.)');
-          if (!ok) return;
-          console.warn('[STUB] Aquí iría la lógica para borrar la tabla de solicitudes (requests).');
-          alert('Stub ejecutado: la lógica real de borrado aún no está implementada.');
-        });
+      if (isAdmin && adminTools) {
+        adminTools.style.display = 'block';
       }
 
-      if (resetStockBtn) {
-        resetStockBtn.addEventListener('click', async () => {
-          const ok = confirm('Esto debería poner a 0 el stock de todos los almacenes. ¿Seguro? (Stub / simulación.)');
-          if (!ok) return;
-          console.warn('[STUB] Aquí iría la lógica para poner a 0 las cantidades en warehouse_items.');
-          alert('Stub ejecutado: la lógica real de reset de stock aún no está implementada.');
-        });
+      function openAdminModal() {
+        if (!isAdmin || !adminModalBackdrop) return;
+        adminModalBackdrop.classList.add('open');
       }
 
-      // Cerrar modal al hacer click fuera
-      if (backdrop) {
-        backdrop.addEventListener('click', (e) => {
-          if (e.target === backdrop) {
-            closeModal();
+      function closeAdminModal() {
+        if (!adminModalBackdrop) return;
+        adminModalBackdrop.classList.remove('open');
+      }
+
+      if (adminOpenBtn) {
+        adminOpenBtn.addEventListener('click', openAdminModal);
+      }
+      if (adminCloseBtn) {
+        adminCloseBtn.addEventListener('click', closeAdminModal);
+      }
+      if (adminModalBackdrop) {
+        adminModalBackdrop.addEventListener('click', (e) => {
+          if (e.target === adminModalBackdrop) {
+            closeAdminModal();
           }
+        });
+      }
+
+      // Reset tablas (usa funciones RPC existentes)
+      if (btnResetReq) {
+        btnResetReq.addEventListener('click', async () => {
+          if (!isAdmin) {
+            alert('Solo Admin puede ejecutar este reset.');
+            return;
+          }
+          const ok = confirm('Vas a resetear TODAS las solicitudes (tabla requests). ¿Seguro?');
+          if (!ok) return;
+
+          const { error } = await supa.rpc('admin_reset_requests');
+          if (error) {
+            console.error('Error en admin_reset_requests:', error);
+            alert('No se ha podido resetear la tabla de solicitudes.\n\n' + (error.message || ''));
+            return;
+          }
+          alert('Tabla de solicitudes reseteada correctamente.');
+        });
+      }
+
+      if (btnResetWh) {
+        btnResetWh.addEventListener('click', async () => {
+          if (!isAdmin) {
+            alert('Solo Admin puede ejecutar este reset.');
+            return;
+          }
+          const ok = confirm('Vas a poner a 0 TODAS las cantidades en warehouse_items.\n\n¿Seguro?');
+          if (!ok) return;
+
+          const { error } = await supa.rpc('admin_reset_warehouse_quantities');
+          if (error) {
+            console.error('Error en admin_reset_warehouse_quantities:', error);
+            alert('No se han podido resetear las cantidades de los almacenes.\n\n' + (error.message || ''));
+            return;
+          }
+          alert('Cantidad en almacenes reseteada a 0 correctamente.');
         });
       }
     });
