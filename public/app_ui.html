@@ -265,7 +265,7 @@
           <p class="group-subtitle">Módulos de petición de operaciones al Tesoro.</p>
 
           <div class="modules-grid">
-            <!-- Commodities (archivo actual: solicitudes.html) -->
+            <!-- Commodities (por ahora sigue apuntando a solicitudes.html) -->
             <div class="card module-card" data-module="solicitudes">
               <span class="module-chip">Solicitudes</span>
               <h3>Commodities</h3>
@@ -354,13 +354,12 @@
         </section>
       </div>
 
-      <!-- LATERAL ADMIN SOLO ADMIN -->
+      <!-- LATERAL ADMIN SOLO ADMIN TESORO -->
       <aside id="admin-tools" class="admin-sidebar" style="display:none;">
         <div class="admin-tag">ADMIN · MANTENIMIENTO</div>
         <div class="admin-box">
           <p>
-            Herramientas de mantenimiento de base de datos.
-            Úsalo solo en entorno de pruebas.
+            Herramientas peligrosas para resetear el sistema de pruebas.
           </p>
 
           <button type="button"
@@ -371,8 +370,8 @@
           </button>
 
           <p class="help-text" style="margin-top:.6rem;">
-            No borra estructuras, pero puede vaciar datos prácticos.  
-            En producción sería una catástrofe.
+            Solo deberías usar esto en entornos de test.  
+            En producción esto sería una catástrofe nuclear.
           </p>
         </div>
       </aside>
@@ -395,20 +394,21 @@
           no se pueden deshacer.
         </p>
         <p class="danger-text">
-          ⚠️ IMPORTANTE: estas acciones solo deben ejecutarse en entorno de
-          pruebas. Pueden borrar datos reales de la base de datos.
+          ⚠️ IMPORTANTE: estas acciones solo deben ejecutarse en entorno de pruebas.
+          Borran datos reales de la base de datos.
         </p>
 
         <ul class="reset-list">
-          <li><strong>Resetear solicitudes</strong>: vacía la tabla de solicitudes.</li>
-          <li><strong>Poner a 0 el stock</strong>: pone a 0 las cantidades de todos los almacenes.</li>
+          <li>
+            <strong>Resetear solicitudes (vaciar tabla requests)</strong> ·
+            Borra todas las solicitudes y resetea el contador de IDs.
+          </li>
+          <li>
+            <strong>Poner a 0 el stock de todos los almacenes</strong> ·
+            No borra almacenes ni commodities, solo pone la cantidad a 0 en
+            <code>warehouse_items</code>.
+          </li>
         </ul>
-
-        <p class="danger-text">
-          De momento la lógica interna de borrado está preparada como <em>stub</em>
-          para no tocar tu base de datos sin tu OK. Cuando me pases el esquema exacto
-          te lo dejo funcional.
-        </p>
       </div>
 
       <div class="modal-footer">
@@ -450,7 +450,7 @@
         return;
       }
 
-      // 4) Header + menú usuario + notificaciones
+      // 4) Header + menú usuario
       if (typeof window.loadHeader === 'function') {
         await window.loadHeader('app');
       }
@@ -524,7 +524,7 @@
         });
       });
 
-      // 7) Lógica modal mantenimiento (sin tocar BD todavía)
+      // 7) Lógica modal mantenimiento (AHORA MISMO STUB, SIN TOCAR BD)
       const backdrop = document.getElementById('admin-reset-modal-backdrop');
       const openBtn = document.getElementById('admin-reset-open');
       const closeBtn = document.getElementById('admin-reset-close');
@@ -545,10 +545,9 @@
       if (closeBtn) closeBtn.addEventListener('click', closeModal);
       if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
 
-      // Stubs para los resets (para no tocar tu BD sin tener el esquema exacto)
       if (resetReqBtn) {
         resetReqBtn.addEventListener('click', async () => {
-          const ok = confirm('Esto debería resetear TODAS las solicitudes. ¿Seguro? (Ahora mismo solo es un stub / simulación.)');
+          const ok = confirm('Esto debería resetear TODAS las solicitudes (tabla requests). ¿Seguro? (Ahora mismo solo es un stub / simulación.)');
           if (!ok) return;
           console.warn('[STUB] Aquí iría la lógica para borrar la tabla de solicitudes (requests).');
           alert('Stub ejecutado: la lógica real de borrado aún no está implementada.');
