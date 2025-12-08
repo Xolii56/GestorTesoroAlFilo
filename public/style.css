@@ -333,3 +333,7 @@ input,select{
 #notif-clear-all:hover {
   background: #0f172a;
 }
+
+* {
+    font-family: 'NeuropolXBold', sans-serif !important;
+}
