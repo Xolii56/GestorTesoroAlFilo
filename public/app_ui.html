@@ -24,7 +24,7 @@
       min-width: 0;
     }
 
-    /* Grupos de módulos + separadores entre apartados */
+    /* Grupos + separadores */
     .modules-group {
       margin-bottom: 2rem;
       padding-bottom: 0.5rem;
@@ -37,7 +37,7 @@
       box-shadow: 0 -18px 40px rgba(15,23,42,0.9);
     }
 
-    /* Títulos de apartado con efecto neón */
+    /* Títulos con neón */
     .group-title {
       font-size: 1.35rem;
       font-weight: 700;
@@ -51,7 +51,7 @@
         0 0 24px rgba(56,189,248,0.55);
     }
 
-    /* Por si quedara algún subtitle viejo por ahí, se oculta */
+    /* Por si queda algún subtitle, lo ocultamos */
     .group-subtitle {
       display: none;
     }
@@ -63,7 +63,7 @@
       margin-top: 0.8rem;
     }
 
-    /* Base card (por si se usa en otras cosas) */
+    /* Base de tarjetas */
     .card {
       border-radius: 0.9rem;
       border: 1px solid rgba(148,163,184,0.35);
@@ -74,7 +74,7 @@
       padding: 0.85rem 1rem;
     }
 
-    /* Tarjetas de módulos con glow cian */
+    /* Tarjetas de módulos con aura cian */
     .card.module-card {
       cursor: pointer;
       position: relative;
@@ -105,7 +105,7 @@
       cursor: not-allowed;
     }
 
-    /* Etiquetas: limpias, sin neón */
+    /* Etiquetas limpias (sin neón) */
     .module-chip {
       display: inline-block;
       font-size: 0.8rem;
@@ -120,12 +120,13 @@
       margin-bottom: 0.1rem;
     }
 
+    /* Nos aseguramos de que no se vea ningún h3/p viejo dentro de la tarjeta */
     .module-card h3,
     .module-card p {
-      display: none; /* Por si queda algo viejo, solo mostramos la etiqueta */
+      display: none;
     }
 
-    /* PANEL ADMIN ABAJO (como antes) */
+    /* PANEL ADMIN ABAJO (misma estructura que tenías) */
     #admin-tools {
       display: none;
       margin: 2rem auto 0;
@@ -159,57 +160,12 @@
       color: #f97373;
     }
 
-    .admin-box ul {
-      margin: 0.5rem 0 0.8rem;
-      padding-left: 1.15rem;
-      font-size: 0.85rem;
-      opacity: 0.9;
-    }
-
-    .admin-actions {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .btn {
-      padding: 0.55rem 1rem;
-      border-radius: 999px;
-      border: 1px solid #334155;
-      background: #1e293b;
-      color: #e5e7eb;
-      font-size: 0.85rem;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-    }
-
-    .btn-icon {
-      font-size: 1rem;
-      opacity: 0.9;
-    }
-
-    .btn.btn-danger {
-      border-color: #b91c1c;
-      background: #7f1d1d;
-    }
-
-    .btn.btn-secondary {
-      background: transparent;
-    }
-
-    .btn:hover {
-      filter: brightness(1.1);
-    }
-
     .help-text {
       font-size: 0.8rem;
       opacity: 0.8;
     }
 
-    /* MODAL ADMIN RESET (como antes, solo asegurando estilos mínimos) */
+    /* Modal admin */
     .admin-modal-backdrop {
       position: fixed;
       inset: 0;
@@ -221,7 +177,7 @@
       z-index: 50;
     }
 
-    .admin-modal-backdrop[aria-hidden="false"] {
+    .admin-modal-backdrop.open {
       display: flex;
     }
 
@@ -248,11 +204,53 @@
       gap: 0.5rem;
       margin-top: 1.1rem;
     }
+
+    .admin-warning {
+      border-radius:.6rem;
+      border:1px solid rgba(248,113,113,0.7);
+      padding:.55rem .7rem;
+      font-size:.8rem;
+      margin-top:.5rem;
+      background:rgba(127,29,29,0.35);
+    }
+
+    /* Botones reutilizables */
+    .btn {
+      padding: 0.55rem 1rem;
+      border-radius: 999px;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #e5e7eb;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .btn-icon {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+
+    .btn.btn-secondary {
+      background: transparent;
+    }
+
+    .btn.btn-danger {
+      border-color: #b91c1c;
+      background: #7f1d1d;
+    }
+
+    .btn:hover {
+      filter: brightness(1.1);
+    }
   </style>
 </head>
+
 <body>
 
-  <!-- Header (no tocado) -->
+  <!-- Header -->
   <div id="site-header"></div>
 
   <main class="tesoro-main">
@@ -340,68 +338,54 @@
 
     </div>
 
-    <!-- PANEL ADMIN (como antes: un solo botón de reset con modal) -->
+    <!-- PANEL ADMIN AL FINAL (solo admin interno del Tesoro) -->
     <section id="admin-tools">
       <div class="admin-tag">ADMIN · MANTENIMIENTO</div>
       <div class="admin-box">
         <p style="margin:0 0 .4rem;">
           Herramientas peligrosas para resetear el sistema de pruebas.
-          <strong>¡Úsalas con muchísimo cuidado!</strong>
         </p>
-        <ul>
-          <li>Vaciar <strong>todos</strong> los movimientos.</li>
-          <li>Vaciar <strong>todas</strong> las solicitudes, incluidas sus firmas.</li>
-          <li>Resetear cantidades de todos los almacenes a 0.</li>
-        </ul>
-
-        <div class="admin-actions">
-          <button type="button" id="admin-reset-open" class="btn btn-danger">
-            <span class="btn-icon">⚠️</span>
-            Reset del sistema de Tesoro
-          </button>
-          <p class="help-text">
-            Solo visible para el usuario <code>admin@alfilo.test</code>.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- MODAL ADMIN RESET -->
-    <div id="admin-reset-modal-backdrop" class="admin-modal-backdrop" aria-hidden="true">
-      <div class="admin-modal">
-        <h3>Reset del sistema de Tesoro</h3>
-        <p style="font-size:.9rem;opacity:.9;">
-          Esto vaciará todos los movimientos, solicitudes y firmas, y dejará las cantidades
-          de los almacenes a 0. Es una acción destructiva pensada solo para entornos de pruebas.
-        </p>
-        <p style="font-size:.85rem;opacity:.8;">
-          Escribe <strong>RESET TESORO</strong> para confirmar.
-        </p>
-
-        <input
-          id="admin-reset-confirm-input"
-          type="text"
-          placeholder="RESET TESORO"
-          style="width:100%;margin:.5rem 0 0.2rem;padding:.5rem;border-radius:8px;border:1px solid #334155;background:#020617;color:#e5e7eb;"
-        />
-
-        <div class="admin-modal-actions">
-          <button type="button" id="admin-reset-confirm" class="btn btn-danger">
-            <span class="btn-icon">🧨</span>
-            Ejecutar reset
-          </button>
-          <button type="button" id="admin-reset-close" class="btn btn-secondary">
-            Cerrar
-          </button>
-        </div>
-
+        <button type="button" id="admin-reset-open" class="btn btn-danger" style="width:100%;margin-top:.3rem;">
+          Mantenimiento / Reset BD
+        </button>
         <p class="help-text" style="margin-top:.4rem;">
           Solo deberías usar esto en entornos de test. En producción esto sería una catástrofe nuclear.
         </p>
       </div>
-    </div>
+    </section>
 
   </main>
+
+  <!-- MODAL ADMIN RESET -->
+  <div id="admin-reset-modal-backdrop" class="admin-modal-backdrop">
+    <div class="admin-modal">
+      <h3>Reset del sistema de Tesoro</h3>
+      <p style="font-size:.9rem;opacity:.9;">
+        Elige qué parte quieres resetear. Estas operaciones son <strong>destructivas</strong> y no se pueden deshacer.
+      </p>
+
+      <div class="admin-warning">
+        ⚠️ <strong>IMPORTANTE:</strong> estas acciones solo deben ejecutarse en entorno de pruebas.
+        Borran datos reales de la base de datos.
+      </div>
+
+      <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:.4rem;">
+        <button type="button" id="btn-reset-requests" class="btn btn-danger">
+          Resetear solicitudes (vaciar tabla requests)
+        </button>
+
+        <button type="button" id="btn-reset-warehouses" class="btn btn-danger">
+          Poner a 0 cantidades de todos los almacenes
+        </button>
+      </div>
+
+      <div class="admin-modal-actions">
+        <button type="button" id="admin-reset-close" class="btn btn-secondary">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script type="module">
     import { ensureProfile, getOrgStatus } from './modules/profile.js';
@@ -416,140 +400,244 @@
         return;
       }
 
-      // 2) Perfil y estado en la org (si aplica)
-      const profile = await ensureProfile(supa, session);
-      const orgStatus = await getOrgStatus(supa, profile);
-
-      // 3) Cargar header
-      await window.renderLayout('#site-header', {
-        session,
-        profile,
-        orgStatus,
-        activePage: 'app_ui'
-      });
-
-      // 4) Mostrar herramientas admin solo al usuario especial
-      const adminTools = document.getElementById('admin-tools');
-      const isAdmin = profile && profile.email === 'admin@alfilo.test';
-      if (isAdmin) {
-        adminTools.style.display = 'block';
+      // 2) Perfil / estado org (misma lógica que en otras pantallas)
+      await ensureProfile();
+      const status = await getOrgStatus();
+      if (!status || !['miembro','daga','espada','admin'].includes(status)) {
+        await supa.auth.signOut();
+        window.location.href = './index.html';
+        return;
       }
 
-      // Navegación por tarjetas
+      // 3) Header y menú usuario
+      if (typeof window.loadHeader === 'function') {
+        await window.loadHeader('app');
+      }
+      if (typeof window.initHeaderUserMenu === 'function') {
+        window.initHeaderUserMenu(
+          session,
+          async () => {
+            await supa.auth.signOut();
+            window.location.href = './index.html';
+          },
+          () => {
+            window.location.href = './perfil.html';
+          }
+        );
+      }
+
+      // 4) Rol interno de Tesoro
+      const { data: userRow, error: userError } = await supa
+        .from('users')
+        .select('tesoro_internal_role')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (userError) {
+        console.error('Error leyendo tesoro_internal_role:', userError);
+      }
+
+      let internalRole = userRow?.tesoro_internal_role || null;
+      if (typeof internalRole === 'string') internalRole = internalRole.trim();
+
+      // 5) Permisos desde roles_app
+      let roleRow = null;
+
+      if (internalRole) {
+        const numericId = Number(internalRole);
+        if (!Number.isNaN(numericId)) {
+          const { data, error } = await supa
+            .from('roles_app')
+            .select('*')
+            .eq('id', numericId)
+            .maybeSingle();
+          if (!error) roleRow = data;
+        }
+
+        if (!roleRow) {
+          const { data, error } = await supa
+            .from('roles_app')
+            .select('*')
+            .ilike('role_name', internalRole)
+            .maybeSingle();
+          if (!error) roleRow = data;
+        }
+      }
+
+      const permsByModule = {};
+      if (roleRow) {
+        for (const [key, value] of Object.entries(roleRow)) {
+          if (['id', 'role_name', 'created_at', 'updated_at'].includes(key)) continue;
+          const normKey = key.toLowerCase();
+          permsByModule[normKey] = value;
+        }
+      }
+
+      const moduleAliasForPerms = {
+        sol_prestamo: 'solicitudes',
+        sol_taller: 'solicitudes',
+        sol_armeria: 'solicitudes',
+        avales: 'solicitudes',
+        banco: 'almacenes',
+        contratos_trabajo: 'usuarios'
+      };
+
+      function getPermLevelForModule(normMod) {
+        if (permsByModule.hasOwnProperty(normMod)) {
+          return permsByModule[normMod] ?? 0;
+        }
+        const alias = moduleAliasForPerms[normMod];
+        if (alias && permsByModule.hasOwnProperty(alias)) {
+          return permsByModule[alias] ?? 0;
+        }
+        return 0;
+      }
+
+      // 6) Aplicar permisos + navegación
       document.querySelectorAll('.module-card').forEach(card => {
-        if (card.classList.contains('disabled')) return;
+        const mod = card.getAttribute('data-module');
+        const normMod = mod.toLowerCase();
+
+        const level = getPermLevelForModule(normMod);
+
+        if (!level || level === 0) {
+          // Contratos de trabajo visible pero no navegable (aún no implementado)
+          if (mod !== 'contratos_trabajo') {
+            card.classList.add('disabled');
+          }
+        }
 
         card.addEventListener('click', () => {
-          const mod = card.getAttribute('data-module');
-          switch (mod) {
-            case 'solicitudes':
-              window.location.href = './sol_commodities.html';
-              break;
-            case 'sol_prestamo':
-              window.location.href = './sol_prestamo.html';
-              break;
-            case 'sol_taller':
-              window.location.href = './solicitudes.html?tipo=taller';
-              break;
-            case 'sol_armeria':
-              window.location.href = './solicitudes.html?tipo=armeria';
-              break;
-            case 'revision':
-              window.location.href = './revision.html';
-              break;
-            case 'inventario':
-              window.location.href = './inventario.html';
-              break;
-            case 'almacenes':
-              window.location.href = './almacenes.html';
-              break;
-            case 'registro':
-              window.location.href = './registro.html';
-              break;
-            case 'calendario':
-              window.location.href = './calendario.html';
-              break;
-            case 'banco':
-              window.location.href = './banco.html';
-              break;
-            case 'usuarios':
-              window.location.href = './usuarios.html';
-              break;
-            case 'avales':
-              window.location.href = './avales.html';
-              break;
-            case 'contratos_trabajo':
-              window.location.href = './contratos_trabajo.html';
-              break;
-            default:
-              alert('Módulo todavía no disponible');
+          const currentLevel = getPermLevelForModule(normMod);
+
+          if (mod === 'contratos_trabajo') {
+            alert('El módulo "Contratos de trabajo" todavía no está implementado.');
+            return;
           }
+
+          if (!currentLevel || currentLevel === 0) {
+            alert('No tienes acceso a este módulo.');
+            return;
+          }
+
+          if (mod === 'solicitudes') {
+            window.location.href = './sol_commodities.html';
+            return;
+          }
+          if (mod === 'sol_prestamo') {
+            window.location.href = './sol_prestamo.html';
+            return;
+          }
+          if (mod === 'sol_taller') {
+            window.location.href = './sol_taller.html';
+            return;
+          }
+          if (mod === 'sol_armeria') {
+            window.location.href = './sol_armeria.html';
+            return;
+          }
+          if (mod === 'revision') {
+            window.location.href = './revision.html';
+            return;
+          }
+          if (mod === 'usuarios') {
+            window.location.href = './usuarios.html';
+            return;
+          }
+          if (mod === 'almacenes') {
+            window.location.href = './almacenes.html';
+            return;
+          }
+          if (mod === 'registro') {
+            window.location.href = './registro.html';
+            return;
+          }
+          if (mod === 'inventario' || mod === 'calendario') {
+            alert(`El módulo "${mod}" todavía no está implementado.`);
+            return;
+          }
+          if (mod === 'avales') {
+            window.location.href = './avales.html';
+            return;
+          }
+          if (mod === 'banco') {
+            window.location.href = './banco.html';
+            return;
+          }
+
+          alert(`Módulo "${mod}" aún no está implementado.`);
         });
       });
 
-      // Lógica del modal de reset admin
-      const backdrop = document.getElementById('admin-reset-modal-backdrop');
-      const openBtn = document.getElementById('admin-reset-open');
-      const closeBtn = document.getElementById('admin-reset-close');
-      const confirmBtn = document.getElementById('admin-reset-confirm');
-      const confirmInput = document.getElementById('admin-reset-confirm-input');
+      // 7) Bloque admin: solo rol interno "admin"
+      const isAdmin =
+        internalRole &&
+        internalRole.toString().toLowerCase() === 'admin';
 
-      function openModal() {
-        backdrop.setAttribute('aria-hidden', 'false');
+      const adminTools = document.getElementById('admin-tools');
+      const adminModalBackdrop = document.getElementById('admin-reset-modal-backdrop');
+      const adminOpenBtn = document.getElementById('admin-reset-open');
+      const adminCloseBtn = document.getElementById('admin-reset-close');
+      const btnResetReq = document.getElementById('btn-reset-requests');
+      const btnResetWh = document.getElementById('btn-reset-warehouses');
+
+      if (isAdmin && adminTools) {
+        adminTools.style.display = 'block';
       }
-      function closeModal() {
-        backdrop.setAttribute('aria-hidden', 'true');
-        confirmInput.value = '';
+
+      function openAdminModal() {
+        if (!isAdmin || !adminModalBackdrop) return;
+        adminModalBackdrop.classList.add('open');
       }
 
-      openBtn?.addEventListener('click', openModal);
-      closeBtn?.addEventListener('click', closeModal);
-      backdrop.addEventListener('click', (ev) => {
-        if (ev.target === backdrop) closeModal();
-      });
+      function closeAdminModal() {
+        if (!adminModalBackdrop) return;
+        adminModalBackdrop.classList.remove('open');
+      }
 
-      confirmBtn?.addEventListener('click', async () => {
-        if (confirmInput.value.trim().toUpperCase() !== 'RESET TESORO') {
-          alert('Debes escribir exactamente "RESET TESORO" para confirmar.');
-          return;
-        }
+      if (adminOpenBtn) {
+        adminOpenBtn.addEventListener('click', openAdminModal);
+      }
+      if (adminCloseBtn) {
+        adminCloseBtn.addEventListener('click', closeAdminModal);
+      }
+      if (adminModalBackdrop) {
+        adminModalBackdrop.addEventListener('click', (e) => {
+          if (e.target === adminModalBackdrop) {
+            closeAdminModal();
+          }
+        });
+      }
 
-        if (!confirm('¿Seguro que quieres ejecutar el reset completo del sistema de Tesoro? Esta acción es IRREVERSIBLE.')) {
-          return;
-        }
-
-        // 1) Borrar firmas
-        {
-          const { error } = await supa.rpc('admin_clear_signatures');
-          if (error) {
-            console.error('Error en admin_clear_signatures:', error);
-            alert('No se han podido borrar las firmas.\n\n' + (error.message || ''));
+      // Reset tablas (usa funciones RPC existentes)
+      if (btnResetReq) {
+        btnResetReq.addEventListener('click', async () => {
+          if (!isAdmin) {
+            alert('Solo Admin puede ejecutar este reset.');
             return;
           }
-        }
+          const ok = confirm('Vas a resetear TODAS las solicitudes (tabla requests). ¿Seguro?');
+          if (!ok) return;
 
-        // 2) Borrar solicitudes
-        {
-          const { error } = await supa.rpc('admin_clear_requests');
+          const { error } = await supa.rpc('admin_reset_requests');
           if (error) {
-            console.error('Error en admin_clear_requests:', error);
-            alert('No se han podido borrar las solicitudes.\n\n' + (error.message || ''));
+            console.error('Error en admin_reset_requests:', error);
+            alert('No se ha podido resetear la tabla de solicitudes.\n\n' + (error.message || ''));
             return;
           }
-        }
+          alert('Tabla de solicitudes reseteada correctamente.');
+        });
+      }
 
-        // 3) Borrar movimientos
-        {
-          const { error } = await supa.rpc('admin_clear_movements');
-          if (error) {
-            console.error('Error en admin_clear_movements:', error);
-            alert('No se han podido borrar los movimientos.\n\n' + (error.message || ''));
+      if (btnResetWh) {
+        btnResetWh.addEventListener('click', async () => {
+          if (!isAdmin) {
+            alert('Solo Admin puede ejecutar este reset.');
             return;
           }
-        }
+          const ok = confirm('Vas a poner a 0 TODAS las cantidades en warehouse_items.\n\n¿Seguro?');
+          if (!ok) return;
 
-        // 4) Resetear cantidades de almacenes
-        {
           const { error } = await supa.rpc('admin_reset_warehouse_quantities');
           if (error) {
             console.error('Error en admin_reset_warehouse_quantities:', error);
@@ -557,8 +645,8 @@
             return;
           }
           alert('Cantidad en almacenes reseteada a 0 correctamente.');
-        }
-      });
+        });
+      }
     });
   </script>
 </body>
