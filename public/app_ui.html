@@ -37,8 +37,12 @@
       box-shadow: 0 -18px 40px rgba(15,23,42,0.9);
     }
 
-    /* Títulos con neón */
+    /* Títulos con neón + botón de contraer */
     .group-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
       font-size: 1.35rem;
       font-weight: 700;
       letter-spacing: .12em;
@@ -49,6 +53,40 @@
         0 0 4px rgba(59,130,246,0.85),
         0 0 12px rgba(56,189,248,0.75),
         0 0 24px rgba(56,189,248,0.55);
+    }
+
+    .group-title-text {
+      flex: 1 1 auto;
+    }
+
+    .group-toggle {
+      flex: 0 0 auto;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.1rem 0.35rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.7);
+      background-color: rgba(15,23,42,0.9);
+      color: #e5e7eb;
+    }
+
+    .group-toggle-icon {
+      font-size: 0.9rem;
+      line-height: 1;
+      transform: rotate(0deg);
+      transition: transform 0.15s ease-out;
+    }
+
+    .modules-group.collapsed .modules-grid {
+      display: none;
+    }
+
+    .modules-group.collapsed .group-toggle-icon {
+      transform: rotate(-90deg);
     }
 
     /* Por si queda algún subtitle, lo ocultamos */
@@ -126,7 +164,7 @@
       display: none;
     }
 
-    /* PANEL ADMIN ABAJO (misma estructura que tenías) */
+    /* PANEL ADMIN ABAJO */
     #admin-tools {
       display: none;
       margin: 2rem auto 0;
@@ -163,6 +201,15 @@
     .help-text {
       font-size: 0.8rem;
       opacity: 0.8;
+    }
+
+    .admin-warning {
+      border-radius:.6rem;
+      border:1px solid rgba(248,113,113,0.7);
+      padding:.55rem .7rem;
+      font-size:.8rem;
+      margin-top:.5rem;
+      background:rgba(127,29,29,0.35);
     }
 
     /* Modal admin */
@@ -203,15 +250,6 @@
       justify-content: flex-end;
       gap: 0.5rem;
       margin-top: 1.1rem;
-    }
-
-    .admin-warning {
-      border-radius:.6rem;
-      border:1px solid rgba(248,113,113,0.7);
-      padding:.55rem .7rem;
-      font-size:.8rem;
-      margin-top:.5rem;
-      background:rgba(127,29,29,0.35);
     }
 
     /* Botones reutilizables */
@@ -258,7 +296,12 @@
 
       <!-- SOLICITUDES -->
       <section class="modules-group">
-        <h2 class="group-title">Solicitudes</h2>
+        <h2 class="group-title">
+          <span class="group-title-text">Solicitudes</span>
+          <button class="group-toggle" type="button" aria-expanded="true" title="Contraer/expandir sección">
+            <span class="group-toggle-icon">▾</span>
+          </button>
+        </h2>
 
         <div class="modules-grid">
           <div class="card module-card" data-module="solicitudes">
@@ -281,7 +324,12 @@
 
       <!-- TESORO -->
       <section class="modules-group">
-        <h2 class="group-title">Tesoro</h2>
+        <h2 class="group-title">
+          <span class="group-title-text">Tesoro</span>
+          <button class="group-toggle" type="button" aria-expanded="true" title="Contraer/expandir sección">
+            <span class="group-toggle-icon">▾</span>
+          </button>
+        </h2>
 
         <div class="modules-grid">
           <div class="card module-card" data-module="revision">
@@ -294,6 +342,10 @@
 
           <div class="card module-card" data-module="almacenes">
             <span class="module-chip">Almacenes</span>
+          </div>
+
+          <div class="card module-card" data-module="reabastecimiento">
+            <span class="module-chip">Reabastecimiento</span>
           </div>
 
           <div class="card module-card" data-module="registro">
@@ -312,7 +364,12 @@
 
       <!-- CONTRATOS -->
       <section class="modules-group">
-        <h2 class="group-title">Contratos</h2>
+        <h2 class="group-title">
+          <span class="group-title-text">Contratos</span>
+          <button class="group-toggle" type="button" aria-expanded="true" title="Contraer/expandir sección">
+            <span class="group-toggle-icon">▾</span>
+          </button>
+        </h2>
 
         <div class="modules-grid">
           <div class="card module-card" data-module="avales">
@@ -327,7 +384,12 @@
 
       <!-- RRHH -->
       <section class="modules-group">
-        <h2 class="group-title">RRHH</h2>
+        <h2 class="group-title">
+          <span class="group-title-text">RRHH</span>
+          <button class="group-toggle" type="button" aria-expanded="true" title="Contraer/expandir sección">
+            <span class="group-toggle-icon">▾</span>
+          </button>
+        </h2>
 
         <div class="modules-grid">
           <div class="card module-card" data-module="usuarios">
@@ -400,7 +462,7 @@
         return;
       }
 
-      // 2) Perfil / estado org (misma lógica que en otras pantallas)
+      // 2) Perfil / estado org
       await ensureProfile();
       const status = await getOrgStatus();
       if (!status || !['miembro','daga','espada','admin'].includes(status)) {
@@ -479,6 +541,7 @@
         sol_armeria: 'solicitudes',
         avales: 'solicitudes',
         banco: 'almacenes',
+        reabastecimiento: 'almacenes',
         contratos_trabajo: 'usuarios'
       };
 
@@ -493,7 +556,18 @@
         return 0;
       }
 
-      // 6) Aplicar permisos + navegación
+      // 6) Colapsar/expandir grupos
+      document.querySelectorAll('.group-toggle').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const section = btn.closest('.modules-group');
+          if (!section) return;
+          const isCollapsed = section.classList.toggle('collapsed');
+          btn.setAttribute('aria-expanded', String(!isCollapsed));
+        });
+      });
+
+      // 7) Aplicar permisos + navegación de tarjetas
       document.querySelectorAll('.module-card').forEach(card => {
         const mod = card.getAttribute('data-module');
         const normMod = mod.toLowerCase();
@@ -564,12 +638,16 @@
             window.location.href = './banco.html';
             return;
           }
+          if (mod === 'reabastecimiento') {
+            alert('El módulo "Reabastecimiento" todavía no está implementado.');
+            return;
+          }
 
           alert(`Módulo "${mod}" aún no está implementado.`);
         });
       });
 
-      // 7) Bloque admin: solo rol interno "admin"
+      // 8) Bloque admin: solo rol interno "admin"
       const isAdmin =
         internalRole &&
         internalRole.toString().toLowerCase() === 'admin';
@@ -609,7 +687,7 @@
         });
       }
 
-      // Reset tablas (usa funciones RPC existentes)
+      // Reset tablas
       if (btnResetReq) {
         btnResetReq.addEventListener('click', async () => {
           if (!isAdmin) {
