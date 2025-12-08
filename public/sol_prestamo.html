@@ -412,7 +412,7 @@
       const { data: avalistas, error: avError } = await supa
         .from('users')
         .select('id, handle_name, discord_username, org_status')
-        .in('org_status', ['daga','espada'])   <!-- SOLO daga y espada -->
+        .in('org_status', ['daga','espada'])
         .order('handle_name', { ascending: true });
 
       if (avError) {
@@ -585,7 +585,11 @@
         }
 
         loanForm.reset();
-        solicitanteInput.value = solicitanteInput.value;
+        solicitanteInput.value =
+          meRow?.handle_name ||
+          meRow?.discord_username ||
+          session.user.email ||
+          session.user.id;
         interestInput.value = '';
         totalInput.value = '';
         totalInput.dataset.raw = '';
