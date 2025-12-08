@@ -19,7 +19,6 @@
       margin: 0 auto;
     }
 
-    /* Reutilizamos el layout de solicitudes */
     .sol-form-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -185,13 +184,23 @@
 
       <form id="loan-form" class="sol-form">
         <div class="sol-form-grid">
-          <!-- Solicitante -->
+          <!-- Fila 1: Solicitante / Avalista -->
           <div class="field">
             <label>Solicitante</label>
             <input id="loan-solicitante" type="text" readonly />
           </div>
 
-          <!-- Cantidad (UEC) -->
+          <div class="field">
+            <label for="loan-guarantor">Avalista</label>
+            <select id="loan-guarantor" required>
+              <option value="">Selecciona un avalista (Daga/Espada)</option>
+            </select>
+            <p class="help-text" style="margin-top:.2rem;">
+              El avalista debe ser un miembro de rango <strong>Daga</strong> o <strong>Espada</strong> (o superior).
+            </p>
+          </div>
+
+          <!-- Fila 2: Cantidad / Plazo -->
           <div class="field">
             <label for="loan-amount">Cantidad solicitada</label>
             <select id="loan-amount" required>
@@ -204,7 +213,6 @@
             </select>
           </div>
 
-          <!-- Plazo de devolución -->
           <div class="field">
             <label for="loan-term">Plazo de devolución</label>
             <select id="loan-term" required>
@@ -219,20 +227,17 @@
             </p>
           </div>
 
-          <!-- Interés (no editable) -->
+          <!-- Fila 3: Interés / Cantidad a devolver -->
           <div class="field">
             <label for="loan-interest">Interés del préstamo</label>
             <input id="loan-interest" type="text" readonly />
           </div>
 
-          <!-- Avalista -->
-          <div class="field" style="grid-column:1 / -1;">
-            <label for="loan-guarantor">Avalista</label>
-            <select id="loan-guarantor" required>
-              <option value="">Selecciona un avalista (Daga/Espada)</option>
-            </select>
+          <div class="field">
+            <label for="loan-total">Cantidad a devolver</label>
+            <input id="loan-total" type="text" readonly />
             <p class="help-text" style="margin-top:.2rem;">
-              El avalista debe ser un miembro de rango <strong>Daga</strong> o <strong>Espada</strong> (o superior).
+              Se calcula automáticamente según la cantidad solicitada y el interés aplicado.
             </p>
           </div>
         </div>
@@ -465,16 +470,31 @@
       solicitanteInput.value = handle;
 
       // 6) Controles de formulario
-      const amountSelect   = document.getElementById('loan-amount');
-      const termSelect     = document.getElementById('loan-term');
-      const interestInput  = document.getElementById('loan-interest');
+      const amountSelect    = document.getElementById('loan-amount');
+      const termSelect      = document.getElementById('loan-term');
+      const interestInput   = document.getElementById('loan-interest');
+      const totalInput      = document.getElementById('loan-total');
       const guarantorSelect = document.getElementById('loan-guarantor');
 
-      termSelect.addEventListener('change', () => {
-        const w = parseInt(termSelect.value, 10) || 0;
-        const interest = interestFromWeeks(w);
-        interestInput.value = interest ? `${interest} %` : '';
-      });
+      function updateInterestAndTotal() {
+        const amount = parseInt(amountSelect.value, 10) || 0;
+        const weeks  = parseInt(termSelect.value, 10) || 0;
+
+        const interestPercent = interestFromWeeks(weeks);
+        interestInput.value = interestPercent ? `${interestPercent} %` : '';
+
+        if (amount > 0 && interestPercent > 0) {
+          const total = Math.round(amount * (1 + interestPercent / 100));
+          totalInput.value = formatAmount(total);
+          totalInput.dataset.raw = String(total);
+        } else {
+          totalInput.value = '';
+          totalInput.dataset.raw = '';
+        }
+      }
+
+      termSelect.addEventListener('change', updateInterestAndTotal);
+      amountSelect.addEventListener('change', updateInterestAndTotal);
 
       // 7) Cargar lista de avalistas (Daga / Espada / Admin)
       const guarantorsById = {};
@@ -658,6 +678,8 @@
         loanForm.reset();
         solicitanteInput.value = handle;
         interestInput.value = '';
+        totalInput.value = '';
+        totalInput.dataset.raw = '';
 
         await loadMyLoans();
         alert('Solicitud de préstamo creada correctamente.');
