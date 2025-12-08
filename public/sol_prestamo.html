@@ -44,8 +44,7 @@
     }
 
     .sol-form select,
-    .sol-form input,
-    .sol-form textarea {
+    .sol-form input {
       width: 100%;
       padding: 0.4rem 0.5rem;
       border-radius: 0.55rem;
@@ -56,15 +55,9 @@
     }
 
     .sol-form input[readonly],
-    .sol-form select[disabled],
-    .sol-form textarea[readonly] {
+    .sol-form select[disabled] {
       opacity: 0.8;
       cursor: default;
-    }
-
-    .help-text {
-      font-size: .78rem;
-      opacity: .75;
     }
 
     .loans-table {
@@ -166,9 +159,6 @@
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
       <div>
         <h2>Préstamos</h2>
-        <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
-          Solicita préstamos de UEC al Tesoro y consulta el estado de tus solicitudes.
-        </p>
       </div>
       <button type="button"
               class="btn btn-secondary"
@@ -177,14 +167,14 @@
       </button>
     </div>
 
-    <!-- BLOQUE 1: FORMULARIO DE NUEVO PRÉSTAMO -->
+    <!-- FORMULARIO -->
     <div class="card">
       <h3 style="margin-top:0;">Nuevo préstamo</h3>
-      <p id="loan-perms-label" class="help-text" style="margin-bottom:.8rem;"></p>
 
       <form id="loan-form" class="sol-form">
         <div class="sol-form-grid">
-          <!-- Fila 1: Solicitante / Avalista -->
+
+          <!-- Fila 1 -->
           <div class="field">
             <label>Solicitante</label>
             <input id="loan-solicitante" type="text" readonly />
@@ -193,18 +183,15 @@
           <div class="field">
             <label for="loan-guarantor">Avalista</label>
             <select id="loan-guarantor" required>
-              <option value="">Selecciona un avalista (Daga/Espada)</option>
+              <option value="">Selecciona...</option>
             </select>
-            <p class="help-text" style="margin-top:.2rem;">
-              El avalista debe ser un miembro de rango <strong>Daga</strong> o <strong>Espada</strong> (o superior).
-            </p>
           </div>
 
-          <!-- Fila 2: Cantidad / Plazo -->
+          <!-- Fila 2 -->
           <div class="field">
             <label for="loan-amount">Cantidad solicitada</label>
             <select id="loan-amount" required>
-              <option value="">Selecciona cantidad...</option>
+              <option value="">Selecciona...</option>
               <option value="1000000">1 M UEC</option>
               <option value="5000000">5 M UEC</option>
               <option value="10000000">10 M UEC</option>
@@ -216,30 +203,25 @@
           <div class="field">
             <label for="loan-term">Plazo de devolución</label>
             <select id="loan-term" required>
-              <option value="">Selecciona plazo...</option>
+              <option value="">Selecciona...</option>
               <option value="1">1 semana</option>
               <option value="2">2 semanas</option>
               <option value="3">3 semanas</option>
               <option value="4">4 semanas</option>
             </select>
-            <p class="help-text" style="margin-top:.2rem;">
-              El interés depende del plazo seleccionado.
-            </p>
           </div>
 
-          <!-- Fila 3: Interés / Cantidad a devolver -->
+          <!-- Fila 3 -->
           <div class="field">
-            <label for="loan-interest">Interés del préstamo</label>
+            <label for="loan-interest">Interés</label>
             <input id="loan-interest" type="text" readonly />
           </div>
 
           <div class="field">
             <label for="loan-total">Cantidad a devolver</label>
             <input id="loan-total" type="text" readonly />
-            <p class="help-text" style="margin-top:.2rem;">
-              Se calcula automáticamente según la cantidad solicitada y el interés aplicado.
-            </p>
           </div>
+
         </div>
 
         <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.8rem;">
@@ -250,69 +232,44 @@
       </form>
     </div>
 
-    <!-- BLOQUE 2: PRÉSTAMOS ACTIVOS -->
+    <!-- TABLAS -->
     <div class="card" style="margin-top:1.25rem;">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;">
-        <h3 style="margin-top:0;">Mis préstamos activos</h3>
-      </div>
+      <h3 style="margin-top:0;">Mis préstamos activos</h3>
 
       <div class="loans-toolbar">
-        <div>
-          <input type="search" id="loan-open-search" placeholder="Buscar por avalista..."/>
-        </div>
+        <input type="search" id="loan-open-search" placeholder="Buscar por avalista..."/>
       </div>
 
       <div class="table-container">
         <table class="loans-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Fecha</th>
-              <th>Cantidad</th>
-              <th>Plazo</th>
-              <th>Interés</th>
-              <th>Avalista</th>
-              <th>Estado</th>
+              <th>ID</th><th>Fecha</th><th>Cantidad</th><th>Plazo</th><th>Interés</th><th>Avalista</th><th>Estado</th>
             </tr>
           </thead>
           <tbody id="loan-open-tbody">
-            <tr>
-              <td colspan="7">Cargando...</td>
-            </tr>
+            <tr><td colspan="7">Cargando...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- BLOQUE 3: HISTÓRICO DE PRÉSTAMOS -->
     <div class="card" style="margin-top:1.25rem;">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;">
-        <h3 style="margin-top:0;">Histórico de préstamos</h3>
-      </div>
+      <h3 style="margin-top:0;">Histórico de préstamos</h3>
 
       <div class="loans-toolbar">
-        <div>
-          <input type="search" id="loan-history-search" placeholder="Buscar por avalista..."/>
-        </div>
+        <input type="search" id="loan-history-search" placeholder="Buscar por avalista..."/>
       </div>
 
       <div class="table-container">
         <table class="loans-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Fecha</th>
-              <th>Cantidad</th>
-              <th>Plazo</th>
-              <th>Interés</th>
-              <th>Avalista</th>
-              <th>Estado</th>
+              <th>ID</th><th>Fecha</th><th>Cantidad</th><th>Plazo</th><th>Interés</th><th>Avalista</th><th>Estado</th>
             </tr>
           </thead>
           <tbody id="loan-history-tbody">
-            <tr>
-              <td colspan="7">Cargando...</td>
-            </tr>
+            <tr><td colspan="7">Cargando...</td></tr>
           </tbody>
         </table>
       </div>
@@ -320,371 +277,235 @@
 
   </main>
 
-  <script type="module">
-    import { getOrgStatus } from './modules/profile.js';
+<script type="module">
+import { getOrgStatus } from './modules/profile.js';
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      const { supa } = window;
+document.addEventListener('DOMContentLoaded', async () => {
+  const { supa } = window;
 
-      function formatStatus(st) {
-        const map = {
-          pendiente: 'pendiente',
-          aprobada: 'aprobada',
-          rechazada: 'rechazada',
-          completada: 'completada',
-          cancelada: 'cancelada'
-        };
-        return map[st] || st;
-      }
+  function formatAmount(amount) {
+    if (!amount) return '-';
+    return (amount / 1_000_000) + ' M UEC';
+  }
 
-      function formatDate(iso) {
-        if (!iso) return '-';
-        const d = new Date(iso);
-        if (Number.isNaN(d.getTime())) return '-';
-        return d.toLocaleString('es-ES', {
-          day: '2-digit',
-          month: '2-digit',
-          year: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-      }
+  function formatDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleString('es-ES');
+  }
 
-      function formatAmount(amount) {
-        if (!amount || amount <= 0) return '-';
-        const millions = amount / 1000000;
-        return `${millions} M UEC`;
-      }
+  function interestFromWeeks(w) {
+    return {1:5,2:10,3:15,4:20}[w] || 0;
+  }
 
-      function formatTerm(weeks) {
-        if (!weeks) return '-';
-        return `${weeks} semana${weeks === 1 ? '' : 's'}`;
-      }
+  // Sesión
+  const { data:{session} } = await supa.auth.getSession();
+  if (!session) return location.href = './index.html';
 
-      function interestFromWeeks(weeks) {
-        const map = { 1: 5, 2: 10, 3: 15, 4: 20 };
-        return map[weeks] || 0;
-      }
+  const orgStatus = await getOrgStatus();
+  if (!['miembro','daga','espada','admin'].includes(orgStatus))
+    return location.href = './index.html';
 
-      // 1) Sesión
-      const { data: { session } } = await supa.auth.getSession();
-      if (!session) {
-        window.location.href = './index.html';
-        return;
-      }
+  // Header
+  if (window.loadHeader) await loadHeader('app');
+  if (window.initHeaderUserMenu)
+    initHeaderUserMenu(session, async()=>{await supa.auth.signOut();location.href='./index.html';}, ()=>location.href='./perfil.html');
 
-      // 2) org_status
-      const orgStatus = await getOrgStatus();
-      if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
-        await supa.auth.signOut();
-        window.location.href = './index.html';
-        return;
-      }
+  // Permisos
+  const { data: meRow } = await supa.from('users').select('tesoro_internal_role, handle_name, discord_username').eq('id', session.user.id).single();
+  const myRole = (meRow?.tesoro_internal_role || '').trim();
+  let roleRow = null;
 
-      // 3) Header
-      if (typeof window.loadHeader === 'function') {
-        await window.loadHeader('app');
-      }
-      if (typeof window.initHeaderUserMenu === 'function') {
-        window.initHeaderUserMenu(
-          session,
-          async () => {
-            await supa.auth.signOut();
-            window.location.href = "./index.html";
-          },
-          () => {
-            window.location.href = './perfil.html';
-          }
-        );
-      }
+  if (myRole) {
+    const { data } = await supa.from('roles_app').select('*').or(`id.eq.${myRole},role_name.ilike.${myRole}`).maybeSingle();
+    roleRow = data;
+  }
 
-      // 4) Permisos (reutilizamos columna "solicitudes" de roles_app)
-      const { data: meRow, error: meError } = await supa
-        .from('users')
-        .select('tesoro_internal_role, handle_name, discord_username')
-        .eq('id', session.user.id)
-        .maybeSingle();
+  const solLevel = roleRow?.solicitudes ?? 0;
+  if (!solLevel) return location.href = './app_ui.html';
 
-      if (meError) console.error('Error leyendo rol interno:', meError);
+  const readOnly = solLevel === 1;
 
-      let myRole = meRow?.tesoro_internal_role || null;
-      if (typeof myRole === 'string') myRole = myRole.trim();
+  // Form
+  const solicitanteInput = document.getElementById('loan-solicitante');
+  const guarantorSelect = document.getElementById('loan-guarantor');
+  const amountSelect = document.getElementById('loan-amount');
+  const termSelect = document.getElementById('loan-term');
+  const interestInput = document.getElementById('loan-interest');
+  const totalInput = document.getElementById('loan-total');
+  const loanForm = document.getElementById('loan-form');
+  const loanSubmitBtn = document.getElementById('loan-submit-btn');
 
-      let roleRow = null;
-      if (myRole) {
-        const asNumber = Number(myRole);
-        if (!Number.isNaN(asNumber) && myRole !== '') {
-          const { data, error } = await supa
-            .from('roles_app')
-            .select('*')
-            .eq('id', asNumber)
-            .maybeSingle();
-          if (!error) roleRow = data;
-        }
+  solicitanteInput.value =
+    meRow?.handle_name ||
+    meRow?.discord_username ||
+    session.user.email ||
+    session.user.id;
 
-        if (!roleRow) {
-          const { data, error } = await supa
-            .from('roles_app')
-            .select('*')
-            .ilike('role_name', myRole)
-            .maybeSingle();
-          if (!error) roleRow = data;
-        }
-      }
-
-      let solLevel = 0;
-      if (roleRow && Object.prototype.hasOwnProperty.call(roleRow, 'solicitudes')) {
-        solLevel = roleRow.solicitudes ?? 0;
-      }
-
-      if (!solLevel || solLevel === 0) {
-        alert('No tienes acceso al módulo de Préstamos.');
-        window.location.href = './app_ui.html';
-        return;
-      }
-
-      const readOnly = (solLevel === 1);
-
-      const permsLabel = document.getElementById('loan-perms-label');
-      const loanForm = document.getElementById('loan-form');
-      const loanSubmitBtn = document.getElementById('loan-submit-btn');
-
-      if (readOnly) {
-        permsLabel.textContent = 'Permisos: solo lectura.';
-        loanForm.querySelectorAll('input, select, textarea').forEach(el => {
-          if (el.id === 'loan-solicitante') return; // ya es readonly
-          el.disabled = true;
-        });
-        loanSubmitBtn.classList.add('btn-disabled');
-      } else {
-        permsLabel.textContent = 'Permisos: lectura y creación de préstamos.';
-      }
-
-      // 5) Rellenar solicitante
-      const solicitanteInput = document.getElementById('loan-solicitante');
-      const handle =
-        meRow?.handle_name ||
-        meRow?.discord_username ||
-        session.user.email ||
-        session.user.id;
-      solicitanteInput.value = handle;
-
-      // 6) Controles de formulario
-      const amountSelect    = document.getElementById('loan-amount');
-      const termSelect      = document.getElementById('loan-term');
-      const interestInput   = document.getElementById('loan-interest');
-      const totalInput      = document.getElementById('loan-total');
-      const guarantorSelect = document.getElementById('loan-guarantor');
-
-      function updateInterestAndTotal() {
-        const amount = parseInt(amountSelect.value, 10) || 0;
-        const weeks  = parseInt(termSelect.value, 10) || 0;
-
-        const interestPercent = interestFromWeeks(weeks);
-        interestInput.value = interestPercent ? `${interestPercent} %` : '';
-
-        if (amount > 0 && interestPercent > 0) {
-          const total = Math.round(amount * (1 + interestPercent / 100));
-          totalInput.value = formatAmount(total);
-          totalInput.dataset.raw = String(total);
-        } else {
-          totalInput.value = '';
-          totalInput.dataset.raw = '';
-        }
-      }
-
-      termSelect.addEventListener('change', updateInterestAndTotal);
-      amountSelect.addEventListener('change', updateInterestAndTotal);
-
-      // 7) Cargar lista de avalistas (Daga / Espada / Admin)
-      const guarantorsById = {};
-
-      const { data: avalistas, error: avError } = await supa
-        .from('users')
-        .select('id, handle_name, discord_username, org_status')
-        .in('org_status', ['daga','espada','admin'])
-        .order('handle_name', { ascending: true });
-
-      if (avError) {
-        console.error('Error cargando avalistas:', avError);
-      } else {
-        (avalistas || []).forEach(u => {
-          const name = u.handle_name || u.discord_username || u.id;
-          guarantorsById[u.id] = {
-            name,
-            org_status: u.org_status
-          };
-          const opt = document.createElement('option');
-          opt.value = u.id;
-          opt.textContent = `${name} (${u.org_status})`;
-          guarantorSelect.appendChild(opt);
-        });
-      }
-
-      // 8) Cargar préstamos propios
-      const openTbody = document.getElementById('loan-open-tbody');
-      const historyTbody = document.getElementById('loan-history-tbody');
-      const openSearchInput = document.getElementById('loan-open-search');
-      const histSearchInput = document.getElementById('loan-history-search');
-
-      let allLoans = [];
-
-      async function loadMyLoans() {
-        const { data, error } = await supa
-          .from('loan_requests')
-          .select('id, requester_id, amount, term_weeks, interest_percent, guarantor_id, status, created_at')
-          .eq('requester_id', session.user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.error('Error cargando préstamos:', error);
-          allLoans = [];
-        } else {
-          allLoans = data || [];
-        }
-
-        renderTables();
-      }
-
-      function renderTables() {
-        const openFilter = (openSearchInput.value || '').toLowerCase().trim();
-        const histFilter = (histSearchInput.value || '').toLowerCase().trim();
-
-        const openLoans = [];
-        const histLoans = [];
-
-        allLoans.forEach(l => {
-          const isActive = (l.status === 'pendiente' || l.status === 'aprobada');
-          (isActive ? openLoans : histLoans).push(l);
-        });
-
-        // abiertos
-        openTbody.innerHTML = '';
-        openLoans
-          .filter(l => {
-            if (!openFilter) return true;
-            const g = guarantorsById[l.guarantor_id];
-            const name = g?.name?.toLowerCase() || '';
-            return name.includes(openFilter);
-          })
-          .forEach(l => {
-            const tr = document.createElement('tr');
-
-            const g = guarantorsById[l.guarantor_id];
-            const gName = g?.name || l.guarantor_id || '-';
-
-            tr.innerHTML = `
-              <td>#${l.id}</td>
-              <td>${formatDate(l.created_at)}</td>
-              <td>${formatAmount(l.amount)}</td>
-              <td>${formatTerm(l.term_weeks)}</td>
-              <td>${(l.interest_percent ?? interestFromWeeks(l.term_weeks))} %</td>
-              <td>${gName}</td>
-              <td><span class="badge-status ${formatStatus(l.status)}">${formatStatus(l.status)}</span></td>
-            `;
-            openTbody.appendChild(tr);
-          });
-
-        if (!openTbody.children.length) {
-          const tr = document.createElement('tr');
-          const td = document.createElement('td');
-          td.colSpan = 7;
-          td.textContent = 'No tienes préstamos activos.';
-          tr.appendChild(td);
-          openTbody.appendChild(tr);
-        }
-
-        // histórico
-        historyTbody.innerHTML = '';
-        histLoans
-          .filter(l => {
-            if (!histFilter) return true;
-            const g = guarantorsById[l.guarantor_id];
-            const name = g?.name?.toLowerCase() || '';
-            return name.includes(histFilter);
-          })
-          .forEach(l => {
-            const tr = document.createElement('tr');
-            const g = guarantorsById[l.guarantor_id];
-            const gName = g?.name || l.guarantor_id || '-';
-
-            tr.innerHTML = `
-              <td>#${l.id}</td>
-              <td>${formatDate(l.created_at)}</td>
-              <td>${formatAmount(l.amount)}</td>
-              <td>${formatTerm(l.term_weeks)}</td>
-              <td>${(l.interest_percent ?? interestFromWeeks(l.term_weeks))} %</td>
-              <td>${gName}</td>
-              <td><span class="badge-status ${formatStatus(l.status)}">${formatStatus(l.status)}</span></td>
-            `;
-            historyTbody.appendChild(tr);
-          });
-
-        if (!historyTbody.children.length) {
-          const tr = document.createElement('tr');
-          const td = document.createElement('td');
-          td.colSpan = 7;
-          td.textContent = 'No hay préstamos en el histórico.';
-          tr.appendChild(td);
-          historyTbody.appendChild(tr);
-        }
-      }
-
-      openSearchInput.addEventListener('input', renderTables);
-      histSearchInput.addEventListener('input', renderTables);
-
-      await loadMyLoans();
-
-      // 9) Envío del formulario (solo si tiene nivel > 1)
-      loanForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (readOnly) {
-          alert('Tienes permisos de solo lectura en este módulo.');
-          return;
-        }
-
-        const amountStr = amountSelect.value;
-        const termStr   = termSelect.value;
-        const guarantor = guarantorSelect.value;
-
-        if (!amountStr || !termStr || !guarantor) {
-          alert('Rellena todos los campos del préstamo.');
-          return;
-        }
-
-        const amount = parseInt(amountStr, 10);
-        const termWeeks = parseInt(termStr, 10);
-        const interestPercent = interestFromWeeks(termWeeks);
-
-        const payload = {
-          requester_id: session.user.id,
-          amount,
-          term_weeks: termWeeks,
-          interest_percent: interestPercent,
-          guarantor_id: guarantor,
-          status: 'pendiente'
-        };
-
-        const { error: insError } = await supa
-          .from('loan_requests')
-          .insert(payload);
-
-        if (insError) {
-          console.error('Error creando préstamo:', insError);
-          alert('No se ha podido registrar el préstamo.\n\nDetalle: ' + insError.message);
-          return;
-        }
-
-        loanForm.reset();
-        solicitanteInput.value = handle;
-        interestInput.value = '';
-        totalInput.value = '';
-        totalInput.dataset.raw = '';
-
-        await loadMyLoans();
-        alert('Solicitud de préstamo creada correctamente.');
-      });
+  if (readOnly) {
+    loanForm.querySelectorAll('input,select').forEach(e=>{
+      if(e.id!=='loan-solicitante') e.disabled = true;
     });
-  </script>
+    loanSubmitBtn.classList.add('btn-disabled');
+  }
+
+  // Cargar avalistas
+  const { data: avalistas } = await supa
+    .from('users')
+    .select('id, handle_name, discord_username, org_status')
+    .in('org_status',['daga','espada','admin'])
+    .order('handle_name',{ascending:true});
+
+  const guarantorsById = {};
+  (avalistas||[]).forEach(u=>{
+    const name = u.handle_name || u.discord_username || u.id;
+    guarantorsById[u.id] = { name };
+    const opt = document.createElement('option');
+    opt.value = u.id;
+    opt.textContent = name;
+    guarantorSelect.appendChild(opt);
+  });
+
+  // Cálculo de interés y total
+  function updateTotals() {
+    const amount = parseInt(amountSelect.value,10) || 0;
+    const weeks = parseInt(termSelect.value,10) || 0;
+    const interest = interestFromWeeks(weeks);
+
+    interestInput.value = interest ? interest + ' %' : '';
+
+    if (amount && interest) {
+      const total = Math.round(amount * (1 + interest/100));
+      totalInput.value = formatAmount(total);
+      totalInput.dataset.raw = total;
+    } else {
+      totalInput.value = '';
+      totalInput.dataset.raw = '';
+    }
+  }
+
+  amountSelect.addEventListener('change', updateTotals);
+  termSelect.addEventListener('change', updateTotals);
+
+  // Listas de préstamos
+  const openTbody = document.getElementById('loan-open-tbody');
+  const historyTbody = document.getElementById('loan-history-tbody');
+  const searchOpen = document.getElementById('loan-open-search');
+  const searchHist = document.getElementById('loan-history-search');
+
+  let allLoans = [];
+
+  async function loadLoans() {
+    const { data } = await supa
+      .from('loan_requests')
+      .select('*')
+      .eq('requester_id', session.user.id)
+      .order('created_at',{ascending:false});
+
+    allLoans = data || [];
+    renderTables();
+  }
+
+  function renderTables() {
+    const fOpen = (searchOpen.value||'').toLowerCase();
+    const fHist = (searchHist.value||'').toLowerCase();
+
+    const active = allLoans.filter(l => ['pendiente','aprobada'].includes(l.status));
+    const history = allLoans.filter(l => !['pendiente','aprobada'].includes(l.status));
+
+    // activos
+    openTbody.innerHTML = '';
+    active
+      .filter(l=>{
+        const g=guarantorsById[l.guarantor_id]?.name?.toLowerCase()||'';
+        return g.includes(fOpen);
+      })
+      .forEach(l=>{
+        const g=guarantorsById[l.guarantor_id]?.name||'-';
+        openTbody.insertAdjacentHTML('beforeend',`
+        <tr>
+          <td>#${l.id}</td>
+          <td>${formatDate(l.created_at)}</td>
+          <td>${formatAmount(l.amount)}</td>
+          <td>${l.term_weeks} semanas</td>
+          <td>${l.interest_percent} %</td>
+          <td>${g}</td>
+          <td><span class="badge-status ${l.status}">${l.status}</span></td>
+        </tr>`);
+      });
+
+    if (!openTbody.children.length)
+      openTbody.innerHTML = `<tr><td colspan="7">No tienes préstamos activos.</td></tr>`;
+
+    // histórico
+    historyTbody.innerHTML = '';
+    history
+      .filter(l=>{
+        const g=guarantorsById[l.guarantor_id]?.name?.toLowerCase()||'';
+        return g.includes(fHist);
+      })
+      .forEach(l=>{
+        const g=guarantorsById[l.guarantor_id]?.name||'-';
+        historyTbody.insertAdjacentHTML('beforeend',`
+        <tr>
+          <td>#${l.id}</td>
+          <td>${formatDate(l.created_at)}</td>
+          <td>${formatAmount(l.amount)}</td>
+          <td>${l.term_weeks} semanas</td>
+          <td>${l.interest_percent} %</td>
+          <td>${g}</td>
+          <td><span class="badge-status ${l.status}">${l.status}</span></td>
+        </tr>`);
+      });
+
+    if (!historyTbody.children.length)
+      historyTbody.innerHTML = `<tr><td colspan="7">No hay histórico.</td></tr>`;
+  }
+
+  searchOpen.addEventListener('input', renderTables);
+  searchHist.addEventListener('input', renderTables);
+
+  await loadLoans();
+
+  // Envío
+  loanForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (readOnly) return;
+
+    const amount = parseInt(amountSelect.value,10);
+    const weeks = parseInt(termSelect.value,10);
+    const guarantor = guarantorSelect.value;
+
+    const interestPercent = interestFromWeeks(weeks);
+
+    const payload = {
+      requester_id: session.user.id,
+      amount,
+      term_weeks: weeks,
+      interest_percent: interestPercent,
+      guarantor_id: guarantor,
+      status: 'pendiente'
+    };
+
+    const { error } = await supa
+      .from('loan_requests')
+      .insert(payload);
+
+    if (error) {
+      alert('Error creando préstamo:\n' + error.message);
+      return;
+    }
+
+    loanForm.reset();
+    solicitanteInput.value = solicitanteInput.value;
+    interestInput.value = '';
+    totalInput.value = '';
+
+    await loadLoans();
+    alert('Préstamo solicitado.');
+  });
+
+});
+</script>
+
 </body>
 </html>
