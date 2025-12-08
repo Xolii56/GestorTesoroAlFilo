@@ -25,7 +25,15 @@
     }
 
     .modules-group {
-      margin-bottom: 1.8rem;
+      margin-bottom: 2.2rem;
+      padding-bottom: 0.4rem;
+    }
+
+    .modules-group + .modules-group {
+      margin-top: 2.2rem;
+      padding-top: 1.6rem;
+      border-top: 1px solid rgba(148,163,184,0.6);
+      box-shadow: 0 -22px 40px rgba(15,23,42,0.9);
     }
 
     .group-title {
@@ -33,7 +41,7 @@
       font-weight: 700;
       letter-spacing: .12em;
       text-transform: uppercase;
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.6rem;
       color: #f9fafb;
       text-shadow:
         0 0 4px rgba(59,130,246,0.85),
@@ -42,9 +50,7 @@
     }
 
     .group-subtitle {
-      font-size: .85rem;
-      opacity: .7;
-      margin-bottom: .6rem;
+      display: none;
     }
 
     .modules-grid {
@@ -54,51 +60,56 @@
       margin-top: 0.8rem;
     }
 
+    .card {
+      border-radius: 0.9rem;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: radial-gradient(circle at 0% 0%, rgba(248,250,252,0.02), transparent 55%), rgba(15,23,42,0.98);
+      box-shadow:
+        0 0 0 1px rgba(15,23,42,0.6),
+        0 18px 45px rgba(15,23,42,1);
+      padding: 0.85rem 1rem;
+    }
+
     .card.module-card {
       cursor: pointer;
-      transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, border-color 0.12s ease-out;
       position: relative;
       overflow: hidden;
-      border-color: #4b5563;
+      border-radius: 14px;
+      border: 1px solid #4b5563;
+      background: radial-gradient(circle at 0% 0%, rgba(15,23,42,0.9), rgba(15,23,42,1));
       box-shadow:
-        0 0 0 1px rgba(56,189,248,0.18),
-        0 0 26px rgba(56,189,248,0.35),
-        0 14px 34px rgba(15,23,42,0.95);
+        0 0 0 1px rgba(15,23,42,1),
+        0 0 26px rgba(15,23,42,0.9);
+      transition:
+        transform 0.12s ease-out,
+        box-shadow 0.12s ease-out,
+        border-color 0.12s ease-out;
     }
 
     .card.module-card:hover {
       transform: translateY(-2px);
-      box-shadow:
-        0 0 0 1px rgba(56,189,248,0.45),
-        0 0 40px rgba(56,189,248,0.75),
-        0 18px 46px rgba(15,23,42,1);
       border-color: #e5e7eb;
+      box-shadow:
+        0 0 0 1px rgba(56,189,248,0.5),
+        0 0 40px rgba(56,189,248,0.85),
+        0 18px 46px rgba(15,23,42,1);
     }
 
     .card.module-card.disabled {
-      opacity: 0.45;
+      opacity: 0.4;
       cursor: not-allowed;
-      filter: grayscale(0.2);
     }
 
     .module-chip {
       display: inline-block;
-      font-size: 0.8rem;
-      font-weight: 600;
+      font-size: 0.7rem;
       text-transform: uppercase;
-      letter-spacing: 0.14em;
-      padding: 0.28rem 1rem;
+      letter-spacing: 0.08em;
+      padding: 0.15rem 0.55rem;
       border-radius: 999px;
-      border: 1px solid rgba(56,189,248,0.9);
-      background: radial-gradient(circle at 0% 0%, rgba(56,189,248,0.24), transparent 60%);
-      color: #e0f2fe;
-      text-shadow:
-        0 0 4px rgba(56,189,248,0.9),
-        0 0 10px rgba(56,189,248,0.8);
-      box-shadow:
-        0 0 14px rgba(56,189,248,0.85),
-        0 0 30px rgba(56,189,248,0.65);
-      margin-bottom: 0.1rem;
+      border: 1px solid rgba(148,163,184,0.5);
+      opacity: 0.85;
+      margin-bottom: 0.4rem;
     }
 
     .module-card h3 {
@@ -119,6 +130,10 @@
       max-width: 420px;
     }
 
+    #admin-tools .card {
+      padding: 1rem 1.1rem 0.9rem;
+    }
+
     .admin-tag {
       display: inline-block;
       font-size: 0.7rem;
@@ -132,37 +147,30 @@
       margin-bottom: 0.5rem;
     }
 
-    .admin-box {
-      border-radius: 14px;
-      background: radial-gradient(circle at 0% 0%, rgba(248,250,252,0.02), transparent 55%), rgba(15,23,42,0.95);
-      border: 1px solid rgba(148,163,184,0.4);
-      padding: 1rem;
-      box-shadow:
-        0 0 0 1px rgba(15,23,42,0.4),
-        0 20px 45px rgba(15,23,42,0.95);
+    .admin-box-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
     }
 
-    .admin-box strong {
-      color: #f97373;
+    .admin-box-subtitle {
+      font-size: 0.8rem;
+      opacity: 0.85;
+      margin-bottom: 0.6rem;
     }
 
-    .admin-box ul {
-      margin: 0.5rem 0 0.8rem;
-      padding-left: 1.15rem;
-      font-size: 0.85rem;
-      opacity: 0.9;
-    }
-
-    .admin-actions {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      align-items: center;
+    .admin-warning {
+      border-radius:.6rem;
+      border:1px solid rgba(248,113,113,0.7);
+      padding:.55rem .7rem;
+      font-size:.8rem;
+      margin-top:.5rem;
+      background:rgba(127,29,29,0.35);
     }
 
     .btn {
-      padding: 0.55rem 1rem;
-      border-radius: 999px;
+      padding: .55rem 1rem;
+      border-radius: 12px;
       border: 1px solid #334155;
       background: #1e293b;
       color: #e5e7eb;
@@ -178,62 +186,17 @@
       opacity: 0.9;
     }
 
+    .btn.btn-secondary {
+      background: transparent;
+    }
+
     .btn.btn-danger {
       border-color: #b91c1c;
       background: #7f1d1d;
     }
 
-    .btn.btn-secondary {
-      background: transparent;
-    }
-
     .btn:hover {
       filter: brightness(1.1);
-    }
-
-    .help-text {
-      font-size: 0.8rem;
-      opacity: 0.8;
-    }
-
-    /* MODAL ADMIN RESET */
-    .admin-modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(15,23,42,0.75);
-      backdrop-filter: blur(6px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-    }
-
-    .admin-modal-backdrop[aria-hidden="false"] {
-      display: flex;
-    }
-
-    .admin-modal {
-      background: #020617;
-      border-radius: 18px;
-      padding: 1.5rem 1.4rem 1.2rem;
-      max-width: 480px;
-      width: 100%;
-      border: 1px solid rgba(148,163,184,0.5);
-      box-shadow:
-        0 20px 60px rgba(15,23,42,0.95),
-        0 0 0 1px rgba(15,23,42,0.5);
-    }
-
-    .admin-modal h3 {
-      margin-top: 0;
-      margin-bottom: 0.3rem;
-    }
-
-    .admin-modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.5rem;
-      margin-top: 1.1rem;
     }
   </style>
 </head>
@@ -248,21 +211,22 @@
       <!-- SOLICITUDES -->
       <section class="modules-group">
         <h2 class="group-title">Solicitudes</h2>
+        <p class="group-subtitle">Módulos de petición de operaciones al Tesoro.</p>
 
         <div class="modules-grid">
-                    <div class="card module-card" data-module="solicitudes">
+          <div class="card module-card" data-module="solicitudes">
             <span class="module-chip">Commodities</span>
           </div>
 
-                    <div class="card module-card" data-module="sol_prestamo">
+          <div class="card module-card" data-module="sol_prestamo">
             <span class="module-chip">Préstamo</span>
           </div>
 
-                    <div class="card module-card" data-module="sol_taller">
+          <div class="card module-card" data-module="sol_taller">
             <span class="module-chip">Taller</span>
           </div>
 
-                    <div class="card module-card" data-module="sol_armeria">
+          <div class="card module-card" data-module="sol_armeria">
             <span class="module-chip">Armería</span>
           </div>
         </div>
@@ -271,29 +235,30 @@
       <!-- TESORO -->
       <section class="modules-group">
         <h2 class="group-title">Tesoro</h2>
+        <p class="group-subtitle">Gestión interna del Tesoro y control de stock.</p>
 
         <div class="modules-grid">
-                    <div class="card module-card" data-module="revision">
+          <div class="card module-card" data-module="revision">
             <span class="module-chip">Revisión</span>
           </div>
 
-                    <div class="card module-card" data-module="inventario">
+          <div class="card module-card" data-module="inventario">
             <span class="module-chip">Inventario</span>
           </div>
 
-                    <div class="card module-card" data-module="almacenes">
+          <div class="card module-card" data-module="almacenes">
             <span class="module-chip">Almacenes</span>
           </div>
 
-                    <div class="card module-card" data-module="registro">
+          <div class="card module-card" data-module="registro">
             <span class="module-chip">Registro</span>
           </div>
 
-                    <div class="card module-card" data-module="calendario">
+          <div class="card module-card" data-module="calendario">
             <span class="module-chip">Calendario</span>
           </div>
 
-                    <div class="card module-card" data-module="banco">
+          <div class="card module-card" data-module="banco">
             <span class="module-chip">Banco</span>
           </div>
         </div>
@@ -302,13 +267,14 @@
       <!-- CONTRATOS -->
       <section class="modules-group">
         <h2 class="group-title">Contratos</h2>
+        <p class="group-subtitle">Gestión de avales y contratos internos.</p>
 
         <div class="modules-grid">
-                    <div class="card module-card" data-module="avales">
+          <div class="card module-card" data-module="avales">
             <span class="module-chip">Avales</span>
           </div>
 
-                    <div class="card module-card" data-module="contratos_trabajo">
+          <div class="card module-card" data-module="contratos_trabajo">
             <span class="module-chip">Contratos de trabajo</span>
           </div>
         </div>
@@ -317,9 +283,10 @@
       <!-- RRHH -->
       <section class="modules-group">
         <h2 class="group-title">RRHH</h2>
+        <p class="group-subtitle">Gestión de usuarios internos del Tesoro.</p>
 
         <div class="modules-grid">
-                    <div class="card module-card" data-module="usuarios">
+          <div class="card module-card" data-module="usuarios">
             <span class="module-chip">Usuarios</span>
           </div>
         </div>
@@ -329,66 +296,76 @@
 
     <!-- PANEL ADMIN AL FINAL (solo admin interno del Tesoro) -->
     <section id="admin-tools">
-      <div class="admin-tag">ADMIN · MANTENIMIENTO</div>
-      <div class="admin-box">
-        <p style="margin:0 0 .4rem;">
-          Herramientas peligrosas para resetear el sistema de pruebas.
-          <strong>¡Úsalas con muchísimo cuidado!</strong>
-        </p>
-        <ul>
-          <li>Vaciar <strong>todos</strong> los movimientos.</li>
-          <li>Vaciar <strong>todas</strong> las solicitudes, incluidas sus firmas.</li>
-          <li>Resetear cantidades de todos los almacenes a 0.</li>
-        </ul>
+      <span class="admin-tag">Admin · Mantenimiento</span>
 
-        <div class="admin-actions">
-          <button type="button" id="admin-reset-open" class="btn btn-danger">
-            <span class="btn-icon">⚠️</span>
-            Reset del sistema de Tesoro
-          </button>
-          <p class="help-text">
-            Solo visible para el usuario <code>admin@alfilo.test</code>.
+      <div class="card">
+        <div class="admin-box-title">
+          Herramientas de mantenimiento del sistema de Tesoro
+        </div>
+        <div class="admin-box-subtitle">
+          Operaciones destructivas sobre solicitudes, movimientos y stock.
+        </div>
+
+        <div>
+          <p style="font-size:.8rem;margin:.2rem 0 .3rem;">
+            Acciones disponibles:
           </p>
+          <ul style="margin:0 0 .4rem .9rem;padding:0;font-size:.8rem;opacity:.9;">
+            <li>Vaciar <strong>solicitudes</strong> y sus firmas.</li>
+            <li>Vaciar <strong>movimientos</strong> de almacenes.</li>
+            <li>Resetear cantidades de stock de todos los almacenes.</li>
+          </ul>
+
+          <div class="admin-warning">
+            ⚠️ <strong>IMPORTANTE:</strong> estas acciones solo deben ejecutarse en entorno de pruebas.
+            Borran datos reales de la base de datos.
+          </div>
+        </div>
+
+        <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:.4rem;">
+          <button type="button" id="btn-reset-requests" class="btn btn-danger">
+            <span class="btn-icon">🧹</span>
+            Borrar solicitudes y firmas
+          </button>
+
+          <button type="button" id="btn-reset-movements" class="btn btn-danger">
+            <span class="btn-icon">🧾</span>
+            Borrar movimientos de almacenes
+          </button>
+
+          <button type="button" id="btn-reset-warehouses" class="btn btn-danger">
+            <span class="btn-icon">🏭</span>
+            Poner stock de almacenes a 0
+          </button>
         </div>
       </div>
     </section>
 
-  </main>
+    <!-- MODAL DE CONFIRMACIÓN ADMIN -->
+    <div id="admin-modal" style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(15,23,42,0.8);backdrop-filter:blur(6px);">
+      <div style="background:#020617;border-radius:1rem;padding:1rem 1.1rem;width:100%;max-width:420px;border:1px solid rgba(148,163,184,0.5);box-shadow:0 18px 45px rgba(15,23,42,1);">
+        <h3 style="margin:.1rem 0 .35rem;font-size:1rem;">Confirmar acción de mantenimiento</h3>
+        <p id="admin-modal-text" style="font-size:.85rem;opacity:.9;margin:0 0 .7rem;">
+          ¿Seguro que quieres realizar esta acción?
+        </p>
 
-  <!-- MODAL ADMIN RESET -->
-  <div id="admin-reset-modal-backdrop" class="admin-modal-backdrop" aria-hidden="true">
-    <div class="admin-modal">
-      <h3>Reset del sistema de Tesoro</h3>
-      <p style="font-size:.9rem;opacity:.9;">
-        Esto vaciará todos los movimientos, solicitudes y firmas, y dejará las cantidades
-        de los almacenes a 0. Es una acción destructiva pensada solo para entornos de pruebas.
-      </p>
-      <p style="font-size:.85rem;opacity:.8;">
-        Escribe <strong>RESET TESORO</strong> para confirmar.
-      </p>
+        <div class="admin-warning">
+          ⚠️ Estas operaciones son destructivas y no se pueden deshacer.
+        </div>
 
-      <input
-        id="admin-reset-confirm-input"
-        type="text"
-        placeholder="RESET TESORO"
-        style="width:100%;margin:.5rem 0 0.2rem;padding:.5rem;border-radius:8px;border:1px solid #334155;background:#020617;color:#e5e7eb;"
-      />
-
-      <div class="admin-modal-actions">
-        <button type="button" id="admin-reset-confirm" class="btn btn-danger">
-          <span class="btn-icon">🧨</span>
-          Ejecutar reset
-        </button>
-        <button type="button" id="admin-reset-close" class="btn btn-secondary">
-          Cerrar
-        </button>
+        <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.8rem;">
+          <button type="button" id="admin-modal-cancel" class="btn btn-secondary">
+            Cancelar
+          </button>
+          <button type="button" id="admin-modal-confirm" class="btn btn-danger">
+            <span class="btn-icon">✔</span>
+            Confirmar
+          </button>
+        </div>
       </div>
-
-      <p class="help-text" style="margin-top:.4rem;">
-        Solo deberías usar esto en entornos de test. En producción esto sería una catástrofe nuclear.
-      </p>
     </div>
-  </div>
+
+  </main>
 
   <script type="module">
     import { ensureProfile, getOrgStatus } from './modules/profile.js';
@@ -415,9 +392,10 @@
         activePage: 'app_ui'
       });
 
-      // 4) Mostrar herramientas admin solo al usuario especial
+      // Mostrar herramientas admin solo al usuario especial
       const adminTools = document.getElementById('admin-tools');
-      if (profile && profile.email === 'admin@alfilo.test') {
+      const isAdmin = profile && profile.email === 'admin@alfilo.test';
+      if (isAdmin) {
         adminTools.style.display = 'block';
       }
 
@@ -473,76 +451,88 @@
         });
       });
 
-      // Lógica del modal de reset admin
-      const backdrop = document.getElementById('admin-reset-modal-backdrop');
-      const openBtn = document.getElementById('admin-reset-open');
-      const closeBtn = document.getElementById('admin-reset-close');
-      const confirmBtn = document.getElementById('admin-reset-confirm');
-      const confirmInput = document.getElementById('admin-reset-confirm-input');
+      // Lógica panel admin
+      const btnResetReq = document.getElementById('btn-reset-requests');
+      const btnResetMov = document.getElementById('btn-reset-movements');
+      const btnResetWh  = document.getElementById('btn-reset-warehouses');
 
-      function openModal() {
-        backdrop.setAttribute('aria-hidden', 'false');
+      const modal       = document.getElementById('admin-modal');
+      const modalText   = document.getElementById('admin-modal-text');
+      const modalCancel = document.getElementById('admin-modal-cancel');
+      const modalConfirm= document.getElementById('admin-modal-confirm');
+
+      let pendingAction = null;
+
+      function openModal(message, action) {
+        if (!isAdmin) {
+          alert('Solo Admin puede ejecutar estas acciones.');
+          return;
+        }
+        pendingAction = action;
+        modalText.textContent = message;
+        modal.style.display = 'flex';
       }
+
       function closeModal() {
-        backdrop.setAttribute('aria-hidden', 'true');
-        confirmInput.value = '';
+        modal.style.display = 'none';
+        pendingAction = null;
       }
 
-      openBtn?.addEventListener('click', openModal);
-      closeBtn?.addEventListener('click', closeModal);
-      backdrop.addEventListener('click', (ev) => {
-        if (ev.target === backdrop) closeModal();
+      modalCancel.addEventListener('click', closeModal);
+
+      modalConfirm.addEventListener('click', async () => {
+        if (!pendingAction) {
+          closeModal();
+          return;
+        }
+        const action = pendingAction;
+        pendingAction = null;
+        closeModal();
+
+        try {
+          if (action === 'reset_requests') {
+            const { error } = await supa.rpc('admin_clear_signatures_and_requests');
+            if (error) throw error;
+            alert('Solicitudes y firmas borradas correctamente.');
+          } else if (action === 'reset_movements') {
+            const { error } = await supa.rpc('admin_clear_movements');
+            if (error) throw error;
+            alert('Movimientos de almacenes borrados correctamente.');
+          } else if (action === 'reset_warehouses') {
+            const { error } = await supa.rpc('admin_reset_warehouse_quantities');
+            if (error) throw error;
+            alert('Stock de todos los almacenes puesto a 0 correctamente.');
+          }
+        } catch (err) {
+          console.error('Error en acción admin:', err);
+          alert('Ha ocurrido un error ejecutando la acción de mantenimiento.\n\n' + (err.message || 'Error desconocido.'));
+        }
       });
 
-      confirmBtn?.addEventListener('click', async () => {
-        if (confirmInput.value.trim().toUpperCase() !== 'RESET TESORO') {
-          alert('Debes escribir exactamente "RESET TESORO" para confirmar.');
-          return;
-        }
+      if (btnResetReq) {
+        btnResetReq.addEventListener('click', () => {
+          openModal(
+            'Vas a borrar TODAS las solicitudes y sus firmas asociadas en el sistema de Tesoro.\n\n¿Seguro que quieres continuar?',
+            'reset_requests'
+          );
+        });
+      }
 
-        if (!confirm('¿Seguro que quieres ejecutar el reset completo del sistema de Tesoro? Esta acción es IRREVERSIBLE.')) {
-          return;
-        }
+      if (btnResetMov) {
+        btnResetMov.addEventListener('click', () => {
+          openModal(
+            'Vas a borrar TODOS los movimientos de almacenes.\n\n¿Seguro que quieres continuar?',
+            'reset_movements'
+          );
+        });
+      }
 
-        // 1) Borrar firmas
-        {
-          const { error } = await supa.rpc('admin_clear_signatures');
-          if (error) {
-            console.error('Error en admin_clear_signatures:', error);
-            alert('No se han podido borrar las firmas.\n\n' + (error.message || ''));
-            return;
-          }
-        }
-
-        // 2) Borrar solicitudes
-        {
-          const { error } = await supa.rpc('admin_clear_requests');
-          if (error) {
-            console.error('Error en admin_clear_requests:', error);
-            alert('No se han podido borrar las solicitudes.\n\n' + (error.message || ''));
-            return;
-          }
-        }
-
-        // 3) Borrar movimientos
-        {
-          const { error } = await supa.rpc('admin_clear_movements');
-          if (error) {
-            console.error('Error en admin_clear_movements:', error);
-            alert('No se han podido borrar los movimientos.\n\n' + (error.message || ''));
-            return;
-          }
-        }
-
-        // 4) Resetear cantidades de almacenes
-        {
-          const { error } = await supa.rpc('admin_reset_warehouse_quantities');
-          if (error) {
-            console.error('Error en admin_reset_warehouse_quantities:', error);
-            alert('No se han podido resetear las cantidades de los almacenes.\n\n' + (error.message || ''));
-            return;
-          }
-          alert('Cantidad en almacenes reseteada a 0 correctamente.');
+      if (btnResetWh) {
+        btnResetWh.addEventListener('click', () => {
+          openModal(
+            'Vas a poner a 0 TODAS las cantidades en warehouse_items.\n\n¿Seguro que quieres continuar?',
+            'reset_warehouses'
+          );
         });
       }
     });
