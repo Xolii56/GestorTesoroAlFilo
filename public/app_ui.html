@@ -29,12 +29,16 @@
     }
 
     .group-title {
-      font-size: 1rem;
-      font-weight: 600;
-      letter-spacing: .08em;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: .12em;
       text-transform: uppercase;
-      opacity: .8;
-      margin-bottom: .1rem;
+      margin-bottom: 0.4rem;
+      color: #f9fafb;
+      text-shadow:
+        0 0 4px rgba(59,130,246,0.85),
+        0 0 12px rgba(56,189,248,0.75),
+        0 0 24px rgba(56,189,248,0.55);
     }
 
     .group-subtitle {
@@ -55,12 +59,20 @@
       transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, border-color 0.12s ease-out;
       position: relative;
       overflow: hidden;
+      border-color: #4b5563;
+      box-shadow:
+        0 0 0 1px rgba(56,189,248,0.18),
+        0 0 26px rgba(56,189,248,0.35),
+        0 14px 34px rgba(15,23,42,0.95);
     }
 
     .card.module-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 18px 40px rgba(0,0,0,0.45);
-      border-color: #334155;
+      box-shadow:
+        0 0 0 1px rgba(56,189,248,0.45),
+        0 0 40px rgba(56,189,248,0.75),
+        0 18px 46px rgba(15,23,42,1);
+      border-color: #e5e7eb;
     }
 
     .card.module-card.disabled {
@@ -71,14 +83,22 @@
 
     .module-chip {
       display: inline-block;
-      font-size: 0.7rem;
+      font-size: 0.8rem;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      padding: 0.15rem 0.55rem;
+      letter-spacing: 0.14em;
+      padding: 0.28rem 1rem;
       border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.5);
-      opacity: 0.85;
-      margin-bottom: 0.4rem;
+      border: 1px solid rgba(56,189,248,0.9);
+      background: radial-gradient(circle at 0% 0%, rgba(56,189,248,0.24), transparent 60%);
+      color: #e0f2fe;
+      text-shadow:
+        0 0 4px rgba(56,189,248,0.9),
+        0 0 10px rgba(56,189,248,0.8);
+      box-shadow:
+        0 0 14px rgba(56,189,248,0.85),
+        0 0 30px rgba(56,189,248,0.65);
+      margin-bottom: 0.1rem;
     }
 
     .module-card h3 {
@@ -100,91 +120,62 @@
     }
 
     .admin-tag {
-      font-size: .75rem;
-      padding: .12rem .55rem;
-      border-radius: 999px;
-      border: 1px solid rgba(248,250,252,0.9);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      opacity: .85;
       display: inline-block;
-      margin-bottom: .35rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      padding: 0.2rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(148,163,184,0.08);
+      border: 1px solid rgba(148,163,184,0.35);
+      color: #e5e7eb;
+      margin-bottom: 0.5rem;
     }
 
     .admin-box {
-      padding: .9rem 1rem;
-      border-radius: .75rem;
-      border: 1px solid rgba(248,250,252,0.16);
-      background: radial-gradient(circle at top left, rgba(248,250,252,0.08), rgba(15,23,42,0.95));
-      font-size: .8rem;
+      border-radius: 14px;
+      background: radial-gradient(circle at 0% 0%, rgba(248,250,252,0.02), transparent 55%), rgba(15,23,42,0.95);
+      border: 1px solid rgba(148,163,184,0.4);
+      padding: 1rem;
+      box-shadow:
+        0 0 0 1px rgba(15,23,42,0.4),
+        0 20px 45px rgba(15,23,42,0.95);
     }
 
-    .help-text {
-      font-size: 0.75rem;
-      opacity: 0.8;
+    .admin-box strong {
+      color: #f97373;
     }
 
-    /* Modal admin */
-    .admin-modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(15,23,42,0.82);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 80;
+    .admin-box ul {
+      margin: 0.5rem 0 0.8rem;
+      padding-left: 1.15rem;
+      font-size: 0.85rem;
+      opacity: 0.9;
     }
 
-    .admin-modal-backdrop.open {
+    .admin-actions {
       display: flex;
-    }
-
-    .admin-modal {
-      background: #020617;
-      border-radius: 16px;
-      border: 1px solid #1f2937;
-      padding: 1.2rem 1.4rem;
-      max-width: 520px;
-      width: 100%;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.7);
-      font-size: 0.9rem;
-    }
-
-    .admin-modal h3 {
-      margin-top: 0;
-      margin-bottom: .4rem;
-      font-size: 1rem;
-    }
-
-    .admin-modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: .5rem;
-      margin-top: .9rem;
+      gap: 0.5rem;
       flex-wrap: wrap;
-    }
-
-    .admin-warning {
-      border-radius:.6rem;
-      border:1px solid rgba(248,113,113,0.7);
-      padding:.55rem .7rem;
-      font-size:.8rem;
-      margin-top:.5rem;
-      background:rgba(127,29,29,0.35);
+      align-items: center;
     }
 
     .btn {
-      padding: .55rem 1rem;
-      border-radius: 12px;
+      padding: 0.55rem 1rem;
+      border-radius: 999px;
       border: 1px solid #334155;
       background: #1e293b;
-      color: #e7eaf3;
-      cursor: pointer;
+      color: #e5e7eb;
       font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
     }
 
-    .btn.btn-secondary {
-      background: transparent;
+    .btn-icon {
+      font-size: 1rem;
+      opacity: 0.9;
     }
 
     .btn.btn-danger {
@@ -192,12 +183,60 @@
       background: #7f1d1d;
     }
 
+    .btn.btn-secondary {
+      background: transparent;
+    }
+
     .btn:hover {
       filter: brightness(1.1);
     }
+
+    .help-text {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+
+    /* MODAL ADMIN RESET */
+    .admin-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.75);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .admin-modal-backdrop[aria-hidden="false"] {
+      display: flex;
+    }
+
+    .admin-modal {
+      background: #020617;
+      border-radius: 18px;
+      padding: 1.5rem 1.4rem 1.2rem;
+      max-width: 480px;
+      width: 100%;
+      border: 1px solid rgba(148,163,184,0.5);
+      box-shadow:
+        0 20px 60px rgba(15,23,42,0.95),
+        0 0 0 1px rgba(15,23,42,0.5);
+    }
+
+    .admin-modal h3 {
+      margin-top: 0;
+      margin-bottom: 0.3rem;
+    }
+
+    .admin-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 1.1rem;
+    }
   </style>
 </head>
-
 <body>
 
   <!-- Header -->
@@ -209,31 +248,22 @@
       <!-- SOLICITUDES -->
       <section class="modules-group">
         <h2 class="group-title">Solicitudes</h2>
-        <p class="group-subtitle">Módulos de petición de operaciones al Tesoro.</p>
 
         <div class="modules-grid">
-          <div class="card module-card" data-module="solicitudes">
-            <span class="module-chip">Solicitudes</span>
-            <h3>Commodities</h3>
-            <p>Crea solicitudes de compra o venta de commodities y consulta su estado.</p>
+                    <div class="card module-card" data-module="solicitudes">
+            <span class="module-chip">Commodities</span>
           </div>
 
-          <div class="card module-card" data-module="sol_prestamo">
-            <span class="module-chip">Solicitudes</span>
-            <h3>Préstamo</h3>
-            <p>Solicitudes de préstamo de fondos al Tesoro.</p>
+                    <div class="card module-card" data-module="sol_prestamo">
+            <span class="module-chip">Préstamo</span>
           </div>
 
-          <div class="card module-card" data-module="sol_taller">
-            <span class="module-chip">Solicitudes</span>
-            <h3>Taller</h3>
-            <p>Gestión de solicitudes de reparación, mantenimiento y taller.</p>
+                    <div class="card module-card" data-module="sol_taller">
+            <span class="module-chip">Taller</span>
           </div>
 
-          <div class="card module-card" data-module="sol_armeria">
-            <span class="module-chip">Solicitudes</span>
-            <h3>Armería</h3>
-            <p>Solicitudes relacionadas con armas, equipamiento y munición.</p>
+                    <div class="card module-card" data-module="sol_armeria">
+            <span class="module-chip">Armería</span>
           </div>
         </div>
       </section>
@@ -241,43 +271,30 @@
       <!-- TESORO -->
       <section class="modules-group">
         <h2 class="group-title">Tesoro</h2>
-        <p class="group-subtitle">Gestión interna del Tesoro y control de stock.</p>
 
         <div class="modules-grid">
-          <div class="card module-card" data-module="revision">
-            <span class="module-chip">Encargados</span>
-            <h3>Revisión</h3>
-            <p>Bandeja para aprobar, denegar o modificar solicitudes.</p>
+                    <div class="card module-card" data-module="revision">
+            <span class="module-chip">Revisión</span>
           </div>
 
-          <div class="card module-card" data-module="inventario">
-            <span class="module-chip">Stock</span>
-            <h3>Inventario</h3>
-            <p>Listado y estado del stock general del Tesoro. (Pendiente de UI)</p>
+                    <div class="card module-card" data-module="inventario">
+            <span class="module-chip">Inventario</span>
           </div>
 
-          <div class="card module-card" data-module="almacenes">
-            <span class="module-chip">Logística</span>
-            <h3>Almacenes</h3>
-            <p>Gestión de ubicaciones, hangares y contenedores.</p>
+                    <div class="card module-card" data-module="almacenes">
+            <span class="module-chip">Almacenes</span>
           </div>
 
-          <div class="card module-card" data-module="registro">
-            <span class="module-chip">Auditoría</span>
-            <h3>Registro</h3>
-            <p>Histórico de movimientos y trazabilidad completa.</p>
+                    <div class="card module-card" data-module="registro">
+            <span class="module-chip">Registro</span>
           </div>
 
-          <div class="card module-card" data-module="calendario">
-            <span class="module-chip">Planificación</span>
-            <h3>Calendario</h3>
-            <p>Vista de calendario con los movimientos distribuidos por día. (Pendiente de UI)</p>
+                    <div class="card module-card" data-module="calendario">
+            <span class="module-chip">Calendario</span>
           </div>
 
-          <div class="card module-card" data-module="banco">
-            <span class="module-chip">Tesoro</span>
-            <h3>Banco</h3>
-            <p>Gestión de cuentas de tesorería y movimientos de UEC.</p>
+                    <div class="card module-card" data-module="banco">
+            <span class="module-chip">Banco</span>
           </div>
         </div>
       </section>
@@ -285,19 +302,14 @@
       <!-- CONTRATOS -->
       <section class="modules-group">
         <h2 class="group-title">Contratos</h2>
-        <p class="group-subtitle">Gestión de avales y contratos internos.</p>
 
         <div class="modules-grid">
-          <div class="card module-card" data-module="avales">
-            <span class="module-chip">Contratos</span>
-            <h3>Avales</h3>
-            <p>Gestión de contratos de préstamo en los que actúas como avalista.</p>
+                    <div class="card module-card" data-module="avales">
+            <span class="module-chip">Avales</span>
           </div>
 
-          <div class="card module-card" data-module="contratos_trabajo">
-            <span class="module-chip">Contratos</span>
-            <h3>Contratos de trabajo</h3>
-            <p>Gestión de contratos de trabajo del clan. (Pendiente de UI)</p>
+                    <div class="card module-card" data-module="contratos_trabajo">
+            <span class="module-chip">Contratos de trabajo</span>
           </div>
         </div>
       </section>
@@ -305,13 +317,10 @@
       <!-- RRHH -->
       <section class="modules-group">
         <h2 class="group-title">RRHH</h2>
-        <p class="group-subtitle">Gestión de usuarios internos del Tesoro.</p>
 
         <div class="modules-grid">
-          <div class="card module-card" data-module="usuarios">
-            <span class="module-chip">Administración</span>
-            <h3>Usuarios</h3>
-            <p>Gestión de usuarios, permisos internos del Tesoro y datos de cada miembro.</p>
+                    <div class="card module-card" data-module="usuarios">
+            <span class="module-chip">Usuarios</span>
           </div>
         </div>
       </section>
@@ -324,46 +333,60 @@
       <div class="admin-box">
         <p style="margin:0 0 .4rem;">
           Herramientas peligrosas para resetear el sistema de pruebas.
+          <strong>¡Úsalas con muchísimo cuidado!</strong>
         </p>
-        <button type="button" id="admin-reset-open" class="btn btn-danger" style="width:100%;margin-top:.3rem;">
-          Mantenimiento / Reset BD
-        </button>
-        <p class="help-text" style="margin-top:.4rem;">
-          Solo deberías usar esto en entornos de test. En producción esto sería una catástrofe nuclear.
-        </p>
+        <ul>
+          <li>Vaciar <strong>todos</strong> los movimientos.</li>
+          <li>Vaciar <strong>todas</strong> las solicitudes, incluidas sus firmas.</li>
+          <li>Resetear cantidades de todos los almacenes a 0.</li>
+        </ul>
+
+        <div class="admin-actions">
+          <button type="button" id="admin-reset-open" class="btn btn-danger">
+            <span class="btn-icon">⚠️</span>
+            Reset del sistema de Tesoro
+          </button>
+          <p class="help-text">
+            Solo visible para el usuario <code>admin@alfilo.test</code>.
+          </p>
+        </div>
       </div>
     </section>
 
   </main>
 
   <!-- MODAL ADMIN RESET -->
-  <div id="admin-reset-modal-backdrop" class="admin-modal-backdrop">
+  <div id="admin-reset-modal-backdrop" class="admin-modal-backdrop" aria-hidden="true">
     <div class="admin-modal">
       <h3>Reset del sistema de Tesoro</h3>
       <p style="font-size:.9rem;opacity:.9;">
-        Elige qué parte quieres resetear. Estas operaciones son <strong>destructivas</strong> y no se pueden deshacer.
+        Esto vaciará todos los movimientos, solicitudes y firmas, y dejará las cantidades
+        de los almacenes a 0. Es una acción destructiva pensada solo para entornos de pruebas.
+      </p>
+      <p style="font-size:.85rem;opacity:.8;">
+        Escribe <strong>RESET TESORO</strong> para confirmar.
       </p>
 
-      <div class="admin-warning">
-        ⚠️ <strong>IMPORTANTE:</strong> estas acciones solo deben ejecutarse en entorno de pruebas.
-        Borran datos reales de la base de datos.
-      </div>
-
-      <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:.4rem;">
-        <button type="button" id="btn-reset-requests" class="btn btn-danger">
-          Resetear solicitudes (vaciar tabla requests)
-        </button>
-
-        <button type="button" id="btn-reset-warehouses" class="btn btn-secondary">
-          Poner a 0 el stock de todos los almacenes
-        </button>
-      </div>
+      <input
+        id="admin-reset-confirm-input"
+        type="text"
+        placeholder="RESET TESORO"
+        style="width:100%;margin:.5rem 0 0.2rem;padding:.5rem;border-radius:8px;border:1px solid #334155;background:#020617;color:#e5e7eb;"
+      />
 
       <div class="admin-modal-actions">
+        <button type="button" id="admin-reset-confirm" class="btn btn-danger">
+          <span class="btn-icon">🧨</span>
+          Ejecutar reset
+        </button>
         <button type="button" id="admin-reset-close" class="btn btn-secondary">
           Cerrar
         </button>
       </div>
+
+      <p class="help-text" style="margin-top:.4rem;">
+        Solo deberías usar esto en entornos de test. En producción esto sería una catástrofe nuclear.
+      </p>
     </div>
   </div>
 
@@ -380,244 +403,139 @@
         return;
       }
 
-      // 2) Perfil básico y estado de organización
-      await ensureProfile();
-      const status = await getOrgStatus();
-      if (!status || !['miembro','daga','espada','admin'].includes(status)) {
-        await supa.auth.signOut();
-        window.location.href = './index.html';
-        return;
-      }
+      // 2) Perfil y estado en la org (si aplica)
+      const profile = await ensureProfile(supa, session);
+      const orgStatus = await getOrgStatus(supa, profile);
 
-      // 3) Header y menú usuario
-      if (typeof window.loadHeader === 'function') {
-        await window.loadHeader('app');
-      }
-      if (typeof window.initHeaderUserMenu === 'function') {
-        window.initHeaderUserMenu(
-          session,
-          async () => {
-            await supa.auth.signOut();
-            window.location.href = './index.html';
-          },
-          () => {
-            window.location.href = './perfil.html';
-          }
-        );
-      }
-
-      // 4) Rol interno de Tesoro
-      const { data: userRow, error: userError } = await supa
-        .from('users')
-        .select('tesoro_internal_role')
-        .eq('id', session.user.id)
-        .maybeSingle();
-
-      if (userError) {
-        console.error('Error leyendo tesoro_internal_role:', userError);
-      }
-
-      let internalRole = userRow?.tesoro_internal_role || null;
-      if (typeof internalRole === 'string') internalRole = internalRole.trim();
-
-      // 5) Permisos desde roles_app
-      let roleRow = null;
-
-      if (internalRole) {
-        const numericId = Number(internalRole);
-        if (!Number.isNaN(numericId)) {
-          const { data, error } = await supa
-            .from('roles_app')
-            .select('*')
-            .eq('id', numericId)
-            .maybeSingle();
-          if (!error) roleRow = data;
-        }
-
-        if (!roleRow) {
-          const { data, error } = await supa
-            .from('roles_app')
-            .select('*')
-            .ilike('role_name', internalRole)
-            .maybeSingle();
-          if (!error) roleRow = data;
-        }
-      }
-
-      const permsByModule = {};
-      if (roleRow) {
-        for (const [key, value] of Object.entries(roleRow)) {
-          if (['id', 'role_name', 'created_at', 'updated_at'].includes(key)) continue;
-          const normKey = key.toLowerCase();
-          permsByModule[normKey] = value;
-        }
-      }
-
-      const moduleAliasForPerms = {
-        sol_prestamo: 'solicitudes',
-        sol_taller: 'solicitudes',
-        sol_armeria: 'solicitudes',
-        avales: 'solicitudes',
-        banco: 'almacenes',
-        contratos_trabajo: 'usuarios'
-      };
-
-      function getPermLevelForModule(normMod) {
-        if (permsByModule.hasOwnProperty(normMod)) {
-          return permsByModule[normMod] ?? 0;
-        }
-        const alias = moduleAliasForPerms[normMod];
-        if (alias && permsByModule.hasOwnProperty(alias)) {
-          return permsByModule[alias] ?? 0;
-        }
-        return 0;
-      }
-
-      // 6) Aplicar permisos + navegación
-      document.querySelectorAll('.module-card').forEach(card => {
-        const mod = card.getAttribute('data-module');
-        const normMod = mod.toLowerCase();
-
-        const level = getPermLevelForModule(normMod);
-
-        if (!level || level === 0) {
-          // Contratos de trabajo lo dejamos visible pero no navegable (aún no implementado)
-          if (mod !== 'contratos_trabajo') {
-            card.classList.add('disabled');
-          }
-        }
-
-        card.addEventListener('click', () => {
-          const currentLevel = getPermLevelForModule(normMod);
-
-          if (mod === 'contratos_trabajo') {
-            alert('El módulo "Contratos de trabajo" todavía no está implementado.');
-            return;
-          }
-
-          if (!currentLevel || currentLevel === 0) {
-            alert('No tienes acceso a este módulo.');
-            return;
-          }
-
-          if (mod === 'solicitudes') {
-            window.location.href = './sol_commodities.html';
-            return;
-          }
-          if (mod === 'sol_prestamo') {
-            window.location.href = './sol_prestamo.html';
-            return;
-          }
-          if (mod === 'sol_taller') {
-            window.location.href = './sol_taller.html';
-            return;
-          }
-          if (mod === 'sol_armeria') {
-            window.location.href = './sol_armeria.html';
-            return;
-          }
-          if (mod === 'revision') {
-            window.location.href = './revision.html';
-            return;
-          }
-          if (mod === 'usuarios') {
-            window.location.href = './usuarios.html';
-            return;
-          }
-          if (mod === 'almacenes') {
-            window.location.href = './almacenes.html';
-            return;
-          }
-          if (mod === 'registro') {
-            window.location.href = './registro.html';
-            return;
-          }
-          if (mod === 'inventario' || mod === 'calendario') {
-            alert(`El módulo "${mod}" todavía no está implementado.`);
-            return;
-          }
-          if (mod === 'avales') {
-            window.location.href = './avales.html';
-            return;
-          }
-          if (mod === 'banco') {
-            window.location.href = './banco.html';
-            return;
-          }
-
-          alert(`Módulo "${mod}" aún no está implementado.`);
-        });
+      // 3) Cargar header
+      await window.renderLayout('#site-header', {
+        session,
+        profile,
+        orgStatus,
+        activePage: 'app_ui'
       });
 
-      // 7) Bloque admin: solo rol interno "admin"
-      const isAdmin =
-        internalRole &&
-        internalRole.toString().toLowerCase() === 'admin';
-
+      // 4) Mostrar herramientas admin solo al usuario especial
       const adminTools = document.getElementById('admin-tools');
-      const adminModalBackdrop = document.getElementById('admin-reset-modal-backdrop');
-      const adminOpenBtn = document.getElementById('admin-reset-open');
-      const adminCloseBtn = document.getElementById('admin-reset-close');
-      const btnResetReq = document.getElementById('btn-reset-requests');
-      const btnResetWh = document.getElementById('btn-reset-warehouses');
-
-      if (isAdmin && adminTools) {
+      if (profile && profile.email === 'admin@alfilo.test') {
         adminTools.style.display = 'block';
       }
 
-      function openAdminModal() {
-        if (!isAdmin || !adminModalBackdrop) return;
-        adminModalBackdrop.classList.add('open');
-      }
+      // Navegación por tarjetas
+      document.querySelectorAll('.module-card').forEach(card => {
+        if (card.classList.contains('disabled')) return;
 
-      function closeAdminModal() {
-        if (!adminModalBackdrop) return;
-        adminModalBackdrop.classList.remove('open');
-      }
-
-      if (adminOpenBtn) {
-        adminOpenBtn.addEventListener('click', openAdminModal);
-      }
-      if (adminCloseBtn) {
-        adminCloseBtn.addEventListener('click', closeAdminModal);
-      }
-      if (adminModalBackdrop) {
-        adminModalBackdrop.addEventListener('click', (e) => {
-          if (e.target === adminModalBackdrop) {
-            closeAdminModal();
+        card.addEventListener('click', () => {
+          const mod = card.getAttribute('data-module');
+          switch (mod) {
+            case 'solicitudes':
+              window.location.href = './sol_commodities.html';
+              break;
+            case 'sol_prestamo':
+              window.location.href = './sol_prestamo.html';
+              break;
+            case 'sol_taller':
+              window.location.href = './solicitudes.html?tipo=taller';
+              break;
+            case 'sol_armeria':
+              window.location.href = './solicitudes.html?tipo=armeria';
+              break;
+            case 'revision':
+              window.location.href = './revision.html';
+              break;
+            case 'inventario':
+              window.location.href = './inventario.html';
+              break;
+            case 'almacenes':
+              window.location.href = './almacenes.html';
+              break;
+            case 'registro':
+              window.location.href = './registro.html';
+              break;
+            case 'calendario':
+              window.location.href = './calendario.html';
+              break;
+            case 'banco':
+              window.location.href = './banco.html';
+              break;
+            case 'usuarios':
+              window.location.href = './usuarios.html';
+              break;
+            case 'avales':
+              window.location.href = './avales.html';
+              break;
+            case 'contratos_trabajo':
+              window.location.href = './contratos_trabajo.html';
+              break;
+            default:
+              alert('Módulo todavía no disponible');
           }
         });
+      });
+
+      // Lógica del modal de reset admin
+      const backdrop = document.getElementById('admin-reset-modal-backdrop');
+      const openBtn = document.getElementById('admin-reset-open');
+      const closeBtn = document.getElementById('admin-reset-close');
+      const confirmBtn = document.getElementById('admin-reset-confirm');
+      const confirmInput = document.getElementById('admin-reset-confirm-input');
+
+      function openModal() {
+        backdrop.setAttribute('aria-hidden', 'false');
+      }
+      function closeModal() {
+        backdrop.setAttribute('aria-hidden', 'true');
+        confirmInput.value = '';
       }
 
-      // Reset tablas (usa funciones RPC existentes)
-      if (btnResetReq) {
-        btnResetReq.addEventListener('click', async () => {
-          if (!isAdmin) {
-            alert('Solo Admin puede ejecutar este reset.');
-            return;
-          }
-          const ok = confirm('Vas a resetear TODAS las solicitudes (tabla requests). ¿Seguro?');
-          if (!ok) return;
+      openBtn?.addEventListener('click', openModal);
+      closeBtn?.addEventListener('click', closeModal);
+      backdrop.addEventListener('click', (ev) => {
+        if (ev.target === backdrop) closeModal();
+      });
 
-          const { error } = await supa.rpc('admin_reset_requests');
+      confirmBtn?.addEventListener('click', async () => {
+        if (confirmInput.value.trim().toUpperCase() !== 'RESET TESORO') {
+          alert('Debes escribir exactamente "RESET TESORO" para confirmar.');
+          return;
+        }
+
+        if (!confirm('¿Seguro que quieres ejecutar el reset completo del sistema de Tesoro? Esta acción es IRREVERSIBLE.')) {
+          return;
+        }
+
+        // 1) Borrar firmas
+        {
+          const { error } = await supa.rpc('admin_clear_signatures');
           if (error) {
-            console.error('Error en admin_reset_requests:', error);
-            alert('No se ha podido resetear la tabla de solicitudes.\n\n' + (error.message || ''));
+            console.error('Error en admin_clear_signatures:', error);
+            alert('No se han podido borrar las firmas.\n\n' + (error.message || ''));
             return;
           }
-          alert('Tabla de solicitudes reseteada correctamente.');
-        });
-      }
+        }
 
-      if (btnResetWh) {
-        btnResetWh.addEventListener('click', async () => {
-          if (!isAdmin) {
-            alert('Solo Admin puede ejecutar este reset.');
+        // 2) Borrar solicitudes
+        {
+          const { error } = await supa.rpc('admin_clear_requests');
+          if (error) {
+            console.error('Error en admin_clear_requests:', error);
+            alert('No se han podido borrar las solicitudes.\n\n' + (error.message || ''));
             return;
           }
-          const ok = confirm('Vas a poner a 0 TODAS las cantidades en warehouse_items.\n\n¿Seguro?');
-          if (!ok) return;
+        }
 
+        // 3) Borrar movimientos
+        {
+          const { error } = await supa.rpc('admin_clear_movements');
+          if (error) {
+            console.error('Error en admin_clear_movements:', error);
+            alert('No se han podido borrar los movimientos.\n\n' + (error.message || ''));
+            return;
+          }
+        }
+
+        // 4) Resetear cantidades de almacenes
+        {
           const { error } = await supa.rpc('admin_reset_warehouse_quantities');
           if (error) {
             console.error('Error en admin_reset_warehouse_quantities:', error);
