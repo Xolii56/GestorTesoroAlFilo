@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Detalle del préstamo</title>
+  <link rel="stylesheet" href="./style.css"/>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="./config.js" defer></script>
+  <script src="./modules/db.js" defer></script>
+  <script src="./modules/layout.js" defer></script>
+
+  <style>
+    main.detalle-main {
+      padding: 1.2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .grid {
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:0.6rem 1rem;
+    }
+
+    @media(max-width:800px){
+      .grid{grid-template-columns:1fr;}
+    }
+
+    .field {
+      font-size:.85rem;
+    }
+
+    .field-label {
+      font-size:.78rem;
+      opacity:.75;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+
+    .field-value {
+      margin-top:.1rem;
+    }
+
+    .badge {
+      display:inline-flex;
+      align-items:center;
+      padding:0.1rem 0.55rem;
+      border-radius:999px;
+      font-size:.75rem;
+      border:1px solid rgba(148,163,184,0.7);
+    }
+
+    .badge-status-pendiente { border-color: rgba(250,204,21,0.9); }
+    .badge-status-aprobada  { border-color: rgba(34,197,94,0.9); }
+    .badge-status-rechazada { border-color: rgba(248,113,113,0.9); }
+    .badge-status-completada{ border-color: rgba(56,189,248,0.9); }
+    .badge-status-cancelada { border-color: rgba(148,163,184,0.9); }
+
+    .badge-av-pendiente { border-color: rgba(250,204,21,0.9); }
+    .badge-av-aceptado  { border-color: rgba(34,197,94,0.9); }
+    .badge-av-rechazado { border-color: rgba(248,113,113,0.9); }
+
+    .btn {
+      padding:.45rem .9rem;
+      border-radius:999px;
+      border:1px solid #334155;
+      background:#020617;
+      color:#e5e7eb;
+      cursor:pointer;
+      font-size:.82rem;
+    }
+
+    .section-title{
+      font-size:.9rem;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      opacity:.8;
+      margin-bottom:.4rem;
+      margin-top:1rem;
+    }
+
+    .divider{
+      border-bottom:1px solid rgba(148,163,184,0.3);
+      margin:1rem 0 .8rem;
+    }
+  </style>
+</head>
+<body>
+  <main class="detalle-main">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:.8rem;">
+      <h2 style="margin:0;">Detalle del préstamo</h2>
+      <button class="btn" onclick="window.close()">Cerrar</button>
+    </div>
+
+    <div id="detalle-content">
+      Cargando...
+    </div>
+  </main>
+
+  <script type="module">
+    import { getOrgStatus } from './modules/profile.js';
+
+    function formatAmount(amount) {
+      if (!amount) return '-';
+      return (amount / 1_000_000) + ' M UEC';
+    }
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return '-';
+      return d.toLocaleString('es-ES');
+    }
+
+    function interestFromWeeks(w) {
+      return ({1:5,2:10,3:15,4:20}[w]||0);
+    }
+
+    function getParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { supa } = window;
+      const id = Number(getParam('id'));
+
+      const cont = document.getElementById('detalle-content');
+
+      if (!id) {
+        cont.textContent = 'ID de préstamo no válido.';
+        return;
+      }
+
+      const { data: { session } } = await supa.auth.getSession();
+      if (!session) {
+        cont.textContent = 'Sesión no válida.';
+        return;
+      }
+
+      const orgStatus = await getOrgStatus();
+      if (!['miembro','daga','espada','admin'].includes(orgStatus)) {
+        cont.textContent = 'No perteneces a la organización.';
+        return;
+      }
+
+      const { data: loan, error } = await supa
+        .from('loan_requests')
+        .select('id, requester_id, guarantor_id, amount, term_weeks, interest_percent, status, guarantor_status, created_at, guarantor_decision_at')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error || !loan) {
+        cont.textContent = 'No se ha encontrado el préstamo.';
+        return;
+      }
+
+      // cargar solicitante y avalista
+      const userIds = [loan.requester_id, loan.guarantor_id].filter(Boolean);
+      let usersById = {};
+      if (userIds.length) {
+        const { data: users } = await supa
+          .from('users')
+          .select('id, handle_name, discord_username')
+          .in('id', userIds);
+        (users || []).forEach(u=>{
+          usersById[u.id] = u.handle_name || u.discord_username || u.id;
+        });
+      }
+
+      const requesterName = usersById[loan.requester_id] || loan.requester_id || '-';
+      const guarantorName = usersById[loan.guarantor_id] || loan.guarantor_id || '-';
+
+      const interest = loan.interest_percent ?? interestFromWeeks(loan.term_weeks);
+      const total = loan.amount && interest
+        ? Math.round(loan.amount * (1 + interest/100))
+        : null;
+
+      const avStatus = loan.guarantor_status || 'pendiente';
+      const avClass = avStatus === 'aceptado'
+        ? 'badge-av-aceptado'
+        : avStatus === 'rechazado'
+          ? 'badge-av-rechazado'
+          : 'badge-av-pendiente';
+
+      cont.innerHTML = `
+        <div class="card">
+          <div class="grid">
+            <div class="field">
+              <div class="field-label">ID</div>
+              <div class="field-value">#${loan.id}</div>
+            </div>
+            <div class="field">
+              <div class="field-label">Fecha</div>
+              <div class="field-value">${formatDate(loan.created_at)}</div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">Solicitante</div>
+              <div class="field-value">${requesterName}</div>
+            </div>
+            <div class="field">
+              <div class="field-label">Avalista</div>
+              <div class="field-value">${guarantorName}</div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">Cantidad</div>
+              <div class="field-value">${formatAmount(loan.amount)}</div>
+            </div>
+            <div class="field">
+              <div class="field-label">Plazo</div>
+              <div class="field-value">${loan.term_weeks} semana${loan.term_weeks===1?'':'s'}</div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">Interés</div>
+              <div class="field-value">${interest} %</div>
+            </div>
+            <div class="field">
+              <div class="field-label">Cantidad a devolver</div>
+              <div class="field-value">${total ? formatAmount(total) : '-'}</div>
+            </div>
+
+            <div class="field">
+              <div class="field-label">Estado solicitud</div>
+              <div class="field-value">
+                <span class="badge badge-status-${loan.status}">${loan.status}</span>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label">Estado aval</div>
+              <div class="field-value">
+                <span class="badge ${avClass}">${avStatus}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="section-title">Trazabilidad</div>
+          <div class="field">
+            <div class="field-label">Creado</div>
+            <div class="field-value">${formatDate(loan.created_at)}</div>
+          </div>
+          <div class="field">
+            <div class="field-label">Decisión de aval</div>
+            <div class="field-value">
+              ${loan.guarantor_decision_at ? formatDate(loan.guarantor_decision_at) : '-'}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  </script>
+</body>
+</html>
