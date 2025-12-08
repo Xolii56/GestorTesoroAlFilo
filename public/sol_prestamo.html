@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Departamento del Tesoro — Préstamos</title>
+  <link rel="stylesheet" href="./style.css"/>
+
+  <!-- Supabase + módulos -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="./config.js" defer></script>
+  <script src="./modules/db.js" defer></script>
+  <script src="./modules/layout.js" defer></script>
+
+  <style>
+    main.prestamo-main {
+      padding: 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* Reutilizamos el layout de solicitudes */
+    .sol-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.8rem 1rem;
+    }
+
+    @media (max-width: 800px) {
+      .sol-form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .sol-form .field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sol-form label {
+      display: block;
+      font-size: .8rem;
+      opacity: .8;
+      margin-bottom: .2rem;
+    }
+
+    .sol-form select,
+    .sol-form input,
+    .sol-form textarea {
+      width: 100%;
+      padding: 0.4rem 0.5rem;
+      border-radius: 0.55rem;
+      border: 1px solid rgba(148,163,184,0.65);
+      background: rgba(15,23,42,0.9);
+      color: #e5e7eb;
+      font-size: .85rem;
+    }
+
+    .sol-form input[readonly],
+    .sol-form select[disabled],
+    .sol-form textarea[readonly] {
+      opacity: 0.8;
+      cursor: default;
+    }
+
+    .help-text {
+      font-size: .78rem;
+      opacity: .75;
+    }
+
+    .loans-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .82rem;
+    }
+
+    .loans-table th,
+    .loans-table td {
+      padding: 0.35rem 0.5rem;
+      border-bottom: 1px solid rgba(30,64,175,0.4);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .loans-table th {
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      opacity: .75;
+    }
+
+    .loans-table tbody tr:nth-child(even) {
+      background: rgba(15,23,42,0.75);
+    }
+
+    .loans-table tbody tr:hover {
+      background: rgba(15,23,42,0.95);
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.1rem 0.55rem;
+      border-radius: 999px;
+      font-size: .75rem;
+      border: 1px solid rgba(148,163,184,0.7);
+    }
+
+    .badge-status.pendiente   { border-color: rgba(250,204,21,0.9); }
+    .badge-status.aprobada    { border-color: rgba(34,197,94,0.9); }
+    .badge-status.rechazada   { border-color: rgba(248,113,113,0.9); }
+    .badge-status.completada  { border-color: rgba(56,189,248,0.9); }
+    .badge-status.cancelada   { border-color: rgba(248,113,113,0.9); }
+
+    .btn {
+      padding: .55rem 1rem;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #e7eaf3;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .btn-primary {
+      border-color: #2563eb;
+      background: #1d4ed8;
+    }
+
+    .btn-secondary {
+      background: transparent;
+    }
+
+    .btn:hover {
+      filter: brightness(1.08);
+    }
+
+    .btn-disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .loans-toolbar {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:.75rem;
+      flex-wrap:wrap;
+      margin-bottom:.6rem;
+    }
+
+    .loans-toolbar input[type="search"] {
+      padding:0.35rem 0.5rem;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.7);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.8rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="site-header"></div>
+
+  <main class="prestamo-main">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
+      <div>
+        <h2>Préstamos</h2>
+        <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
+          Solicita préstamos de UEC al Tesoro y consulta el estado de tus solicitudes.
+        </p>
+      </div>
+      <button type="button"
+              class="btn btn-secondary"
+              onclick="window.location.href='./app_ui.html'">
+        ← Volver al panel
+      </button>
+    </div>
+
+    <!-- BLOQUE 1: FORMULARIO DE NUEVO PRÉSTAMO -->
+    <div class="card">
+      <h3 style="margin-top:0;">Nuevo préstamo</h3>
+      <p id="loan-perms-label" class="help-text" style="margin-bottom:.8rem;"></p>
+
+      <form id="loan-form" class="sol-form">
+        <div class="sol-form-grid">
+          <!-- Solicitante -->
+          <div class="field">
+            <label>Solicitante</label>
+            <input id="loan-solicitante" type="text" readonly />
+          </div>
+
+          <!-- Cantidad (UEC) -->
+          <div class="field">
+            <label for="loan-amount">Cantidad solicitada</label>
+            <select id="loan-amount" required>
+              <option value="">Selecciona cantidad...</option>
+              <option value="1000000">1 M UEC</option>
+              <option value="5000000">5 M UEC</option>
+              <option value="10000000">10 M UEC</option>
+              <option value="20000000">20 M UEC</option>
+              <option value="50000000">50 M UEC</option>
+            </select>
+          </div>
+
+          <!-- Plazo de devolución -->
+          <div class="field">
+            <label for="loan-term">Plazo de devolución</label>
+            <select id="loan-term" required>
+              <option value="">Selecciona plazo...</option>
+              <option value="1">1 semana</option>
+              <option value="2">2 semanas</option>
+              <option value="3">3 semanas</option>
+              <option value="4">4 semanas</option>
+            </select>
+            <p class="help-text" style="margin-top:.2rem;">
+              El interés depende del plazo seleccionado.
+            </p>
+          </div>
+
+          <!-- Interés (no editable) -->
+          <div class="field">
+            <label for="loan-interest">Interés del préstamo</label>
+            <input id="loan-interest" type="text" readonly />
+          </div>
+
+          <!-- Avalista -->
+          <div class="field" style="grid-column:1 / -1;">
+            <label for="loan-guarantor">Avalista</label>
+            <select id="loan-guarantor" required>
+              <option value="">Selecciona un avalista (Daga/Espada)</option>
+            </select>
+            <p class="help-text" style="margin-top:.2rem;">
+              El avalista debe ser un miembro de rango <strong>Daga</strong> o <strong>Espada</strong> (o superior).
+            </p>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.8rem;">
+          <button type="submit" class="btn btn-primary" id="loan-submit-btn">
+            Solicitar préstamo
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- BLOQUE 2: PRÉSTAMOS ACTIVOS -->
+    <div class="card" style="margin-top:1.25rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;">
+        <h3 style="margin-top:0;">Mis préstamos activos</h3>
+      </div>
+
+      <div class="loans-toolbar">
+        <div>
+          <input type="search" id="loan-open-search" placeholder="Buscar por avalista..."/>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="loans-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Fecha</th>
+              <th>Cantidad</th>
+              <th>Plazo</th>
+              <th>Interés</th>
+              <th>Avalista</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="loan-open-tbody">
+            <tr>
+              <td colspan="7">Cargando...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BLOQUE 3: HISTÓRICO DE PRÉSTAMOS -->
+    <div class="card" style="margin-top:1.25rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;">
+        <h3 style="margin-top:0;">Histórico de préstamos</h3>
+      </div>
+
+      <div class="loans-toolbar">
+        <div>
+          <input type="search" id="loan-history-search" placeholder="Buscar por avalista..."/>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="loans-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Fecha</th>
+              <th>Cantidad</th>
+              <th>Plazo</th>
+              <th>Interés</th>
+              <th>Avalista</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="loan-history-tbody">
+            <tr>
+              <td colspan="7">Cargando...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script type="module">
+    import { getOrgStatus } from './modules/profile.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { supa } = window;
+
+      function formatStatus(st) {
+        const map = {
+          pendiente: 'pendiente',
+          aprobada: 'aprobada',
+          rechazada: 'rechazada',
+          completada: 'completada',
+          cancelada: 'cancelada'
+        };
+        return map[st] || st;
+      }
+
+      function formatDate(iso) {
+        if (!iso) return '-';
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return '-';
+        return d.toLocaleString('es-ES', {
+          day: '2-digit',
+          month: '2-digit',
+          year: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+
+      function formatAmount(amount) {
+        if (!amount || amount <= 0) return '-';
+        const millions = amount / 1000000;
+        return `${millions} M UEC`;
+      }
+
+      function formatTerm(weeks) {
+        if (!weeks) return '-';
+        return `${weeks} semana${weeks === 1 ? '' : 's'}`;
+      }
+
+      function interestFromWeeks(weeks) {
+        const map = { 1: 5, 2: 10, 3: 15, 4: 20 };
+        return map[weeks] || 0;
+      }
+
+      // 1) Sesión
+      const { data: { session } } = await supa.auth.getSession();
+      if (!session) {
+        window.location.href = './index.html';
+        return;
+      }
+
+      // 2) org_status
+      const orgStatus = await getOrgStatus();
+      if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
+        await supa.auth.signOut();
+        window.location.href = './index.html';
+        return;
+      }
+
+      // 3) Header
+      if (typeof window.loadHeader === 'function') {
+        await window.loadHeader('app');
+      }
+      if (typeof window.initHeaderUserMenu === 'function') {
+        window.initHeaderUserMenu(
+          session,
+          async () => {
+            await supa.auth.signOut();
+            window.location.href = "./index.html";
+          },
+          () => {
+            window.location.href = './perfil.html';
+          }
+        );
+      }
+
+      // 4) Permisos (reutilizamos columna "solicitudes" de roles_app)
+      const { data: meRow, error: meError } = await supa
+        .from('users')
+        .select('tesoro_internal_role, handle_name, discord_username')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (meError) console.error('Error leyendo rol interno:', meError);
+
+      let myRole = meRow?.tesoro_internal_role || null;
+      if (typeof myRole === 'string') myRole = myRole.trim();
+
+      let roleRow = null;
+      if (myRole) {
+        const asNumber = Number(myRole);
+        if (!Number.isNaN(asNumber) && myRole !== '') {
+          const { data, error } = await supa
+            .from('roles_app')
+            .select('*')
+            .eq('id', asNumber)
+            .maybeSingle();
+          if (!error) roleRow = data;
+        }
+
+        if (!roleRow) {
+          const { data, error } = await supa
+            .from('roles_app')
+            .select('*')
+            .ilike('role_name', myRole)
+            .maybeSingle();
+          if (!error) roleRow = data;
+        }
+      }
+
+      let solLevel = 0;
+      if (roleRow && Object.prototype.hasOwnProperty.call(roleRow, 'solicitudes')) {
+        solLevel = roleRow.solicitudes ?? 0;
+      }
+
+      if (!solLevel || solLevel === 0) {
+        alert('No tienes acceso al módulo de Préstamos.');
+        window.location.href = './app_ui.html';
+        return;
+      }
+
+      const readOnly = (solLevel === 1);
+
+      const permsLabel = document.getElementById('loan-perms-label');
+      const loanForm = document.getElementById('loan-form');
+      const loanSubmitBtn = document.getElementById('loan-submit-btn');
+
+      if (readOnly) {
+        permsLabel.textContent = 'Permisos: solo lectura.';
+        loanForm.querySelectorAll('input, select, textarea').forEach(el => {
+          if (el.id === 'loan-solicitante') return; // ya es readonly
+          el.disabled = true;
+        });
+        loanSubmitBtn.classList.add('btn-disabled');
+      } else {
+        permsLabel.textContent = 'Permisos: lectura y creación de préstamos.';
+      }
+
+      // 5) Rellenar solicitante
+      const solicitanteInput = document.getElementById('loan-solicitante');
+      const handle =
+        meRow?.handle_name ||
+        meRow?.discord_username ||
+        session.user.email ||
+        session.user.id;
+      solicitanteInput.value = handle;
+
+      // 6) Controles de formulario
+      const amountSelect   = document.getElementById('loan-amount');
+      const termSelect     = document.getElementById('loan-term');
+      const interestInput  = document.getElementById('loan-interest');
+      const guarantorSelect = document.getElementById('loan-guarantor');
+
+      termSelect.addEventListener('change', () => {
+        const w = parseInt(termSelect.value, 10) || 0;
+        const interest = interestFromWeeks(w);
+        interestInput.value = interest ? `${interest} %` : '';
+      });
+
+      // 7) Cargar lista de avalistas (Daga / Espada / Admin)
+      const guarantorsById = {};
+
+      const { data: avalistas, error: avError } = await supa
+        .from('users')
+        .select('id, handle_name, discord_username, org_status')
+        .in('org_status', ['daga','espada','admin'])
+        .order('handle_name', { ascending: true });
+
+      if (avError) {
+        console.error('Error cargando avalistas:', avError);
+      } else {
+        (avalistas || []).forEach(u => {
+          const name = u.handle_name || u.discord_username || u.id;
+          guarantorsById[u.id] = {
+            name,
+            org_status: u.org_status
+          };
+          const opt = document.createElement('option');
+          opt.value = u.id;
+          opt.textContent = `${name} (${u.org_status})`;
+          guarantorSelect.appendChild(opt);
+        });
+      }
+
+      // 8) Cargar préstamos propios
+      const openTbody = document.getElementById('loan-open-tbody');
+      const historyTbody = document.getElementById('loan-history-tbody');
+      const openSearchInput = document.getElementById('loan-open-search');
+      const histSearchInput = document.getElementById('loan-history-search');
+
+      let allLoans = [];
+
+      async function loadMyLoans() {
+        const { data, error } = await supa
+          .from('loan_requests')
+          .select('id, requester_id, amount, term_weeks, interest_percent, guarantor_id, status, created_at')
+          .eq('requester_id', session.user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error cargando préstamos:', error);
+          allLoans = [];
+        } else {
+          allLoans = data || [];
+        }
+
+        renderTables();
+      }
+
+      function renderTables() {
+        const openFilter = (openSearchInput.value || '').toLowerCase().trim();
+        const histFilter = (histSearchInput.value || '').toLowerCase().trim();
+
+        const openLoans = [];
+        const histLoans = [];
+
+        allLoans.forEach(l => {
+          const isActive = (l.status === 'pendiente' || l.status === 'aprobada');
+          (isActive ? openLoans : histLoans).push(l);
+        });
+
+        // abiertos
+        openTbody.innerHTML = '';
+        openLoans
+          .filter(l => {
+            if (!openFilter) return true;
+            const g = guarantorsById[l.guarantor_id];
+            const name = g?.name?.toLowerCase() || '';
+            return name.includes(openFilter);
+          })
+          .forEach(l => {
+            const tr = document.createElement('tr');
+
+            const g = guarantorsById[l.guarantor_id];
+            const gName = g?.name || l.guarantor_id || '-';
+
+            tr.innerHTML = `
+              <td>#${l.id}</td>
+              <td>${formatDate(l.created_at)}</td>
+              <td>${formatAmount(l.amount)}</td>
+              <td>${formatTerm(l.term_weeks)}</td>
+              <td>${(l.interest_percent ?? interestFromWeeks(l.term_weeks))} %</td>
+              <td>${gName}</td>
+              <td><span class="badge-status ${formatStatus(l.status)}">${formatStatus(l.status)}</span></td>
+            `;
+            openTbody.appendChild(tr);
+          });
+
+        if (!openTbody.children.length) {
+          const tr = document.createElement('tr');
+          const td = document.createElement('td');
+          td.colSpan = 7;
+          td.textContent = 'No tienes préstamos activos.';
+          tr.appendChild(td);
+          openTbody.appendChild(tr);
+        }
+
+        // histórico
+        historyTbody.innerHTML = '';
+        histLoans
+          .filter(l => {
+            if (!histFilter) return true;
+            const g = guarantorsById[l.guarantor_id];
+            const name = g?.name?.toLowerCase() || '';
+            return name.includes(histFilter);
+          })
+          .forEach(l => {
+            const tr = document.createElement('tr');
+            const g = guarantorsById[l.guarantor_id];
+            const gName = g?.name || l.guarantor_id || '-';
+
+            tr.innerHTML = `
+              <td>#${l.id}</td>
+              <td>${formatDate(l.created_at)}</td>
+              <td>${formatAmount(l.amount)}</td>
+              <td>${formatTerm(l.term_weeks)}</td>
+              <td>${(l.interest_percent ?? interestFromWeeks(l.term_weeks))} %</td>
+              <td>${gName}</td>
+              <td><span class="badge-status ${formatStatus(l.status)}">${formatStatus(l.status)}</span></td>
+            `;
+            historyTbody.appendChild(tr);
+          });
+
+        if (!historyTbody.children.length) {
+          const tr = document.createElement('tr');
+          const td = document.createElement('td');
+          td.colSpan = 7;
+          td.textContent = 'No hay préstamos en el histórico.';
+          tr.appendChild(td);
+          historyTbody.appendChild(tr);
+        }
+      }
+
+      openSearchInput.addEventListener('input', renderTables);
+      histSearchInput.addEventListener('input', renderTables);
+
+      await loadMyLoans();
+
+      // 9) Envío del formulario (solo si tiene nivel > 1)
+      loanForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (readOnly) {
+          alert('Tienes permisos de solo lectura en este módulo.');
+          return;
+        }
+
+        const amountStr = amountSelect.value;
+        const termStr   = termSelect.value;
+        const guarantor = guarantorSelect.value;
+
+        if (!amountStr || !termStr || !guarantor) {
+          alert('Rellena todos los campos del préstamo.');
+          return;
+        }
+
+        const amount = parseInt(amountStr, 10);
+        const termWeeks = parseInt(termStr, 10);
+        const interestPercent = interestFromWeeks(termWeeks);
+
+        const payload = {
+          requester_id: session.user.id,
+          amount,
+          term_weeks: termWeeks,
+          interest_percent: interestPercent,
+          guarantor_id: guarantor,
+          status: 'pendiente'
+        };
+
+        const { error: insError } = await supa
+          .from('loan_requests')
+          .insert(payload);
+
+        if (insError) {
+          console.error('Error creando préstamo:', insError);
+          alert('No se ha podido registrar el préstamo.\n\nDetalle: ' + insError.message);
+          return;
+        }
+
+        loanForm.reset();
+        solicitanteInput.value = handle;
+        interestInput.value = '';
+
+        await loadMyLoans();
+        alert('Solicitud de préstamo creada correctamente.');
+      });
+    });
+  </script>
+</body>
+</html>
