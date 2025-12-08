@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Departamento del Tesoro — Banco</title>
+  <link rel="stylesheet" href="./style.css"/>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="./config.js" defer></script>
+  <script src="./modules/db.js" defer></script>
+  <script src="./modules/layout.js" defer></script>
+
+  <style>
+    main.banco-main {
+      padding: 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .table {
+      width:100%;
+      border-collapse:collapse;
+      font-size:.82rem;
+    }
+
+    .table th,
+    .table td {
+      padding:0.35rem 0.5rem;
+      border-bottom:1px solid rgba(30,64,175,0.4);
+      text-align:left;
+      white-space:nowrap;
+    }
+
+    .table th {
+      font-size:.78rem;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      opacity:.75;
+    }
+
+    .table tbody tr:nth-child(even){
+      background:rgba(15,23,42,0.75);
+    }
+
+    .table tbody tr:hover{
+      background:rgba(15,23,42,0.95);
+    }
+
+    .badge {
+      display:inline-flex;
+      align-items:center;
+      padding:0.1rem 0.55rem;
+      border-radius:999px;
+      font-size:.75rem;
+      border:1px solid rgba(148,163,184,0.7);
+    }
+
+    .badge-ok {
+      border-color:rgba(34,197,94,0.9);
+    }
+
+    .badge-off {
+      border-color:rgba(148,163,184,0.9);
+    }
+
+    .btn {
+      padding:.45rem .9rem;
+      border-radius:999px;
+      border:1px solid #334155;
+      background:#020617;
+      color:#e5e7eb;
+      cursor:pointer;
+      font-size:.82rem;
+    }
+
+    .toolbar {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:.75rem;
+      flex-wrap:wrap;
+      margin-bottom:.6rem;
+    }
+
+    .toolbar input[type="search"] {
+      padding:0.35rem 0.5rem;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.7);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.8rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="banco-main">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
+      <div>
+        <h2>Banco</h2>
+      </div>
+      <button type="button"
+              class="btn"
+              onclick="window.location.href='./app_ui.html'">
+        ← Volver al panel
+      </button>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;">Cuentas de tesorería</h3>
+
+      <div class="toolbar">
+        <input type="search" id="search-accounts" placeholder="Buscar cuenta...">
+      </div>
+
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Cuenta</th>
+              <th>Código</th>
+              <th>Moneda</th>
+              <th>Saldo</th>
+              <th>Principal</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-accounts">
+            <tr><td colspan="6">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1.25rem;">
+      <h3 style="margin-top:0;">Movimientos recientes</h3>
+
+      <div class="toolbar">
+        <input type="search" id="search-mov" placeholder="Buscar por concepto...">
+      </div>
+
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Cuenta</th>
+              <th>Tipo</th>
+              <th>Cantidad</th>
+              <th>Estado</th>
+              <th>Concepto</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-movements">
+            <tr><td colspan="6">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script type="module">
+    import { getOrgStatus } from './modules/profile.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { supa } = window;
+
+      function formatAmount(amount) {
+        if (amount === null || amount === undefined) return '-';
+        const millions = amount / 1_000_000;
+        return millions.toLocaleString('es-ES', { maximumFractionDigits: 2 }) + ' M UEC';
+      }
+
+      function formatDate(iso) {
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return '-';
+        return d.toLocaleString('es-ES');
+      }
+
+      // SESIÓN
+      const { data: { session } } = await supa.auth.getSession();
+      if (!session) {
+        window.location.href = './index.html';
+        return;
+      }
+
+      // ORG
+      const orgStatus = await getOrgStatus();
+      if (!['miembro','daga','espada','admin'].includes(orgStatus)) {
+        await supa.auth.signOut();
+        window.location.href = './index.html';
+        return;
+      }
+
+      // Header
+      if (typeof window.loadHeader === 'function') {
+        await window.loadHeader('app');
+      }
+      if (typeof window.initHeaderUserMenu === 'function') {
+        window.initHeaderUserMenu(
+          session,
+          async () => {
+            await supa.auth.signOut();
+            window.location.href = './index.html';
+          },
+          () => {
+            window.location.href = './perfil.html';
+          }
+        );
+      }
+
+      // Permisos: usamos columna "almacenes" de roles_app como base
+      const { data: meRow } = await supa
+        .from('users')
+        .select('tesoro_internal_role')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      let internalRole = meRow?.tesoro_internal_role || null;
+      if (typeof internalRole === 'string') internalRole = internalRole.trim();
+
+      let roleRow = null;
+      if (internalRole) {
+        const numeric = Number(internalRole);
+        if (!Number.isNaN(numeric)) {
+          const { data } = await supa
+            .from('roles_app')
+            .select('*')
+            .eq('id', numeric)
+            .maybeSingle();
+          if (data) roleRow = data;
+        }
+        if (!roleRow) {
+          const { data } = await supa
+            .from('roles_app')
+            .select('*')
+            .ilike('role_name', internalRole)
+            .maybeSingle();
+          if (data) roleRow = data;
+        }
+      }
+
+      const bancoLevel = roleRow?.almacenes ?? 0;
+      if (!bancoLevel || bancoLevel === 0) {
+        alert('No tienes acceso al módulo Banco.');
+        window.location.href = './app_ui.html';
+        return;
+      }
+
+      const tbodyAccounts = document.getElementById('tbody-accounts');
+      const tbodyMov = document.getElementById('tbody-movements');
+      const searchAcc = document.getElementById('search-accounts');
+      const searchMov = document.getElementById('search-mov');
+
+      let accounts = [];
+      let movements = [];
+      const accountById = {};
+
+      async function loadAccounts() {
+        const { data, error } = await supa
+          .from('treasury_accounts')
+          .select('id, name, code, currency, balance_uec, is_primary, active')
+          .order('name', { ascending: true });
+
+        if (error) {
+          console.error('Error cargando cuentas:', error);
+          accounts = [];
+        } else {
+          accounts = data || [];
+        }
+
+        accountById.clear;
+        accounts.forEach(a => {
+          accountById[a.id] = a;
+        });
+
+        renderAccounts();
+      }
+
+      function renderAccounts() {
+        const q = (searchAcc.value || '').toLowerCase().trim();
+        tbodyAccounts.innerHTML = '';
+
+        accounts
+          .filter(a => {
+            if (!q) return true;
+            const s = (a.name || '').toLowerCase() + ' ' + (a.code || '').toLowerCase();
+            return s.includes(q);
+          })
+          .forEach(a => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${a.name || '-'}</td>
+              <td>${a.code || '-'}</td>
+              <td>${a.currency || 'UEC'}</td>
+              <td>${formatAmount(a.balance_uec)}</td>
+              <td>${a.is_primary ? '<span class="badge badge-ok">Sí</span>' : ''}</td>
+              <td>${a.active ? '<span class="badge badge-ok">Activa</span>' : '<span class="badge badge-off">Inactiva</span>'}</td>
+            `;
+            tbodyAccounts.appendChild(tr);
+          });
+
+        if (!tbodyAccounts.children.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="6">No hay cuentas definidas.</td>';
+          tbodyAccounts.appendChild(tr);
+        }
+      }
+
+      async function loadMovements() {
+        const { data, error } = await supa
+          .from('treasury_movements')
+          .select('id, account_id, amount_uec, direction, status, concept, created_at')
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        if (error) {
+          console.error('Error cargando movimientos:', error);
+          movements = [];
+        } else {
+          movements = data || [];
+        }
+
+        renderMovements();
+      }
+
+      function renderMovements() {
+        const q = (searchMov.value || '').toLowerCase().trim();
+        tbodyMov.innerHTML = '';
+
+        movements
+          .filter(m => {
+            if (!q) return true;
+            const s = (m.concept || '').toLowerCase();
+            return s.includes(q);
+          })
+          .forEach(m => {
+            const acc = accountById[m.account_id];
+            const accName = acc?.name || m.account_id || '-';
+            const sign = m.direction === 'gasto' ? '-' : m.direction === 'ingreso' ? '+' : '±';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${formatDate(m.created_at)}</td>
+              <td>${accName}</td>
+              <td>${m.direction}</td>
+              <td>${sign} ${formatAmount(Math.abs(m.amount_uec || 0))}</td>
+              <td>${m.status}</td>
+              <td>${m.concept || '-'}</td>
+            `;
+            tbodyMov.appendChild(tr);
+          });
+
+        if (!tbodyMov.children.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="6">No hay movimientos.</td>';
+          tbodyMov.appendChild(tr);
+        }
+      }
+
+      searchAcc.addEventListener('input', renderAccounts);
+      searchMov.addEventListener('input', renderMovements);
+
+      await loadAccounts();
+      await loadMovements();
+    });
+  </script>
+</body>
+</html>
