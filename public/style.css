@@ -1,15 +1,15 @@
-/* === FUENTE GLOBAL: NEUROPOL X BOLD === */
+/* === FUENTE GLOBAL: KERNEL SEMIBOLD === */
 @font-face {
-    font-family: 'NeuropolXBold';
-    src: url('./fonts/NeuropolX-Bold.ttf') format('truetype');
-    font-weight: bold;
+    font-family: 'KernelSemiBold';
+    src: url('./fonts/Kernel-SemiBold.otf') format('opentype');
+    font-weight: 600;
     font-style: normal;
     font-display: swap;
 }
 
 /* Aplicar la fuente a toda la web */
 html, body {
-    font-family: 'NeuropolXBold', sans-serif !important;
+    font-family: 'KernelSemiBold', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 *{box-sizing:border-box}
@@ -335,5 +335,5 @@ input,select{
 }
 
 * {
-    font-family: 'NeuropolXBold', sans-serif !important;
+    font-family: 'KernelSemiBold', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
 }
