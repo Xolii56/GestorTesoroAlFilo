@@ -204,7 +204,6 @@
   <div id="site-header"></div>
 
   <main class="tesoro-main">
-
     <div class="tesoro-sections">
 
       <!-- SOLICITUDES -->
@@ -222,7 +221,7 @@
           <div class="card module-card" data-module="sol_prestamo">
             <span class="module-chip">Solicitudes</span>
             <h3>Préstamo</h3>
-            <p>Solicitudes de préstamo de fondos o material a la Tesorería.</p>
+            <p>Solicitudes de préstamo de fondos al Tesoro.</p>
           </div>
 
           <div class="card module-card" data-module="sol_taller">
@@ -274,6 +273,32 @@
             <h3>Calendario</h3>
             <p>Vista de calendario con los movimientos distribuidos por día. (Pendiente de UI)</p>
           </div>
+
+          <div class="card module-card" data-module="banco">
+            <span class="module-chip">Tesoro</span>
+            <h3>Banco</h3>
+            <p>Gestión de cuentas de tesorería y movimientos de UEC.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONTRATOS -->
+      <section class="modules-group">
+        <h2 class="group-title">Contratos</h2>
+        <p class="group-subtitle">Gestión de avales y contratos internos.</p>
+
+        <div class="modules-grid">
+          <div class="card module-card" data-module="avales">
+            <span class="module-chip">Contratos</span>
+            <h3>Avales</h3>
+            <p>Gestión de contratos de préstamo en los que actúas como avalista.</p>
+          </div>
+
+          <div class="card module-card" data-module="contratos_trabajo">
+            <span class="module-chip">Contratos</span>
+            <h3>Contratos de trabajo</h3>
+            <p>Gestión de contratos de trabajo del clan. (Pendiente de UI)</p>
+          </div>
         </div>
       </section>
 
@@ -290,6 +315,7 @@
           </div>
         </div>
       </section>
+
     </div>
 
     <!-- PANEL ADMIN AL FINAL (solo admin interno del Tesoro) -->
@@ -327,16 +353,10 @@
         <button type="button" id="btn-reset-requests" class="btn btn-danger">
           Resetear solicitudes (vaciar tabla requests)
         </button>
-        <span class="help-text">
-          Borra todas las solicitudes y resetea el contador de IDs.
-        </span>
 
         <button type="button" id="btn-reset-warehouses" class="btn btn-secondary">
           Poner a 0 el stock de todos los almacenes
         </button>
-        <span class="help-text">
-          No borra almacenes ni commodities, solo pone la cantidad a 0 en <code>warehouse_items</code>.
-        </span>
       </div>
 
       <div class="admin-modal-actions">
@@ -436,7 +456,10 @@
       const moduleAliasForPerms = {
         sol_prestamo: 'solicitudes',
         sol_taller: 'solicitudes',
-        sol_armeria: 'solicitudes'
+        sol_armeria: 'solicitudes',
+        avales: 'solicitudes',
+        banco: 'almacenes',
+        contratos_trabajo: 'usuarios'
       };
 
       function getPermLevelForModule(normMod) {
@@ -458,11 +481,19 @@
         const level = getPermLevelForModule(normMod);
 
         if (!level || level === 0) {
-          card.classList.add('disabled');
+          // Contratos de trabajo lo dejamos visible pero no navegable (aún no implementado)
+          if (mod !== 'contratos_trabajo') {
+            card.classList.add('disabled');
+          }
         }
 
         card.addEventListener('click', () => {
           const currentLevel = getPermLevelForModule(normMod);
+
+          if (mod === 'contratos_trabajo') {
+            alert('El módulo "Contratos de trabajo" todavía no está implementado.');
+            return;
+          }
 
           if (!currentLevel || currentLevel === 0) {
             alert('No tienes acceso a este módulo.');
@@ -503,6 +534,14 @@
           }
           if (mod === 'inventario' || mod === 'calendario') {
             alert(`El módulo "${mod}" todavía no está implementado.`);
+            return;
+          }
+          if (mod === 'avales') {
+            window.location.href = './avales.html';
+            return;
+          }
+          if (mod === 'banco') {
+            window.location.href = './banco.html';
             return;
           }
 
