@@ -109,7 +109,7 @@
       border-radius: 12px;
       border: 1px solid #334155;
       background: #1e293b;
-      color: #e7eaf3;
+      color: #e5e7e3;
       cursor: pointer;
       font-size: 0.85rem;
     }
@@ -299,6 +299,12 @@
         return ({1:5, 2:10, 3:15, 4:20}[w] || 0);
       }
 
+      function capitalizeRank(rank) {
+        if (!rank) return '';
+        const r = rank.toString().toLowerCase();
+        return r.charAt(0).toUpperCase() + r.slice(1);
+      }
+
       // 1) Sesión
       const { data: { session } } = await supa.auth.getSession();
       if (!session) {
@@ -306,7 +312,7 @@
         return;
       }
 
-      // 2) Pertenencia a la org (solo para validar miembro / daga / espada / admin)
+      // 2) Pertenencia a la org
       const orgStatus = await getOrgStatus();
       if (!['miembro','daga','espada','admin'].includes(orgStatus)) {
         await supa.auth.signOut();
@@ -401,12 +407,12 @@
         loanSubmitBtn.classList.add('btn-disabled');
       }
 
-      // 6) Avalistas (org_status daga / espada / admin)
+      // 6) Avalistas (SOLO daga / espada)
       const guarantorsById = {};
       const { data: avalistas, error: avError } = await supa
         .from('users')
         .select('id, handle_name, discord_username, org_status')
-        .in('org_status', ['daga','espada','admin'])
+        .in('org_status', ['daga','espada'])   <!-- SOLO daga y espada -->
         .order('handle_name', { ascending: true });
 
       if (avError) {
@@ -414,10 +420,11 @@
       } else {
         (avalistas || []).forEach(u => {
           const name = u.handle_name || u.discord_username || u.id;
-          guarantorsById[u.id] = { name };
+          const rankLabel = capitalizeRank(u.org_status);
+          guarantorsById[u.id] = { name, org_status: u.org_status };
           const opt = document.createElement('option');
           opt.value = u.id;
-          opt.textContent = name;
+          opt.textContent = `${name} (${rankLabel})`;
           guarantorSelect.appendChild(opt);
         });
       }
@@ -484,7 +491,8 @@
             return g.includes(fOpen);
           })
           .forEach(l => {
-            const gName = guarantorsById[l.guarantor_id]?.name || '-';
+            const gData = guarantorsById[l.guarantor_id];
+            const gName = gData ? `${gData.name} (${capitalizeRank(gData.org_status)})` : '-';
             openTbody.insertAdjacentHTML('beforeend', `
               <tr>
                 <td>#${l.id}</td>
@@ -511,7 +519,8 @@
             return g.includes(fHist);
           })
           .forEach(l => {
-            const gName = guarantorsById[l.guarantor_id]?.name || '-';
+            const gData = guarantorsById[l.guarantor_id];
+            const gName = gData ? `${gData.name} (${capitalizeRank(gData.org_status)})` : '-';
             historyTbody.insertAdjacentHTML('beforeend', `
               <tr>
                 <td>#${l.id}</td>
