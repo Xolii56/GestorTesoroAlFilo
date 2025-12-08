@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Departamento del Tesoro — Avales</title>
+  <link rel="stylesheet" href="./style.css"/>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="./config.js" defer></script>
+  <script src="./modules/db.js" defer></script>
+  <script src="./modules/layout.js" defer></script>
+
+  <style>
+    main.avales-main {
+      padding: 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .loans-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .82rem;
+    }
+
+    .loans-table th,
+    .loans-table td {
+      padding: 0.35rem 0.5rem;
+      border-bottom: 1px solid rgba(30,64,175,0.4);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .loans-table th {
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      opacity: .75;
+    }
+
+    .loans-table tbody tr:nth-child(even) {
+      background: rgba(15,23,42,0.75);
+    }
+
+    .loans-table tbody tr:hover {
+      background: rgba(15,23,42,0.95);
+    }
+
+    .badge {
+      display:inline-flex;
+      align-items:center;
+      padding:0.1rem 0.55rem;
+      border-radius:999px;
+      font-size:.75rem;
+      border:1px solid rgba(148,163,184,0.7);
+    }
+
+    .badge-status-pendiente { border-color: rgba(250,204,21,0.9); }
+    .badge-status-aprobada  { border-color: rgba(34,197,94,0.9); }
+    .badge-status-rechazada { border-color: rgba(248,113,113,0.9); }
+    .badge-status-completada{ border-color: rgba(56,189,248,0.9); }
+    .badge-status-cancelada { border-color: rgba(148,163,184,0.9); }
+
+    .badge-av-pendiente { border-color: rgba(250,204,21,0.9); }
+    .badge-av-aceptado  { border-color: rgba(34,197,94,0.9); }
+    .badge-av-rechazado { border-color: rgba(248,113,113,0.9); }
+
+    .btn {
+      padding: .35rem .7rem;
+      border-radius: 999px;
+      border: 1px solid #334155;
+      background:#020617;
+      color:#e5e7eb;
+      cursor:pointer;
+      font-size:.78rem;
+    }
+
+    .btn-primary {
+      border-color:#22c55e;
+      background:#166534;
+    }
+
+    .btn-danger {
+      border-color:#b91c1c;
+      background:#7f1d1d;
+    }
+
+    .btn:hover {
+      filter:brightness(1.08);
+    }
+
+    .btn:disabled {
+      opacity:.4;
+      cursor:not-allowed;
+    }
+
+    .toolbar {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:.75rem;
+      flex-wrap:wrap;
+      margin-bottom:.6rem;
+    }
+
+    .toolbar input[type="search"] {
+      padding:0.35rem 0.5rem;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.7);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.8rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="avales-main">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
+      <div>
+        <h2>Avales</h2>
+      </div>
+      <button type="button"
+              class="btn"
+              onclick="window.location.href='./app_ui.html'">
+        ← Volver al panel
+      </button>
+    </div>
+
+    <!-- PENDIENTES DE AVAL -->
+    <div class="card">
+      <h3 style="margin-top:0;">Préstamos pendientes de tu aval</h3>
+
+      <div class="toolbar">
+        <input type="search" id="search-pend" placeholder="Buscar por solicitante...">
+      </div>
+
+      <div class="table-container">
+        <table class="loans-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Fecha</th>
+              <th>Solicitante</th>
+              <th>Cantidad</th>
+              <th>Plazo</th>
+              <th>Interés</th>
+              <th>Estado</th>
+              <th>Aval</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-pend">
+            <tr><td colspan="9">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- HISTÓRICO DE AVAL -->
+    <div class="card" style="margin-top:1.25rem;">
+      <h3 style="margin-top:0;">Histórico de avales</h3>
+
+      <div class="toolbar">
+        <input type="search" id="search-hist" placeholder="Buscar por solicitante...">
+      </div>
+
+      <div class="table-container">
+        <table class="loans-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Fecha</th>
+              <th>Solicitante</th>
+              <th>Cantidad</th>
+              <th>Plazo</th>
+              <th>Interés</th>
+              <th>Estado</th>
+              <th>Aval</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-hist">
+            <tr><td colspan="9">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script type="module">
+    import { getOrgStatus } from './modules/profile.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { supa } = window;
+
+      function formatAmount(amount) {
+        if (!amount) return '-';
+        return (amount / 1_000_000) + ' M UEC';
+      }
+
+      function formatDate(iso) {
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return '-';
+        return d.toLocaleString('es-ES');
+      }
+
+      function formatTerm(weeks) {
+        if (!weeks) return '-';
+        return `${weeks} sem`;
+      }
+
+      function interestFromWeeks(w) {
+        return ({1:5, 2:10, 3:15, 4:20}[w] || 0);
+      }
+
+      // SESIÓN
+      const { data: { session } } = await supa.auth.getSession();
+      if (!session) {
+        window.location.href = './index.html';
+        return;
+      }
+
+      // Pertenencia org (igual que resto módulos)
+      const orgStatus = await getOrgStatus();
+      if (!['miembro','daga','espada','admin'].includes(orgStatus)) {
+        await supa.auth.signOut();
+        window.location.href = './index.html';
+        return;
+      }
+
+      // Header
+      if (typeof window.loadHeader === 'function') {
+        await window.loadHeader('app');
+      }
+      if (typeof window.initHeaderUserMenu === 'function') {
+        window.initHeaderUserMenu(
+          session,
+          async () => {
+            await supa.auth.signOut();
+            window.location.href = './index.html';
+          },
+          () => {
+            window.location.href = './perfil.html';
+          }
+        );
+      }
+
+      // Map de solicitantes
+      const usersById = {};
+
+      async function ensureUsers(ids) {
+        const missing = ids.filter(id => id && !usersById[id]);
+        if (!missing.length) return;
+        const { data, error } = await supa
+          .from('users')
+          .select('id, handle_name, discord_username')
+          .in('id', missing);
+        if (error) {
+          console.error('Error cargando usuarios solicitantes:', error);
+          return;
+        }
+        (data || []).forEach(u => {
+          usersById[u.id] = {
+            name: u.handle_name || u.discord_username || u.id
+          };
+        });
+      }
+
+      const tbodyPend = document.getElementById('tbody-pend');
+      const tbodyHist = document.getElementById('tbody-hist');
+      const searchPend = document.getElementById('search-pend');
+      const searchHist = document.getElementById('search-hist');
+
+      let allLoans = [];
+
+      async function loadLoans() {
+        const { data, error } = await supa
+          .from('loan_requests')
+          .select('id, requester_id, guarantor_id, amount, term_weeks, interest_percent, status, guarantor_status, created_at')
+          .eq('guarantor_id', session.user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error cargando avales:', error);
+          allLoans = [];
+        } else {
+          allLoans = data || [];
+        }
+
+        const requesterIds = Array.from(new Set(allLoans.map(r => r.requester_id).filter(Boolean)));
+        await ensureUsers(requesterIds);
+
+        renderTables();
+      }
+
+      function renderTables() {
+        const qPend = (searchPend.value || '').toLowerCase().trim();
+        const qHist = (searchHist.value || '').toLowerCase().trim();
+
+        const pendientes = allLoans.filter(l => l.guarantor_status === 'pendiente');
+        const historico  = allLoans.filter(l => l.guarantor_status !== 'pendiente');
+
+        // pendientes
+        tbodyPend.innerHTML = '';
+        pendientes
+          .filter(l => {
+            if (!qPend) return true;
+            const name = usersById[l.requester_id]?.name?.toLowerCase() || '';
+            return name.includes(qPend);
+          })
+          .forEach(l => {
+            const requesterName = usersById[l.requester_id]?.name || l.requester_id || '-';
+            const interest = l.interest_percent ?? interestFromWeeks(l.term_weeks);
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>#${l.id}</td>
+              <td>${formatDate(l.created_at)}</td>
+              <td>${requesterName}</td>
+              <td>${formatAmount(l.amount)}</td>
+              <td>${formatTerm(l.term_weeks)}</td>
+              <td>${interest} %</td>
+              <td><span class="badge badge-status-pendiente">pendiente</span></td>
+              <td><span class="badge badge-av-pendiente">pendiente</span></td>
+              <td>
+                <button class="btn btn-primary btn-aceptar" data-id="${l.id}">Aceptar</button>
+                <button class="btn btn-danger btn-rechazar" data-id="${l.id}">Rechazar</button>
+                <button class="btn btn-detalle" data-id="${l.id}">Detalle</button>
+              </td>
+            `;
+            tbodyPend.appendChild(tr);
+          });
+
+        if (!tbodyPend.children.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="9">No tienes préstamos pendientes de aval.</td>';
+          tbodyPend.appendChild(tr);
+        }
+
+        // histórico
+        tbodyHist.innerHTML = '';
+        historico
+          .filter(l => {
+            if (!qHist) return true;
+            const name = usersById[l.requester_id]?.name?.toLowerCase() || '';
+            return name.includes(qHist);
+          })
+          .forEach(l => {
+            const requesterName = usersById[l.requester_id]?.name || l.requester_id || '-';
+            const interest = l.interest_percent ?? interestFromWeeks(l.term_weeks);
+            const avStatus = l.guarantor_status || 'pendiente';
+            const avClass = avStatus === 'aceptado'
+              ? 'badge-av-aceptado'
+              : avStatus === 'rechazado'
+                ? 'badge-av-rechazado'
+                : 'badge-av-pendiente';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>#${l.id}</td>
+              <td>${formatDate(l.created_at)}</td>
+              <td>${requesterName}</td>
+              <td>${formatAmount(l.amount)}</td>
+              <td>${formatTerm(l.term_weeks)}</td>
+              <td>${interest} %</td>
+              <td><span class="badge badge-status-${l.status}">${l.status}</span></td>
+              <td><span class="badge ${avClass}">${avStatus}</span></td>
+              <td>
+                <button class="btn btn-detalle" data-id="${l.id}">Detalle</button>
+              </td>
+            `;
+            tbodyHist.appendChild(tr);
+          });
+
+        if (!tbodyHist.children.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="9">No hay histórico de avales.</td>';
+          tbodyHist.appendChild(tr);
+        }
+
+        // bind acciones
+        tbodyPend.querySelectorAll('.btn-aceptar').forEach(btn => {
+          btn.addEventListener('click', () => handleDecision(btn.dataset.id, 'aceptado'));
+        });
+
+        tbodyPend.querySelectorAll('.btn-rechazar').forEach(btn => {
+          btn.addEventListener('click', () => handleDecision(btn.dataset.id, 'rechazado'));
+        });
+
+        document.querySelectorAll('.btn-detalle').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.dataset.id;
+            window.open(`./detalle_sol_prestamo.html?id=${id}`, '_blank', 'width=900,height=700');
+          });
+        });
+      }
+
+      async function handleDecision(id, decision) {
+        const msg = decision === 'aceptado'
+          ? '¿Confirmas que aceptas este aval?'
+          : '¿Confirmas que rechazas este aval?';
+
+        const ok = confirm(msg);
+        if (!ok) return;
+
+        const { error } = await supa
+          .from('loan_requests')
+          .update({
+            guarantor_status: decision,
+            guarantor_decision_at: new Date().toISOString()
+          })
+          .eq('id', id)
+          .eq('guarantor_id', session.user.id);
+
+        if (error) {
+          console.error('Error actualizando aval:', error);
+          alert('No se ha podido actualizar el aval.\n\n' + error.message);
+          return;
+        }
+
+        await loadLoans();
+      }
+
+      searchPend.addEventListener('input', renderTables);
+      searchHist.addEventListener('input', renderTables);
+
+      await loadLoans();
+    });
+  </script>
+</body>
+</html>
