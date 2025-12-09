@@ -260,15 +260,15 @@
       </div>
     </section>
 
-    <!-- LISTA DE PRÉSTAMOS -->
+    <!-- LISTA DE PRÉSTAMOS (asignados a interventor) -->
     <section class="card" style="margin-bottom:1.1rem;">
       <h3>Préstamos</h3>
 
       <div class="toolbar">
         <p class="help-text" style="margin:0;">
-          Listado de préstamos registrados en el sistema.
+          Préstamos ya asignados a un interventor.
         </p>
-        <input type="search" id="search-loans" placeholder="Filtrar por solicitante...">
+        <input type="search" id="search-loans" placeholder="Filtrar por solicitante o interventor...">
       </div>
 
       <div class="table-container">
@@ -292,7 +292,7 @@
       </div>
     </section>
 
-    <!-- SOLICITUDES PENDIENTES DE ASIGNAR -->
+    <!-- SOLICITUDES EN COLA (SIN INTERVENTOR) -->
     <section class="card">
       <h3>Solicitudes en cola (sin interventor)</h3>
 
@@ -465,6 +465,7 @@
       const intCancel     = document.getElementById('int-cancel');
 
       let interventors = [];
+      let interventorsById = {};
       let editingInterventorId = null;
 
       function openIntervModal(interv) {
@@ -524,7 +525,6 @@
               .eq('id', editingInterventorId);
             if (error) throw error;
           } else {
-            // fondo y disponible empiezan en 0
             payload.fund_total_uec = 0;
             payload.fund_available_uec = 0;
             const { error } = await supa
@@ -535,6 +535,7 @@
 
           closeIntervModal();
           await loadInterventors();
+          renderLoans(); // refrescar etiqueta de interventor en préstamos
         } catch (err) {
           console.error('Error guardando interventor:', err);
           alert('No se ha podido guardar el interventor. ' + (err.message || ''));
@@ -555,6 +556,9 @@
         }
 
         interventors = data || [];
+        interventorsById = {};
+        interventors.forEach(iv => { interventorsById[iv.id] = iv; });
+
         renderInterventors();
       }
 
@@ -609,7 +613,7 @@
       async function loadLoans() {
         const { data, error } = await supa
           .from('loan_requests')
-          .select('id, requester_id, guarantor_id, amount, term_weeks, interest_percent, status, guarantor_status, created_at')
+          .select('id, requester_id, guarantor_id, interventor_id, amount, term_weeks, interest_percent, status, guarantor_status, created_at')
           .order('created_at', { ascending: false });
 
         if (error) {
@@ -660,25 +664,35 @@
         return u.handle_name || u.discord_username || u.id;
       }
 
+      function getInterventorLabel(id) {
+        if (!id) return '-';
+        const iv = interventorsById[id];
+        return iv?.name || '-';
+      }
+
       function renderLoans() {
         if (!tbodyLoans) return;
         tbodyLoans.innerHTML = '';
 
         const term = (searchLoans?.value || '').toLowerCase().trim();
 
-        allLoans
+        // SOLO préstamos con interventor asignado
+        const assigned = allLoans.filter(l => l.interventor_id);
+
+        assigned
           .filter(l => {
             if (!term) return true;
-            const name = getUserLabel(l.requester_id).toLowerCase();
-            return name.includes(term);
+            const sName = getUserLabel(l.requester_id).toLowerCase();
+            const iName = getInterventorLabel(l.interventor_id).toLowerCase();
+            return sName.includes(term) || iName.includes(term);
           })
           .forEach(l => {
             const solicitante = getUserLabel(l.requester_id);
+            const intervName  = getInterventorLabel(l.interventor_id);
             const valor = formatAmount(l.amount || 0);
             const interes = (l.interest_percent || 0) + ' %';
             const fin = formatDateFromTerm(l.created_at, l.term_weeks || 0);
             const estado = mapLoanStatus(l.status);
-            // Recibido teórico si se ha cobrado (futuro estado "cobrado")
             const recibido = l.status === 'cobrado'
               ? formatAmount((l.amount || 0) * (1 + (l.interest_percent || 0) / 100))
               : '-';
@@ -687,7 +701,7 @@
             tr.innerHTML = `
               <td>#${l.id}</td>
               <td>${solicitante}</td>
-              <td>-</td>
+              <td>${intervName}</td>
               <td>${valor}</td>
               <td>${interes}</td>
               <td>${fin}</td>
@@ -699,7 +713,7 @@
 
         if (!tbodyLoans.children.length) {
           const tr = document.createElement('tr');
-          tr.innerHTML = '<td colspan="8">No hay préstamos registrados.</td>';
+          tr.innerHTML = '<td colspan="8">No hay préstamos asignados a interventor.</td>';
           tbodyLoans.appendChild(tr);
         }
       }
@@ -710,9 +724,10 @@
 
         const term = (searchReq?.value || '').toLowerCase().trim();
 
-        const pendings = allLoans.filter(l => l.status === 'pendiente');
+        // Solicitudes sin interventor asignado (cola del Tesoro)
+        const unassigned = allLoans.filter(l => !l.interventor_id);
 
-        pendings
+        unassigned
           .filter(l => {
             if (!term) return true;
             const sName = getUserLabel(l.requester_id).toLowerCase();
@@ -752,7 +767,7 @@
       searchLoans?.addEventListener('input', renderLoans);
       searchReq?.addEventListener('input', renderRequests);
 
-      await loadInterventors();
+      await loadInterventors(); // primero interventores para poder mostrar sus nombres
       await loadLoans();
     });
   </script>
