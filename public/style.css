@@ -1,16 +1,11 @@
-/* === FUENTE GLOBAL: ORBITRON REGULAR === */
-@font-face {
-    font-family: 'Orbitron';
-    src: url('./fonts/Orbitron-Regular.ttf') format('truetype');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
+/* === FUENTE GLOBAL: RAJDHANI === */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+
+html, body {
+    font-family: 'Rajdhani', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 500;
 }
 
-/* Aplicar la fuente a toda la web */
-html, body {
-    font-family: 'Orbitron', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
 
 *{box-sizing:border-box}
 body{
@@ -335,5 +330,6 @@ input,select{
 }
 
 * {
-    font-family: 'Orbitron', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+    font-family: 'Rajdhani', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
 }
+
