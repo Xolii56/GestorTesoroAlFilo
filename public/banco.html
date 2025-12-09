@@ -6,7 +6,6 @@
   <title>Departamento del Tesoro — Banco</title>
   <link rel="stylesheet" href="./style.css"/>
 
-  <!-- Supabase + módulos -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="./config.js" defer></script>
   <script src="./modules/db.js" defer></script>
@@ -106,30 +105,6 @@
       opacity:0.75;
     }
 
-    .status-pill {
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-width:3.4rem;
-      padding:0.12rem 0.55rem;
-      border-radius:999px;
-      font-size:.72rem;
-      text-transform:uppercase;
-      letter-spacing:.08em;
-    }
-
-    .status-pill.on {
-      background:rgba(22,163,74,0.15);
-      border:1px solid rgba(34,197,94,0.7);
-      color:#bbf7d0;
-    }
-
-    .status-pill.off {
-      background:rgba(127,29,29,0.25);
-      border:1px solid rgba(248,113,113,0.7);
-      color:#fecaca;
-    }
-
     .btn {
       padding: 0.45rem 0.9rem;
       border-radius: 999px;
@@ -154,6 +129,36 @@
 
     .btn:hover {
       filter:brightness(1.1);
+    }
+
+    .status-pill {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:3.4rem;
+      padding:0.12rem 0.55rem;
+      border-radius:999px;
+      font-size:.72rem;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+
+    .status-pill.ok {
+      background:rgba(22,163,74,0.15);
+      border:1px solid rgba(34,197,94,0.7);
+      color:#bbf7d0;
+    }
+
+    .status-pill.warn {
+      background:rgba(202,138,4,0.15);
+      border:1px solid rgba(234,179,8,0.7);
+      color:#fef9c3;
+    }
+
+    .status-pill.bad {
+      background:rgba(127,29,29,0.25);
+      border:1px solid rgba(248,113,113,0.7);
+      color:#fecaca;
     }
 
     /* Modal Interventores */
@@ -199,7 +204,8 @@
       margin-bottom:.15rem;
     }
 
-    .int-form input[type="text"] {
+    .int-form input[type="text"],
+    .int-form input[type="number"] {
       width:100%;
       padding:0.4rem 0.55rem;
       border-radius:0.55rem;
@@ -215,9 +221,7 @@
 
   <main class="banco-main">
     <div class="banco-header-row">
-      <div>
-        <h2>Banco</h2>
-      </div>
+      <h2>Banco</h2>
       <button type="button"
               class="btn"
               onclick="window.location.href='./app_ui.html'">
@@ -226,7 +230,7 @@
     </div>
 
     <!-- INTERVENTORES -->
-    <div class="card" style="margin-bottom:1.1rem;">
+    <section class="card" style="margin-bottom:1.1rem;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;gap:.75rem;flex-wrap:wrap;">
         <h3 style="margin:0;">Interventores</h3>
         <button type="button" id="btn-add-interventor" class="btn">
@@ -234,8 +238,8 @@
         </button>
       </div>
 
-      <p id="int-empty" class="help-text" style="margin:0.3rem 0 0.6rem;display:none;">
-        No hay interventores definidos todavía.
+      <p class="help-text" style="margin:0 0 .6rem;">
+        Personas del Tesoro que manejan fondos del clan y ejecutan las operaciones de préstamo.
       </p>
 
       <div class="table-container">
@@ -243,9 +247,9 @@
           <thead>
             <tr>
               <th>Interventor</th>
-              <th>Discord</th>
-              <th>Activo</th>
-              <th>Responsabilidades</th>
+              <th>Operativa máx.</th>
+              <th>Fondo</th>
+              <th>Disponible</th>
               <th></th>
             </tr>
           </thead>
@@ -254,65 +258,71 @@
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
 
-    <!-- CUENTAS -->
-    <div class="card">
-      <h3>Cuentas de tesorería</h3>
+    <!-- LISTA DE PRÉSTAMOS -->
+    <section class="card" style="margin-bottom:1.1rem;">
+      <h3>Préstamos</h3>
 
       <div class="toolbar">
         <p class="help-text" style="margin:0;">
-          Cuentas internas donde se reflejan los saldos de tesorería.
+          Listado de préstamos registrados en el sistema.
         </p>
-        <input type="search" id="search-accounts" placeholder="Buscar cuenta...">
+        <input type="search" id="search-loans" placeholder="Filtrar por solicitante...">
       </div>
 
       <div class="table-container">
         <table class="table">
           <thead>
             <tr>
-              <th>Cuenta</th>
-              <th>Código</th>
-              <th>Moneda</th>
-              <th>Saldo</th>
-              <th>Principal</th>
+              <th>ID préstamo</th>
+              <th>Solicitante</th>
+              <th>Interventor</th>
+              <th>Valor</th>
+              <th>Interés</th>
+              <th>Finalización</th>
               <th>Estado</th>
+              <th>Recibido</th>
             </tr>
           </thead>
-          <tbody id="tbody-accounts">
-            <tr><td colspan="6">Cargando...</td></tr>
+          <tbody id="tbody-loans">
+            <tr><td colspan="8">Cargando préstamos...</td></tr>
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
 
-    <!-- MOVIMIENTOS -->
-    <div class="card" style="margin-top:1.25rem;">
-      <h3>Movimientos recientes</h3>
+    <!-- SOLICITUDES PENDIENTES DE ASIGNAR -->
+    <section class="card">
+      <h3>Solicitudes en cola (sin interventor)</h3>
 
       <div class="toolbar">
-        <input type="search" id="search-mov" placeholder="Buscar por concepto...">
+        <p class="help-text" style="margin:0;">
+          Solicitudes de préstamo que todavía no están asignadas a ningún interventor.
+        </p>
+        <input type="search" id="search-requests" placeholder="Filtrar por solicitante o avalista...">
       </div>
 
       <div class="table-container">
         <table class="table">
           <thead>
             <tr>
-              <th>Fecha</th>
-              <th>Cuenta</th>
-              <th>Tipo</th>
-              <th>Cantidad</th>
-              <th>Estado</th>
-              <th>Concepto</th>
+              <th>ID</th>
+              <th>Solicitante</th>
+              <th>Avalista</th>
+              <th>Valor</th>
+              <th>Interés</th>
+              <th>Plazo</th>
+              <th>Estado aval</th>
+              <th>Fecha solicitud</th>
             </tr>
           </thead>
-          <tbody id="tbody-movements">
-            <tr><td colspan="6">Cargando...</td></tr>
+          <tbody id="tbody-requests">
+            <tr><td colspan="8">Cargando solicitudes...</td></tr>
           </tbody>
         </table>
       </div>
-    </div>
-
+    </section>
   </main>
 
   <!-- MODAL INTERVENTOR -->
@@ -322,26 +332,24 @@
       <form id="int-form" class="int-form">
         <div class="field">
           <label>Nombre / alias del interventor</label>
-          <input type="text" id="int_name" required/>
+          <input type="text" id="int_name" required />
         </div>
         <div class="field">
-          <label>Usuario / Discord</label>
-          <input type="text" id="int_discord" placeholder="usuario#1234 o @handle"/>
+          <label>Operativa máxima (en M UEC)</label>
+          <input type="number" min="0" step="0.1" id="int_max_op" placeholder="Ej: 5 (equivale a 5 M UEC)" required />
         </div>
         <div class="field">
-          <label style="display:flex;align-items:center;gap:.4rem;">
-            <input type="checkbox" id="int_active" checked/>
-            <span>Interventor activo</span>
-          </label>
+          <label>Usuario / Discord (opcional)</label>
+          <input type="text" id="int_discord" placeholder="usuario#1234 o @handle" />
         </div>
 
-        <div class="admin-modal-actions" style="margin-top:1rem;display:flex;justify-content:flex-end;gap:.5rem;">
+        <div style="margin-top:1rem;display:flex;justify-content:flex-end;gap:.5rem;">
           <button type="button" id="int-cancel" class="btn btn-secondary">Cancelar</button>
-          <button type="submit" class="btn btn-danger">Guardar</button>
+          <button type="submit" class="btn">Guardar</button>
         </div>
       </form>
       <p class="help-text" style="margin-top:.5rem;">
-        Los interventores son las personas que aportan fondos y reciben las solicitudes de préstamo.
+        Los interventores acumulan fondos del clan y ejecutan las transacciones de dinero de los préstamos.
       </p>
     </div>
   </div>
@@ -364,65 +372,77 @@
         return d.toLocaleString('es-ES');
       }
 
-      // 1) Sesión
+      function formatDateFromTerm(createdAt, weeks) {
+        const d = new Date(createdAt);
+        if (Number.isNaN(d.getTime())) return '-';
+        const result = new Date(d.getTime() + (weeks || 0) * 7 * 24 * 60 * 60 * 1000);
+        return result.toLocaleDateString('es-ES');
+      }
+
+      function mapLoanStatus(status) {
+        if (!status) return '-';
+        if (status === 'pendiente') return 'Esperando aprobación';
+        if (status === 'aprobada') return 'Concedido';
+        return status;
+      }
+
+      // SESIÓN
       const { data: { session } } = await supa.auth.getSession();
       if (!session) {
         window.location.href = './index.html';
         return;
       }
 
-      // 2) Estado en la org
       const orgStatus = await getOrgStatus();
-      if (!orgStatus || !["miembro","daga","espada","admin"].includes(orgStatus)) {
+      if (!['miembro','daga','espada','admin'].includes(orgStatus)) {
         await supa.auth.signOut();
-        window.location.href = "./index.html";
+        window.location.href = './index.html';
         return;
       }
 
-      // 3) Header
-      if (typeof window.loadHeader === "function") {
-        await window.loadHeader("app");
+      // Header
+      if (typeof window.loadHeader === 'function') {
+        await window.loadHeader('app');
       }
-      if (typeof window.initHeaderUserMenu === "function") {
+      if (typeof window.initHeaderUserMenu === 'function') {
         window.initHeaderUserMenu(
           session,
           async () => {
             await supa.auth.signOut();
-            window.location.href = "./index.html";
+            window.location.href = './index.html';
           },
-          () => window.location.href = "./perfil.html"
+          () => window.location.href = './perfil.html'
         );
       }
 
-      // 4) Permisos desde roles_app (como en otros módulos)
-      const { data: meRow } = await supa
+      // Rol interno de Tesoro
+      const { data: userRow } = await supa
         .from('users')
         .select('tesoro_internal_role')
         .eq('id', session.user.id)
         .maybeSingle();
 
-      let internalRole = meRow?.tesoro_internal_role || null;
+      let internalRole = userRow?.tesoro_internal_role || null;
       if (typeof internalRole === 'string') internalRole = internalRole.trim();
 
       let roleRow = null;
       if (internalRole) {
-        const numeric = Number(internalRole);
-        if (!Number.isNaN(numeric)) {
+        const numericId = Number(internalRole);
+        if (!Number.isNaN(numericId)) {
           const { data } = await supa
             .from('roles_app')
             .select('*')
-            .eq('id', numeric)
+            .eq('id', numericId)
             .maybeSingle();
-          roleRow = data || null;
+          if (data) roleRow = data;
         }
-
         if (!roleRow) {
           const { data } = await supa
             .from('roles_app')
             .select('*')
             .ilike('role_name', internalRole)
             .maybeSingle();
-          roleRow = data || null;
+          if (data) roleRow = data;
         }
       }
 
@@ -433,17 +453,16 @@
         return;
       }
 
-      // ---- Interventores (gestión básica) ----
-      const tbodyInterv = document.getElementById('tbody-interventores');
-      const emptyInterv = document.getElementById('int-empty');
-      const btnAddInterv = document.getElementById('btn-add-interventor');
-      const intModalBackdrop = document.getElementById('int-modal-backdrop');
-      const intForm = document.getElementById('int-form');
-      const intName = document.getElementById('int_name');
-      const intDiscord = document.getElementById('int_discord');
-      const intActive = document.getElementById('int_active');
+      // -------- INTERVENTORES --------
+      const tbodyInterv   = document.getElementById('tbody-interventores');
+      const btnAddInterv  = document.getElementById('btn-add-interventor');
+      const intModal      = document.getElementById('int-modal-backdrop');
+      const intForm       = document.getElementById('int-form');
+      const intName       = document.getElementById('int_name');
+      const intMaxOp      = document.getElementById('int_max_op');
+      const intDiscord    = document.getElementById('int_discord');
       const intModalTitle = document.getElementById('int-modal-title');
-      const intCancel = document.getElementById('int-cancel');
+      const intCancel     = document.getElementById('int-cancel');
 
       let interventors = [];
       let editingInterventorId = null;
@@ -454,15 +473,14 @@
           intModalTitle.textContent = editingInterventorId ? 'Editar interventor' : 'Nuevo interventor';
         }
         if (intName) intName.value = interv?.name || '';
+        if (intMaxOp) intMaxOp.value = interv?.max_operation_uec ? (interv.max_operation_uec / 1_000_000) : '';
         if (intDiscord) intDiscord.value = interv?.discord || '';
-        if (intActive) intActive.checked = interv?.active ?? true;
-        if (intModalBackdrop) intModalBackdrop.classList.add('open');
+        if (intModal) intModal.classList.add('open');
       }
 
       function closeIntervModal() {
-        if (intModalBackdrop) intModalBackdrop.classList.remove('open');
+        if (intModal) intModal.classList.remove('open');
         if (intForm) intForm.reset();
-        if (intActive) intActive.checked = true;
         editingInterventorId = null;
       }
 
@@ -471,24 +489,32 @@
         closeIntervModal();
       });
 
-      intModalBackdrop?.addEventListener('click', (e) => {
-        if (e.target === intModalBackdrop) closeIntervModal();
+      intModal?.addEventListener('click', (e) => {
+        if (e.target === intModal) closeIntervModal();
       });
 
       btnAddInterv?.addEventListener('click', () => openIntervModal(null));
 
       intForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const payload = {
-          name: intName?.value.trim(),
-          discord: intDiscord?.value.trim() || null,
-          active: !!(intActive?.checked)
-        };
+        const name = intName?.value.trim();
+        const maxOpMillions = parseFloat(intMaxOp?.value || '0');
+        const discord = intDiscord?.value.trim() || null;
 
-        if (!payload.name) {
+        if (!name) {
           alert('El nombre del interventor es obligatorio.');
           return;
         }
+        if (!(maxOpMillions > 0)) {
+          alert('La operativa máxima debe ser mayor que 0.');
+          return;
+        }
+
+        const payload = {
+          name,
+          discord,
+          max_operation_uec: Math.round(maxOpMillions * 1_000_000)
+        };
 
         try {
           if (editingInterventorId) {
@@ -498,6 +524,9 @@
               .eq('id', editingInterventorId);
             if (error) throw error;
           } else {
+            // fondo y disponible empiezan en 0
+            payload.fund_total_uec = 0;
+            payload.fund_available_uec = 0;
             const { error } = await supa
               .from('treasury_interventors')
               .insert(payload);
@@ -508,7 +537,7 @@
           await loadInterventors();
         } catch (err) {
           console.error('Error guardando interventor:', err);
-          alert('No se ha podido guardar el interventor.\n\n' + (err.message || 'Error desconocido.'));
+          alert('No se ha podido guardar el interventor. ' + (err.message || ''));
         }
       });
 
@@ -516,11 +545,12 @@
         if (!tbodyInterv) return;
         const { data, error } = await supa
           .from('treasury_interventors')
-          .select('id, name, discord, active, responsibility_count')
+          .select('id, name, discord, max_operation_uec, fund_total_uec, fund_available_uec')
           .order('name', { ascending: true });
 
         if (error) {
           console.error('Error cargando interventores:', error);
+          tbodyInterv.innerHTML = '<tr><td colspan="5">Error cargando interventores.</td></tr>';
           return;
         }
 
@@ -530,29 +560,25 @@
 
       function renderInterventors() {
         if (!tbodyInterv) return;
-
         tbodyInterv.innerHTML = '';
 
         if (!interventors.length) {
-          if (emptyInterv) emptyInterv.style.display = 'block';
           const tr = document.createElement('tr');
           tr.innerHTML = '<td colspan="5">No hay interventores definidos.</td>';
           tbodyInterv.appendChild(tr);
           return;
         }
 
-        if (emptyInterv) emptyInterv.style.display = 'none';
-
-        interventors.forEach((iv) => {
+        interventors.forEach(iv => {
           const tr = document.createElement('tr');
-          const estado = iv.active ? 'Activo' : 'Inactivo';
-          const resp = iv.responsibility_count ?? 0;
-
+          const maxOp = formatAmount(iv.max_operation_uec || 0);
+          const fondo = formatAmount(iv.fund_total_uec || 0);
+          const disp  = formatAmount(iv.fund_available_uec || 0);
           tr.innerHTML = `
             <td>${iv.name || '-'}</td>
-            <td>${iv.discord || '-'}</td>
-            <td><span class="status-pill ${iv.active ? 'on' : 'off'}">${estado}</span></td>
-            <td>${resp}</td>
+            <td>${maxOp}</td>
+            <td>${fondo}</td>
+            <td>${disp}</td>
             <td style="text-align:right;">
               <button type="button" class="btn btn-secondary btn-sm btn-edit-interv" data-id="${iv.id}">
                 Editar
@@ -562,143 +588,172 @@
           tbodyInterv.appendChild(tr);
         });
 
-        tbodyInterv.querySelectorAll('.btn-edit-interv').forEach((btn) => {
+        tbodyInterv.querySelectorAll('.btn-edit-interv').forEach(btn => {
           btn.addEventListener('click', () => {
             const id = btn.getAttribute('data-id');
-            const iv = interventors.find((x) => x.id === id);
+            const iv = interventors.find(x => x.id === id);
             if (iv) openIntervModal(iv);
           });
         });
       }
 
-      // ---- Cuentas y movimientos ----
-      const tbodyAccounts = document.getElementById('tbody-accounts');
-      const tbodyMov = document.getElementById('tbody-movements');
-      const searchAcc = document.getElementById('search-accounts');
-      const searchMov = document.getElementById('search-mov');
+      // -------- PRÉSTAMOS Y SOLICITUDES --------
+      const tbodyLoans    = document.getElementById('tbody-loans');
+      const tbodyRequests = document.getElementById('tbody-requests');
+      const searchLoans   = document.getElementById('search-loans');
+      const searchReq     = document.getElementById('search-requests');
 
-      let accounts = [];
-      let movements = [];
-      const accountById = {};
+      let allLoans = [];
+      let usersById = {};
 
-      async function loadAccounts() {
+      async function loadLoans() {
         const { data, error } = await supa
-          .from('treasury_accounts')
-          .select('id, name, code, currency, balance_uec, is_primary, active')
-          .order('name', { ascending: true });
+          .from('loan_requests')
+          .select('id, requester_id, guarantor_id, amount, term_weeks, interest_percent, status, guarantor_status, created_at')
+          .order('created_at', { ascending: false });
 
         if (error) {
-          console.error('Error cargando cuentas:', error);
+          console.error('Error cargando préstamos:', error);
+          if (tbodyLoans) tbodyLoans.innerHTML = '<tr><td colspan="8">Error cargando préstamos.</td></tr>';
+          if (tbodyRequests) tbodyRequests.innerHTML = '<tr><td colspan="8">Error cargando solicitudes.</td></tr>';
           return;
         }
-        accounts = data || [];
-        accountById.clear;
-        accountById; // no-op para evitar warnings
 
-        // reconstruimos el índice
-        for (const acc of accounts) {
-          if (acc && acc.id) accountById[acc.id] = acc;
-        }
-
-        renderAccounts();
+        allLoans = data || [];
+        await loadUsersForLoans();
+        renderLoans();
+        renderRequests();
       }
 
-      function renderAccounts() {
-        if (!tbodyAccounts) return;
-        tbodyAccounts.innerHTML = '';
-
-        const term = (searchAcc?.value || '').toLowerCase().trim();
-
-        let filtered = accounts;
-        if (term) {
-          filtered = accounts.filter(a =>
-            (a.name || '').toLowerCase().includes(term) ||
-            (a.code || '').toLowerCase().includes(term)
-          );
-        }
-
-        if (!filtered.length) {
-          const tr = document.createElement('tr');
-          tr.innerHTML = '<td colspan="6">No hay cuentas que coincidan con el filtro.</td>';
-          tbodyAccounts.appendChild(tr);
+      async function loadUsersForLoans() {
+        const ids = new Set();
+        allLoans.forEach(l => {
+          if (l.requester_id) ids.add(l.requester_id);
+          if (l.guarantor_id) ids.add(l.guarantor_id);
+        });
+        if (!ids.size) {
+          usersById = {};
           return;
         }
 
-        filtered.forEach(acc => {
-          const tr = document.createElement('tr');
-          const saldo = formatAmount(acc.balance_uec || 0);
-          const principal = acc.is_primary ? 'Sí' : 'No';
-          const estado = acc.active ? 'Activa' : 'Inactiva';
+        const { data, error } = await supa
+          .from('users')
+          .select('id, handle_name, discord_username')
+          .in('id', Array.from(ids));
 
-          tr.innerHTML = `
-            <td>${acc.name || '-'}</td>
-            <td>${acc.code || '-'}</td>
-            <td>${acc.currency || 'UEC'}</td>
-            <td>${saldo}</td>
-            <td>${principal}</td>
-            <td>${estado}</td>
-          `;
-          tbodyAccounts.appendChild(tr);
+        if (error) {
+          console.error('Error cargando usuarios de préstamos:', error);
+          usersById = {};
+          return;
+        }
+
+        usersById = {};
+        (data || []).forEach(u => {
+          usersById[u.id] = u;
         });
       }
 
-      async function loadMovements() {
-        const { data, error } = await supa
-          .from('treasury_movements')
-          .select('id, created_at, account_id, direction, amount_uec, status, concept')
-          .order('created_at', { ascending: false })
-          .limit(200);
-
-        if (error) {
-          console.error('Error cargando movimientos:', error);
-          return;
-        }
-        movements = data || [];
-        renderMovements();
+      function getUserLabel(id) {
+        if (!id) return '-';
+        const u = usersById[id];
+        if (!u) return id;
+        return u.handle_name || u.discord_username || u.id;
       }
 
-      function renderMovements() {
-        if (!tbodyMov) return;
-        tbodyMov.innerHTML = '';
+      function renderLoans() {
+        if (!tbodyLoans) return;
+        tbodyLoans.innerHTML = '';
 
-        const term = (searchMov?.value || '').toLowerCase().trim();
+        const term = (searchLoans?.value || '').toLowerCase().trim();
 
-        let filtered = movements;
-        if (term) {
-          filtered = movements.filter(m =>
-            (m.concept || '').toLowerCase().includes(term)
-          );
-        }
+        allLoans
+          .filter(l => {
+            if (!term) return true;
+            const name = getUserLabel(l.requester_id).toLowerCase();
+            return name.includes(term);
+          })
+          .forEach(l => {
+            const solicitante = getUserLabel(l.requester_id);
+            const valor = formatAmount(l.amount || 0);
+            const interes = (l.interest_percent || 0) + ' %';
+            const fin = formatDateFromTerm(l.created_at, l.term_weeks || 0);
+            const estado = mapLoanStatus(l.status);
+            // Recibido teórico si se ha cobrado (futuro estado "cobrado")
+            const recibido = l.status === 'cobrado'
+              ? formatAmount((l.amount || 0) * (1 + (l.interest_percent || 0) / 100))
+              : '-';
 
-        filtered.forEach(m => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>#${l.id}</td>
+              <td>${solicitante}</td>
+              <td>-</td>
+              <td>${valor}</td>
+              <td>${interes}</td>
+              <td>${fin}</td>
+              <td>${estado}</td>
+              <td>${recibido}</td>
+            `;
+            tbodyLoans.appendChild(tr);
+          });
+
+        if (!tbodyLoans.children.length) {
           const tr = document.createElement('tr');
-          const accName = accountById[m.account_id]?.name || '-';
-          const sign = m.direction === 'out' ? '-' : '+';
-
-          tr.innerHTML = `
-            <td>${formatDate(m.created_at)}</td>
-            <td>${accName}</td>
-            <td>${m.direction || '-'}</td>
-            <td>${sign} ${formatAmount(Math.abs(m.amount_uec || 0))}</td>
-            <td>${m.status || '-'}</td>
-            <td>${m.concept || '-'}</td>
-          `;
-          tbodyMov.appendChild(tr);
-        });
-
-        if (!tbodyMov.children.length) {
-          const tr = document.createElement('tr');
-          tr.innerHTML = '<td colspan="6">No hay movimientos.</td>';
-          tbodyMov.appendChild(tr);
+          tr.innerHTML = '<td colspan="8">No hay préstamos registrados.</td>';
+          tbodyLoans.appendChild(tr);
         }
       }
 
-      searchAcc?.addEventListener('input', renderAccounts);
-      searchMov?.addEventListener('input', renderMovements);
+      function renderRequests() {
+        if (!tbodyRequests) return;
+        tbodyRequests.innerHTML = '';
+
+        const term = (searchReq?.value || '').toLowerCase().trim();
+
+        const pendings = allLoans.filter(l => l.status === 'pendiente');
+
+        pendings
+          .filter(l => {
+            if (!term) return true;
+            const sName = getUserLabel(l.requester_id).toLowerCase();
+            const gName = getUserLabel(l.guarantor_id).toLowerCase();
+            return sName.includes(term) || gName.includes(term);
+          })
+          .forEach(l => {
+            const solicitante = getUserLabel(l.requester_id);
+            const avalista    = getUserLabel(l.guarantor_id);
+            const valor       = formatAmount(l.amount || 0);
+            const interes     = (l.interest_percent || 0) + ' %';
+            const plazo       = (l.term_weeks || 0) + ' semanas';
+            const estAval     = l.guarantor_status || '-';
+            const fechaSol    = formatDate(l.created_at);
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>#${l.id}</td>
+              <td>${solicitante}</td>
+              <td>${avalista}</td>
+              <td>${valor}</td>
+              <td>${interes}</td>
+              <td>${plazo}</td>
+              <td>${estAval}</td>
+              <td>${fechaSol}</td>
+            `;
+            tbodyRequests.appendChild(tr);
+          });
+
+        if (!tbodyRequests.children.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="8">No hay solicitudes pendientes de asignar.</td>';
+          tbodyRequests.appendChild(tr);
+        }
+      }
+
+      searchLoans?.addEventListener('input', renderLoans);
+      searchReq?.addEventListener('input', renderRequests);
 
       await loadInterventors();
-      await loadAccounts();
-      await loadMovements();
+      await loadLoans();
     });
   </script>
 </body>
