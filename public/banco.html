@@ -6,6 +6,7 @@
   <title>Departamento del Tesoro — Banco</title>
   <link rel="stylesheet" href="./style.css"/>
 
+  <!-- Supabase + módulos -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="./config.js" defer></script>
   <script src="./modules/db.js" defer></script>
@@ -18,60 +19,33 @@
       margin: 0 auto;
     }
 
-    .table {
-      width:100%;
-      border-collapse:collapse;
-      font-size:.82rem;
-    }
-
-    .table th,
-    .table td {
-      padding:0.35rem 0.5rem;
-      border-bottom:1px solid rgba(30,64,175,0.4);
-      text-align:left;
-      white-space:nowrap;
-    }
-
-    .table th {
-      font-size:.78rem;
-      text-transform:uppercase;
-      letter-spacing:.06em;
-      opacity:.75;
-    }
-
-    .table tbody tr:nth-child(even){
-      background:rgba(15,23,42,0.75);
-    }
-
-    .table tbody tr:hover{
-      background:rgba(15,23,42,0.95);
-    }
-
-    .badge {
-      display:inline-flex;
+    .banco-header-row {
+      display:flex;
+      justify-content:space-between;
       align-items:center;
-      padding:0.1rem 0.55rem;
-      border-radius:999px;
-      font-size:.75rem;
-      border:1px solid rgba(148,163,184,0.7);
+      margin-bottom:1rem;
+      gap:.75rem;
+      flex-wrap:wrap;
     }
 
-    .badge-ok {
-      border-color:rgba(34,197,94,0.9);
+    .banco-header-row h2 {
+      margin:0;
     }
 
-    .badge-off {
-      border-color:rgba(148,163,184,0.9);
+    .card {
+      border-radius: 0.9rem;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: radial-gradient(circle at 0% 0%, rgba(248,250,252,0.02), transparent 55%), rgba(15,23,42,0.98);
+      box-shadow:
+        0 0 0 1px rgba(15,23,42,0.6),
+        0 18px 45px rgba(15,23,42,1);
+      padding: 0.9rem 1rem 1rem;
     }
 
-    .btn {
-      padding:.45rem .9rem;
-      border-radius:999px;
-      border:1px solid #334155;
-      background:#020617;
-      color:#e5e7eb;
-      cursor:pointer;
-      font-size:.82rem;
+    .card h3 {
+      margin-top:0;
+      margin-bottom:0.5rem;
+      font-size:1rem;
     }
 
     .toolbar {
@@ -91,13 +65,156 @@
       color:#e5e7eb;
       font-size:.8rem;
     }
+
+    .table-container {
+      border-radius:0.6rem;
+      border:1px solid rgba(30,64,175,0.6);
+      background:radial-gradient(circle at 0% 0%, rgba(37,99,235,0.08), transparent 60%);
+      overflow:hidden;
+    }
+
+    .table {
+      width:100%;
+      border-collapse:collapse;
+      font-size:.82rem;
+    }
+
+    .table th,
+    .table td {
+      padding:0.35rem 0.5rem;
+      border-bottom:1px solid rgba(31,41,55,0.9);
+    }
+
+    .table th {
+      font-size:.78rem;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      opacity:.75;
+      background:rgba(15,23,42,0.95);
+    }
+
+    .table tbody tr:nth-child(even){
+      background:rgba(15,23,42,0.75);
+    }
+
+    .table tbody tr:hover {
+      background:rgba(30,64,175,0.35);
+    }
+
+    .help-text {
+      font-size:0.8rem;
+      opacity:0.75;
+    }
+
+    .status-pill {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:3.4rem;
+      padding:0.12rem 0.55rem;
+      border-radius:999px;
+      font-size:.72rem;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+
+    .status-pill.on {
+      background:rgba(22,163,74,0.15);
+      border:1px solid rgba(34,197,94,0.7);
+      color:#bbf7d0;
+    }
+
+    .status-pill.off {
+      background:rgba(127,29,29,0.25);
+      border:1px solid rgba(248,113,113,0.7);
+      color:#fecaca;
+    }
+
+    .btn {
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #e5e7eb;
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .btn-secondary {
+      background:transparent;
+    }
+
+    .btn-sm {
+      padding:0.25rem 0.6rem;
+      font-size:.75rem;
+    }
+
+    .btn:hover {
+      filter:brightness(1.1);
+    }
+
+    /* Modal Interventores */
+    .int-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.75);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .int-modal-backdrop.open {
+      display: flex;
+    }
+
+    .int-modal {
+      background: #020617;
+      border-radius: 16px;
+      padding: 1.4rem 1.3rem 1.1rem;
+      max-width: 480px;
+      width: 100%;
+      border: 1px solid rgba(148,163,184,0.5);
+      box-shadow:
+        0 20px 60px rgba(15,23,42,0.95),
+        0 0 0 1px rgba(15,23,42,0.5);
+    }
+
+    .int-modal h3 {
+      margin-top:0;
+      margin-bottom:.5rem;
+    }
+
+    .int-form .field {
+      margin-bottom: 0.65rem;
+    }
+
+    .int-form label {
+      display:block;
+      font-size:.8rem;
+      margin-bottom:.15rem;
+    }
+
+    .int-form input[type="text"] {
+      width:100%;
+      padding:0.4rem 0.55rem;
+      border-radius:0.55rem;
+      border:1px solid #334155;
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.85rem;
+    }
   </style>
 </head>
 <body>
   <div id="site-header"></div>
 
   <main class="banco-main">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
+    <div class="banco-header-row">
       <div>
         <h2>Banco</h2>
       </div>
@@ -108,10 +225,45 @@
       </button>
     </div>
 
+    <!-- INTERVENTORES -->
+    <div class="card" style="margin-bottom:1.1rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;gap:.75rem;flex-wrap:wrap;">
+        <h3 style="margin:0;">Interventores</h3>
+        <button type="button" id="btn-add-interventor" class="btn">
+          + Nuevo interventor
+        </button>
+      </div>
+
+      <p id="int-empty" class="help-text" style="margin:0.3rem 0 0.6rem;display:none;">
+        No hay interventores definidos todavía.
+      </p>
+
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Interventor</th>
+              <th>Discord</th>
+              <th>Activo</th>
+              <th>Responsabilidades</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody-interventores">
+            <tr><td colspan="5">Cargando interventores...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CUENTAS -->
     <div class="card">
-      <h3 style="margin-top:0;">Cuentas de tesorería</h3>
+      <h3>Cuentas de tesorería</h3>
 
       <div class="toolbar">
+        <p class="help-text" style="margin:0;">
+          Cuentas internas donde se reflejan los saldos de tesorería.
+        </p>
         <input type="search" id="search-accounts" placeholder="Buscar cuenta...">
       </div>
 
@@ -134,8 +286,9 @@
       </div>
     </div>
 
+    <!-- MOVIMIENTOS -->
     <div class="card" style="margin-top:1.25rem;">
-      <h3 style="margin-top:0;">Movimientos recientes</h3>
+      <h3>Movimientos recientes</h3>
 
       <div class="toolbar">
         <input type="search" id="search-mov" placeholder="Buscar por concepto...">
@@ -162,6 +315,37 @@
 
   </main>
 
+  <!-- MODAL INTERVENTOR -->
+  <div id="int-modal-backdrop" class="int-modal-backdrop">
+    <div class="int-modal">
+      <h3 id="int-modal-title">Nuevo interventor</h3>
+      <form id="int-form" class="int-form">
+        <div class="field">
+          <label>Nombre / alias del interventor</label>
+          <input type="text" id="int_name" required/>
+        </div>
+        <div class="field">
+          <label>Usuario / Discord</label>
+          <input type="text" id="int_discord" placeholder="usuario#1234 o @handle"/>
+        </div>
+        <div class="field">
+          <label style="display:flex;align-items:center;gap:.4rem;">
+            <input type="checkbox" id="int_active" checked/>
+            <span>Interventor activo</span>
+          </label>
+        </div>
+
+        <div class="admin-modal-actions" style="margin-top:1rem;display:flex;justify-content:flex-end;gap:.5rem;">
+          <button type="button" id="int-cancel" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" class="btn btn-danger">Guardar</button>
+        </div>
+      </form>
+      <p class="help-text" style="margin-top:.5rem;">
+        Los interventores son las personas que aportan fondos y reciben las solicitudes de préstamo.
+      </p>
+    </div>
+  </div>
+
   <script type="module">
     import { getOrgStatus } from './modules/profile.js';
 
@@ -180,39 +364,37 @@
         return d.toLocaleString('es-ES');
       }
 
-      // SESIÓN
+      // 1) Sesión
       const { data: { session } } = await supa.auth.getSession();
       if (!session) {
         window.location.href = './index.html';
         return;
       }
 
-      // ORG
+      // 2) Estado en la org
       const orgStatus = await getOrgStatus();
-      if (!['miembro','daga','espada','admin'].includes(orgStatus)) {
+      if (!orgStatus || !["miembro","daga","espada","admin"].includes(orgStatus)) {
         await supa.auth.signOut();
-        window.location.href = './index.html';
+        window.location.href = "./index.html";
         return;
       }
 
-      // Header
-      if (typeof window.loadHeader === 'function') {
-        await window.loadHeader('app');
+      // 3) Header
+      if (typeof window.loadHeader === "function") {
+        await window.loadHeader("app");
       }
-      if (typeof window.initHeaderUserMenu === 'function') {
+      if (typeof window.initHeaderUserMenu === "function") {
         window.initHeaderUserMenu(
           session,
           async () => {
             await supa.auth.signOut();
-            window.location.href = './index.html';
+            window.location.href = "./index.html";
           },
-          () => {
-            window.location.href = './perfil.html';
-          }
+          () => window.location.href = "./perfil.html"
         );
       }
 
-      // Permisos: usamos columna "almacenes" de roles_app como base
+      // 4) Permisos desde roles_app (como en otros módulos)
       const { data: meRow } = await supa
         .from('users')
         .select('tesoro_internal_role')
@@ -231,15 +413,16 @@
             .select('*')
             .eq('id', numeric)
             .maybeSingle();
-          if (data) roleRow = data;
+          roleRow = data || null;
         }
+
         if (!roleRow) {
           const { data } = await supa
             .from('roles_app')
             .select('*')
             .ilike('role_name', internalRole)
             .maybeSingle();
-          if (data) roleRow = data;
+          roleRow = data || null;
         }
       }
 
@@ -250,6 +433,145 @@
         return;
       }
 
+      // ---- Interventores (gestión básica) ----
+      const tbodyInterv = document.getElementById('tbody-interventores');
+      const emptyInterv = document.getElementById('int-empty');
+      const btnAddInterv = document.getElementById('btn-add-interventor');
+      const intModalBackdrop = document.getElementById('int-modal-backdrop');
+      const intForm = document.getElementById('int-form');
+      const intName = document.getElementById('int_name');
+      const intDiscord = document.getElementById('int_discord');
+      const intActive = document.getElementById('int_active');
+      const intModalTitle = document.getElementById('int-modal-title');
+      const intCancel = document.getElementById('int-cancel');
+
+      let interventors = [];
+      let editingInterventorId = null;
+
+      function openIntervModal(interv) {
+        editingInterventorId = interv?.id || null;
+        if (intModalTitle) {
+          intModalTitle.textContent = editingInterventorId ? 'Editar interventor' : 'Nuevo interventor';
+        }
+        if (intName) intName.value = interv?.name || '';
+        if (intDiscord) intDiscord.value = interv?.discord || '';
+        if (intActive) intActive.checked = interv?.active ?? true;
+        if (intModalBackdrop) intModalBackdrop.classList.add('open');
+      }
+
+      function closeIntervModal() {
+        if (intModalBackdrop) intModalBackdrop.classList.remove('open');
+        if (intForm) intForm.reset();
+        if (intActive) intActive.checked = true;
+        editingInterventorId = null;
+      }
+
+      intCancel?.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeIntervModal();
+      });
+
+      intModalBackdrop?.addEventListener('click', (e) => {
+        if (e.target === intModalBackdrop) closeIntervModal();
+      });
+
+      btnAddInterv?.addEventListener('click', () => openIntervModal(null));
+
+      intForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+          name: intName?.value.trim(),
+          discord: intDiscord?.value.trim() || null,
+          active: !!(intActive?.checked)
+        };
+
+        if (!payload.name) {
+          alert('El nombre del interventor es obligatorio.');
+          return;
+        }
+
+        try {
+          if (editingInterventorId) {
+            const { error } = await supa
+              .from('treasury_interventors')
+              .update(payload)
+              .eq('id', editingInterventorId);
+            if (error) throw error;
+          } else {
+            const { error } = await supa
+              .from('treasury_interventors')
+              .insert(payload);
+            if (error) throw error;
+          }
+
+          closeIntervModal();
+          await loadInterventors();
+        } catch (err) {
+          console.error('Error guardando interventor:', err);
+          alert('No se ha podido guardar el interventor.\n\n' + (err.message || 'Error desconocido.'));
+        }
+      });
+
+      async function loadInterventors() {
+        if (!tbodyInterv) return;
+        const { data, error } = await supa
+          .from('treasury_interventors')
+          .select('id, name, discord, active, responsibility_count')
+          .order('name', { ascending: true });
+
+        if (error) {
+          console.error('Error cargando interventores:', error);
+          return;
+        }
+
+        interventors = data || [];
+        renderInterventors();
+      }
+
+      function renderInterventors() {
+        if (!tbodyInterv) return;
+
+        tbodyInterv.innerHTML = '';
+
+        if (!interventors.length) {
+          if (emptyInterv) emptyInterv.style.display = 'block';
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="5">No hay interventores definidos.</td>';
+          tbodyInterv.appendChild(tr);
+          return;
+        }
+
+        if (emptyInterv) emptyInterv.style.display = 'none';
+
+        interventors.forEach((iv) => {
+          const tr = document.createElement('tr');
+          const estado = iv.active ? 'Activo' : 'Inactivo';
+          const resp = iv.responsibility_count ?? 0;
+
+          tr.innerHTML = `
+            <td>${iv.name || '-'}</td>
+            <td>${iv.discord || '-'}</td>
+            <td><span class="status-pill ${iv.active ? 'on' : 'off'}">${estado}</span></td>
+            <td>${resp}</td>
+            <td style="text-align:right;">
+              <button type="button" class="btn btn-secondary btn-sm btn-edit-interv" data-id="${iv.id}">
+                Editar
+              </button>
+            </td>
+          `;
+          tbodyInterv.appendChild(tr);
+        });
+
+        tbodyInterv.querySelectorAll('.btn-edit-interv').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            const iv = interventors.find((x) => x.id === id);
+            if (iv) openIntervModal(iv);
+          });
+        });
+      }
+
+      // ---- Cuentas y movimientos ----
       const tbodyAccounts = document.getElementById('tbody-accounts');
       const tbodyMov = document.getElementById('tbody-movements');
       const searchAcc = document.getElementById('search-accounts');
@@ -267,92 +589,102 @@
 
         if (error) {
           console.error('Error cargando cuentas:', error);
-          accounts = [];
-        } else {
-          accounts = data || [];
+          return;
         }
-
+        accounts = data || [];
         accountById.clear;
-        accounts.forEach(a => {
-          accountById[a.id] = a;
-        });
+        accountById; // no-op para evitar warnings
+
+        // reconstruimos el índice
+        for (const acc of accounts) {
+          if (acc && acc.id) accountById[acc.id] = acc;
+        }
 
         renderAccounts();
       }
 
       function renderAccounts() {
-        const q = (searchAcc.value || '').toLowerCase().trim();
+        if (!tbodyAccounts) return;
         tbodyAccounts.innerHTML = '';
 
-        accounts
-          .filter(a => {
-            if (!q) return true;
-            const s = (a.name || '').toLowerCase() + ' ' + (a.code || '').toLowerCase();
-            return s.includes(q);
-          })
-          .forEach(a => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${a.name || '-'}</td>
-              <td>${a.code || '-'}</td>
-              <td>${a.currency || 'UEC'}</td>
-              <td>${formatAmount(a.balance_uec)}</td>
-              <td>${a.is_primary ? '<span class="badge badge-ok">Sí</span>' : ''}</td>
-              <td>${a.active ? '<span class="badge badge-ok">Activa</span>' : '<span class="badge badge-off">Inactiva</span>'}</td>
-            `;
-            tbodyAccounts.appendChild(tr);
-          });
+        const term = (searchAcc?.value || '').toLowerCase().trim();
 
-        if (!tbodyAccounts.children.length) {
-          const tr = document.createElement('tr');
-          tr.innerHTML = '<td colspan="6">No hay cuentas definidas.</td>';
-          tbodyAccounts.appendChild(tr);
+        let filtered = accounts;
+        if (term) {
+          filtered = accounts.filter(a =>
+            (a.name || '').toLowerCase().includes(term) ||
+            (a.code || '').toLowerCase().includes(term)
+          );
         }
+
+        if (!filtered.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="6">No hay cuentas que coincidan con el filtro.</td>';
+          tbodyAccounts.appendChild(tr);
+          return;
+        }
+
+        filtered.forEach(acc => {
+          const tr = document.createElement('tr');
+          const saldo = formatAmount(acc.balance_uec || 0);
+          const principal = acc.is_primary ? 'Sí' : 'No';
+          const estado = acc.active ? 'Activa' : 'Inactiva';
+
+          tr.innerHTML = `
+            <td>${acc.name || '-'}</td>
+            <td>${acc.code || '-'}</td>
+            <td>${acc.currency || 'UEC'}</td>
+            <td>${saldo}</td>
+            <td>${principal}</td>
+            <td>${estado}</td>
+          `;
+          tbodyAccounts.appendChild(tr);
+        });
       }
 
       async function loadMovements() {
         const { data, error } = await supa
           .from('treasury_movements')
-          .select('id, account_id, amount_uec, direction, status, concept, created_at')
+          .select('id, created_at, account_id, direction, amount_uec, status, concept')
           .order('created_at', { ascending: false })
-          .limit(50);
+          .limit(200);
 
         if (error) {
           console.error('Error cargando movimientos:', error);
-          movements = [];
-        } else {
-          movements = data || [];
+          return;
         }
-
+        movements = data || [];
         renderMovements();
       }
 
       function renderMovements() {
-        const q = (searchMov.value || '').toLowerCase().trim();
+        if (!tbodyMov) return;
         tbodyMov.innerHTML = '';
 
-        movements
-          .filter(m => {
-            if (!q) return true;
-            const s = (m.concept || '').toLowerCase();
-            return s.includes(q);
-          })
-          .forEach(m => {
-            const acc = accountById[m.account_id];
-            const accName = acc?.name || m.account_id || '-';
-            const sign = m.direction === 'gasto' ? '-' : m.direction === 'ingreso' ? '+' : '±';
+        const term = (searchMov?.value || '').toLowerCase().trim();
 
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${formatDate(m.created_at)}</td>
-              <td>${accName}</td>
-              <td>${m.direction}</td>
-              <td>${sign} ${formatAmount(Math.abs(m.amount_uec || 0))}</td>
-              <td>${m.status}</td>
-              <td>${m.concept || '-'}</td>
-            `;
-            tbodyMov.appendChild(tr);
-          });
+        let filtered = movements;
+        if (term) {
+          filtered = movements.filter(m =>
+            (m.concept || '').toLowerCase().includes(term)
+          );
+        }
+
+        filtered.forEach(m => {
+          const tr = document.createElement('tr');
+          const accName = accountById[m.account_id]?.name || '-';
+          const sign = m.direction === 'out' ? '-' : '+';
+
+          tr.innerHTML = `
+            <td>${formatDate(m.created_at)}</td>
+            <td>${accName}</td>
+            <td>${m.direction || '-'}</td>
+            <td>${sign} ${formatAmount(Math.abs(m.amount_uec || 0))}</td>
+            <td>${m.status || '-'}</td>
+            <td>${m.concept || '-'}</td>
+          `;
+          tbodyMov.appendChild(tr);
+        });
 
         if (!tbodyMov.children.length) {
           const tr = document.createElement('tr');
@@ -361,9 +693,10 @@
         }
       }
 
-      searchAcc.addEventListener('input', renderAccounts);
-      searchMov.addEventListener('input', renderMovements);
+      searchAcc?.addEventListener('input', renderAccounts);
+      searchMov?.addEventListener('input', renderMovements);
 
+      await loadInterventors();
       await loadAccounts();
       await loadMovements();
     });
