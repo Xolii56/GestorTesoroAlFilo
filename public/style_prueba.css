@@ -1,0 +1,421 @@
+/* === FUENTE GLOBAL: RAJDHANI === */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
+
+/* === TOKENS BÁSICOS === */
+:root {
+  --bg-body: #020617;
+  --bg-surface: #020617;
+  --bg-surface-elevated: #020617;
+
+  --border-subtle: rgba(148,163,184,0.35);
+  --border-strong: rgba(30,64,175,0.8);
+
+  --text-primary: #e5e7eb;
+  --text-muted: #9ca3af;
+
+  --accent: #38bdf8;
+  --accent-soft: rgba(56,189,248,0.15);
+
+  --status-ok: #22c55e;
+  --status-warn: #eab308;
+  --status-bad: #f97373;
+  --status-info: #38bdf8;
+}
+
+/* === BASE === */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Rajdhani', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 500;
+  background: radial-gradient(circle at 0% 0%, rgba(56,189,248,0.07), transparent 55%),
+              #020617;
+  color: var(--text-primary);
+}
+
+body {
+  min-height: 100vh;
+}
+
+/* === PAGE LAYOUT MUESTRARIO === */
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.8rem 1.4rem 3rem;
+}
+
+.page-header {
+  margin-bottom: 1.5rem;
+}
+
+.page-title {
+  font-size: 1.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin: 0 0 .3rem;
+  color: #f9fafb;
+  text-shadow:
+    0 0 4px rgba(59,130,246,0.85),
+    0 0 12px rgba(56,189,248,0.75),
+    0 0 24px rgba(56,189,248,0.55);
+}
+
+.page-subtitle {
+  font-size: .9rem;
+  color: var(--text-muted);
+}
+
+.sample-section {
+  margin-bottom: 1.8rem;
+}
+
+.sample-section-title {
+  font-size: .95rem;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  margin-bottom: .8rem;
+  opacity: .85;
+}
+
+.sample-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: .9rem;
+}
+
+.sample-item {
+  position: relative;
+  border-radius: .9rem;
+  border: 1px dashed rgba(148,163,184,0.4);
+  padding: .75rem .75rem .75rem;
+  background: radial-gradient(circle at 0% 0%, rgba(15,23,42,0.9), rgba(15,23,42,1));
+}
+
+.sample-item-inner {
+  margin-top: .35rem;
+}
+
+.sample-label {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--text-muted);
+}
+
+.sample-label-code {
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,0.5);
+  background: rgba(15,23,42,0.9);
+}
+
+/* === TITULOS / TEXTO DE EJEMPLO === */
+.heading-1 {
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: .18em;
+}
+
+.heading-2 {
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+}
+
+.heading-3 {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}
+
+.text-muted {
+  color: var(--text-muted);
+  font-size: .85rem;
+}
+
+/* === CARDS / CONTENEDORES === */
+.card {
+  border-radius: 0.9rem;
+  border: 1px solid var(--border-subtle);
+  background: radial-gradient(circle at 0% 0%, rgba(248,250,252,0.02), transparent 55%),
+              rgba(15,23,42,0.98);
+  box-shadow:
+    0 0 0 1px rgba(15,23,42,0.6),
+    0 18px 45px rgba(15,23,42,1);
+  padding: 0.9rem 1rem 1rem;
+}
+
+.card-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:.75rem;
+  margin-bottom:.6rem;
+}
+
+.card-header h3 {
+  margin:0;
+  font-size:1rem;
+}
+
+/* === BOTONES === */
+.btn {
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #e5e7eb;
+  font-size: 0.82rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  text-decoration:none;
+}
+
+.btn-sm {
+  padding:0.25rem 0.6rem;
+  font-size:.75rem;
+}
+
+.btn-block {
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-primary {
+  border-color: var(--accent);
+  background: radial-gradient(circle at 0% 0%, rgba(56,189,248,0.25), transparent 55%),
+              rgba(15,23,42,1);
+}
+
+.btn-secondary {
+  background:transparent;
+  border-color:#475569;
+}
+
+.btn-danger {
+  border-color: var(--status-bad);
+  background:rgba(127,29,29,0.9);
+}
+
+.btn-ghost {
+  background:transparent;
+  border-color:transparent;
+}
+
+.btn:hover {
+  filter:brightness(1.1);
+}
+
+/* === TAGS / ETIQUETAS === */
+.tag {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:0.18rem 0.7rem;
+  border-radius:999px;
+  border:1px solid var(--border-subtle);
+  background: rgba(15,23,42,0.9);
+  font-size:0.7rem;
+  text-transform:uppercase;
+  letter-spacing:0.12em;
+  color:var(--text-primary);
+}
+
+.tag-lg {
+  padding:0.28rem 1rem;
+  font-size:0.8rem;
+  font-weight:600;
+}
+
+/* Estados genéricos */
+.tag--info {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: #e0f2fe;
+}
+
+.tag--ok {
+  border-color: var(--status-ok);
+  background: rgba(34,197,94,0.18);
+  color:#bbf7d0;
+}
+
+.tag--warn {
+  border-color: var(--status-warn);
+  background: rgba(234,179,8,0.18);
+  color:#fef9c3;
+}
+
+.tag--bad {
+  border-color: var(--status-bad);
+  background: rgba(248,113,113,0.2);
+  color:#fee2e2;
+}
+
+/* Tipos de solicitud */
+.tag--compra {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color:#e0f2fe;
+}
+
+.tag--venta {
+  border-color:#f97316;
+  background:rgba(248,148,60,0.18);
+  color:#ffedd5;
+}
+
+.tag--taller {
+  border-color:#a855f7;
+  background:rgba(168,85,247,0.18);
+  color:#f3e8ff;
+}
+
+.tag--armeria {
+  border-color:#fbbf24;
+  background:rgba(251,191,36,0.18);
+  color:#fef3c7;
+}
+
+/* Estados específicos */
+.tag--aprobada { border-color: var(--status-ok); background: rgba(34,197,94,0.18); color:#bbf7d0; }
+.tag--rechazada{ border-color: var(--status-bad); background: rgba(248,113,113,0.2); color:#fee2e2; }
+.tag--pendiente{ border-color: var(--status-warn); background: rgba(234,179,8,0.18); color:#fef9c3; }
+
+/* === TABLAS === */
+.table-container {
+  border-radius:0.6rem;
+  border:1px solid var(--border-strong);
+  background:radial-gradient(circle at 0% 0%, rgba(37,99,235,0.08), transparent 60%);
+  overflow:hidden;
+}
+
+.table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:.82rem;
+}
+
+.table th,
+.table td {
+  padding:0.35rem 0.5rem;
+  border-bottom:1px solid rgba(31,41,55,0.9);
+}
+
+.table th {
+  font-size:.78rem;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  opacity:.75;
+  background:rgba(15,23,42,0.95);
+}
+
+.table tbody tr:nth-child(even){
+  background:rgba(15,23,42,0.75);
+}
+
+.table tbody tr:hover {
+  background:rgba(30,64,175,0.35);
+}
+
+.table-row-clickable {
+  cursor:pointer;
+}
+
+/* === DETALLE (solicitudes / préstamos) === */
+.detail-grid {
+  display:grid;
+  grid-template-columns: minmax(0, 170px) minmax(0, 1fr);
+  gap:0.3rem 1.2rem;
+  font-size:.85rem;
+}
+
+.detail-label {
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-size:.7rem;
+  opacity:.7;
+}
+
+.detail-value {
+  font-size:.9rem;
+}
+
+.detail-row-full {
+  grid-column:1 / -1;
+}
+
+/* === TARJETA MÓDULO (tipo app_ui) === */
+.module-card {
+  cursor: pointer;
+  position: relative;
+  border-radius: 14px;
+  border: 1px solid #4b5563;
+  background: radial-gradient(circle at 0% 0%, rgba(15,23,42,0.9), rgba(15,23,42,1));
+  box-shadow:
+    0 0 0 1px rgba(15,23,42,1),
+    0 0 26px rgba(15,23,42,0.9);
+  padding: 0.9rem 1rem;
+  display:flex;
+  flex-direction:column;
+  gap:.4rem;
+}
+
+.module-card:hover {
+  transform: translateY(-2px);
+  border-color: #e5e7eb;
+  box-shadow:
+    0 0 0 1px rgba(56,189,248,0.5),
+    0 0 40px rgba(56,189,248,0.85),
+    0 18px 46px rgba(15,23,42,1);
+}
+
+.module-card-title {
+  font-size:.85rem;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+.module-card-footer {
+  margin-top:.2rem;
+  font-size:.75rem;
+  color:var(--text-muted);
+}
+
+/* === AVISOS / ALERTS === */
+.alert {
+  border-radius: .75rem;
+  padding: .6rem .8rem;
+  font-size: .8rem;
+  display:flex;
+  gap:.6rem;
+  align-items:flex-start;
+}
+
+.alert-icon {
+  font-size:1.1rem;
+}
+
+.alert--info {
+  border:1px solid var(--accent);
+  background:rgba(15,23,42,0.9);
+}
+
+.alert--warn {
+  border:1px solid var(--status-warn);
+  background:rgba(66,32,6,0.8);
+}
+
+.alert--bad {
+  border:1px solid var(--status-bad);
+  background:rgba(69,10,10,0.8);
+}
