@@ -427,3 +427,37 @@ body {
   border:1px solid var(--status-bad);
   background:rgba(69,10,10,0.8);
 }
+/* ============================================================
+   TOGGLE BINARIO (Compra / Venta) — Componente estándar
+   ============================================================ */
+
+.toggle-binario {
+  display: inline-flex;
+  gap: 0.35rem;
+}
+
+.toggle-binario .toggle-btn {
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--line-soft);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all .18s ease;
+  user-select: none;
+}
+
+.toggle-binario .toggle-btn:hover {
+  background: rgba(56,189,248,0.08);
+  border-color: var(--accent);
+}
+
+/* Estado activo */
+.toggle-binario .toggle-btn.active {
+  background: rgba(56,189,248,0.20);
+  border-color: var(--accent);
+  box-shadow: 0 0 6px rgba(56,189,248,0.45);
+  color: #e0f2fe;
+  font-weight: 600;
+}
