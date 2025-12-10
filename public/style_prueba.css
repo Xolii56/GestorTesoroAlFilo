@@ -116,23 +116,36 @@ body {
   background: rgba(15,23,42,0.9);
 }
 
-/* === TITULOS / TEXTO DE EJEMPLO === */
+/* ============================================================
+   HEADINGS · Tipografía principal
+   ============================================================ */
+
+/* Heading 1 — Título de página (Aura fuerte) */
 .heading-1 {
-  font-size: 1.5rem;
-  text-transform: uppercase;
-  letter-spacing: .18em;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-shadow:
+    0 0 6px rgba(125, 211, 252, 0.7),
+    0 0 12px rgba(56, 189, 248, 0.5);
 }
 
+/* Heading 2 — Título de bloque (Aura suave) */
 .heading-2 {
-  font-size: 1.2rem;
-  text-transform: uppercase;
-  letter-spacing: .14em;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-shadow:
+    0 0 4px rgba(125, 211, 252, 0.45),
+    0 0 8px rgba(56, 189, 248, 0.28);
 }
 
+/* Heading 3 — Subtítulo / sección (sin glow) */
 .heading-3 {
-  font-size: 1rem;
-  text-transform: uppercase;
-  letter-spacing: .12em;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-shadow: none;
 }
 
 .text-muted {
