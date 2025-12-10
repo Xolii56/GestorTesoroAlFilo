@@ -428,7 +428,7 @@ body {
   background:rgba(69,10,10,0.8);
 }
 /* ============================================================
-   TOGGLE BINARIO (Compra / Venta) — Componente estándar
+   TOGGLE BINARIO (Compra / Venta)
    ============================================================ */
 
 .toggle-binario {
@@ -437,9 +437,9 @@ body {
 }
 
 .toggle-binario .toggle-btn {
-  padding: 0.28rem 0.75rem;
+  padding: 0.28rem 0.8rem;
   border-radius: 999px;
-  border: 1px solid var(--line-soft);
+  border: 1px solid var(--border-subtle); /* borde siempre visible */
   background: transparent;
   color: var(--text-primary);
   font-size: 0.8rem;
@@ -453,11 +453,23 @@ body {
   border-color: var(--accent);
 }
 
-/* Estado activo */
+/* Estado activo genérico: le metemos un pelín de glow */
 .toggle-binario .toggle-btn.active {
-  background: rgba(56,189,248,0.20);
+  box-shadow: 0 0 6px rgba(15,23,42,0.8);
+}
+
+/* Activo COMPRA → mismo color que TAG compra */
+.toggle-binario .toggle-btn[data-value="compra"].active {
   border-color: var(--accent);
-  box-shadow: 0 0 6px rgba(56,189,248,0.45);
+  background: var(--accent-soft);
   color: #e0f2fe;
-  font-weight: 600;
+  box-shadow: 0 0 10px rgba(56,189,248,0.6);
+}
+
+/* Activo VENTA → mismo color que TAG venta */
+.toggle-binario .toggle-btn[data-value="venta"].active {
+  border-color: #f97316;
+  background: rgba(248,148,60,0.18);
+  color: #ffedd5;
+  box-shadow: 0 0 10px rgba(248,148,60,0.55);
 }
