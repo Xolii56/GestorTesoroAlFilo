@@ -141,14 +141,24 @@
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAG-ESTADO-01</span>
-            <span>Estados de solicitud</span>
+            <span>Estados de solicitud / préstamo / aval</span>
           </div>
           <div class="sample-item-inner">
+            <!-- Solicitudes -->
             <span class="tag tag--pendiente">Pendiente</span>
             <span class="tag tag--aprobada">Aprobada</span>
             <span class="tag tag--rechazada">Rechazada</span>
             <span class="tag tag--cancelada">Cancelada</span>
             <span class="tag tag--completada">Completada</span>
+
+            <!-- Préstamos -->
+            <span class="tag tag--concedido">Concedido</span>
+            <span class="tag tag--cobrado">Cobrado</span>
+
+            <!-- Avales -->
+            <span class="tag tag--esperando-aval">Esperando aval</span>
+            <span class="tag tag--aval-aceptado">Aval aceptado</span>
+            <span class="tag tag--aval-rechazado">Aval rechazado</span>
           </div>
         </div>
 
@@ -274,7 +284,7 @@
                     <td>GestorAlpha</td>
                     <td>2.0 M UEC</td>
                     <td>10 %</td>
-                    <td><span class="tag tag--aprobada">Concedido</span></td>
+                    <td><span class="tag tag--concedido">Concedido</span></td>
                   </tr>
                   <tr>
                     <td>#2002</td>
@@ -282,7 +292,7 @@
                     <td>GestorBeta</td>
                     <td>0.5 M UEC</td>
                     <td>15 %</td>
-                    <td><span class="tag tag--pendiente">Esperando aval</span></td>
+                    <td><span class="tag tag--esperando-aval">Esperando aval</span></td>
                   </tr>
                 </tbody>
               </table>
@@ -364,7 +374,7 @@
             <div class="card">
               <div class="card-header">
                 <h3>Detalle del préstamo</h3>
-                <span class="tag tag--aprobada">Concedido</span>
+                <span class="tag tag--concedido">Concedido</span>
               </div>
 
               <div class="detail-grid">
@@ -394,12 +404,12 @@
 
                 <div class="detail-label">Estado solicitud</div>
                 <div class="detail-value">
-                  <span class="tag tag--aprobada">Concedido</span>
+                  <span class="tag tag--concedido">Concedido</span>
                 </div>
 
                 <div class="detail-label">Estado aval</div>
                 <div class="detail-value">
-                  <span class="tag tag--ok">Aval aceptado</span>
+                  <span class="tag tag--aval-aceptado">Aval aceptado</span>
                 </div>
 
                 <div class="detail-label">Creado</div>
