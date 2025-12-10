@@ -309,7 +309,12 @@ body {
 .tag--rechazada{ border-color: var(--status-bad); background: rgba(248,113,113,0.2); color:#fee2e2; }
 .tag--pendiente{ border-color: var(--status-warn); background: rgba(234,179,8,0.18); color:#fef9c3; }
 .tag--cancelada {  border-color: var(--status-bad);  background: rgba(248,113,113,0.12);  color: #fecaca; }
-.tag--completada {  border-color: var(--status-ok);  background: rgba(34,197,94,0.15);  color: #bbf7d0; }
+.tag--esperando-aval {  border-color: #facc15;  background: rgba(250,204,21,0.15);   color: #fef9c3; }
+.tag--aval-aceptado {  border-color: #22c55e;  background: rgba(34,197,94,0.15);  color: #dcfce7; }
+.tag--aval-rechazado {  border-color: #ef4444;  background: rgba(239,68,68,0.15);  color: #fee2e2; }
+.tag--concedido {  border-color: #38bdf8;  background: rgba(56,189,248,0.18);  color: #e0f2fe; }
+.tag--cobrado {  border-color: #22c55e;  background: rgba(34,197,94,0.18);  color: #bbf7d0; }
+.tag--completada {  border-color: #3b82f6;  background: rgba(59,130,246,0.20);  color: #dbeafe; }
 
 /* === TABLAS === */
 .table-container {
