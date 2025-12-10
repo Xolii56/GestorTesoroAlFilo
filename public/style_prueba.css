@@ -296,6 +296,8 @@ body {
 .tag--aprobada { border-color: var(--status-ok); background: rgba(34,197,94,0.18); color:#bbf7d0; }
 .tag--rechazada{ border-color: var(--status-bad); background: rgba(248,113,113,0.2); color:#fee2e2; }
 .tag--pendiente{ border-color: var(--status-warn); background: rgba(234,179,8,0.18); color:#fef9c3; }
+.tag--cancelada {  border-color: var(--status-bad);  background: rgba(248,113,113,0.12);  color: #fecaca; }
+.tag--completada {  border-color: var(--status-ok);  background: rgba(34,197,94,0.15);  color: #bbf7d0; }
 
 /* === TABLAS === */
 .table-container {
