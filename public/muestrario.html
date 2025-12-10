@@ -101,6 +101,25 @@
       </div>
     </section>
 
+    <!-- TOGGLES -->
+    <section class="sample-section">
+      <h2 class="sample-section-title">Toggles (TOG-xx)</h2>
+      <div class="sample-grid">
+        <div class="sample-item">
+          <div class="sample-label">
+            <span class="sample-label-code">TOG-01</span>
+            <span>Toggle binario Compra / Venta</span>
+          </div>
+          <div class="sample-item-inner">
+            <div class="toggle-binario">
+              <button class="toggle-btn active" data-value="compra">Compra</button>
+              <button class="toggle-btn" data-value="venta">Venta</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- TAGS / ETIQUETAS -->
     <section class="sample-section">
       <h2 class="sample-section-title">Etiquetas / Tags (TAG-xx)</h2>
@@ -396,7 +415,6 @@
       </div>
     </section>
 
-
     <!-- ALERTAS / AVISOS -->
     <section class="sample-section">
       <h2 class="sample-section-title">Alertas / Avisos (ALR-xx)</h2>
@@ -449,5 +467,18 @@
     </section>
 
   </div>
+
+  <!-- Script para que los toggles funcionen en el muestrario -->
+  <script>
+    document.querySelectorAll('.toggle-binario').forEach(group => {
+      const buttons = group.querySelectorAll('.toggle-btn');
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          buttons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+      });
+    });
+  </script>
 </body>
 </html>
