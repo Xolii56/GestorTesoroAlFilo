@@ -4,7 +4,10 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Departamento del Tesoro — Solicitudes</title>
+
+  <!-- Estilos globales + design system -->
   <link rel="stylesheet" href="./style.css"/>
+  <link rel="stylesheet" href="./style_prueba.css"/>
 
   <!-- Supabase + módulos -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -17,6 +20,15 @@
       padding: 1.5rem;
       max-width: 1100px;
       margin: 0 auto;
+    }
+
+    .sol-header-row {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:1rem;
+      gap:.75rem;
+      flex-wrap:wrap;
     }
 
     /* FORM EN HORIZONTAL */
@@ -33,7 +45,7 @@
     }
 
     .sol-form .field {
-      margin-bottom: .0rem; /* lo controla el grid */
+      margin-bottom: 0;
     }
 
     .sol-form label {
@@ -66,31 +78,7 @@
       opacity: .8;
     }
 
-    .btn {
-      padding: 0.35rem 0.85rem;
-      border-radius: 0.4rem;
-      border: none;
-      cursor: pointer;
-      font-size: .85rem;
-    }
-
-    .btn-primary {
-      background: #22c55e;
-      color: #020617;
-      font-weight: 600;
-    }
-
-    .btn-secondary {
-      background: #020617;
-      color: #e5e7eb;
-      border: 1px solid rgba(148,163,184,0.8);
-    }
-
-    .btn-disabled {
-      opacity: .6;
-      cursor: not-allowed;
-    }
-
+    /* Botones de firma redondos (OK / KO) */
     .btn-icon {
       width: 28px;
       height: 28px;
@@ -123,104 +111,13 @@
       cursor: not-allowed;
     }
 
+    .btn-disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
     .help-text {
-      font-size: .75rem;
-      opacity: .7;
       margin-top: .2rem;
-    }
-
-    .sol-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .9rem;
-    }
-
-    .sol-table thead {
-      font-size: .8rem;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-      opacity: .8;
-    }
-
-    .sol-table th,
-    .sol-table td {
-      padding: 0.35rem 0.4rem;
-      border-bottom: 1px solid rgba(148,163,184,0.26);
-    }
-
-    /* Centrar columnas: Tipo (2), Cant. (4) y todas las siguientes */
-    .sol-table th:nth-child(2),
-    .sol-table td:nth-child(2),
-    .sol-table th:nth-child(4),
-    .sol-table th:nth-child(5),
-    .sol-table th:nth-child(6),
-    .sol-table th:nth-child(7),
-    .sol-table th:nth-child(8),
-    .sol-table td:nth-child(4),
-    .sol-table td:nth-child(5),
-    .sol-table td:nth-child(6),
-    .sol-table td:nth-child(7),
-    .sol-table td:nth-child(8) {
-      text-align: center;
-    }
-
-    .sol-table tbody tr {
-      transition: background .12s ease-out;
-    }
-
-    .sol-table tbody tr:hover {
-      background: rgba(15,23,42,0.9);
-    }
-
-    .badge-status {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.1rem 0.55rem;
-      border-radius: 999px;
-      font-size: .75rem;
-      border: 1px solid rgba(148,163,184,0.7);
-    }
-
-    .badge-status.pendiente   { border-color: rgba(250,204,21,0.9); }
-    .badge-status.aprobada    { border-color: rgba(34,197,94,0.9); }
-    .badge-status.rechazada   { border-color: rgba(248,113,113,0.9); }
-    .badge-status.completada  { border-color: rgba(56,189,248,0.9); }
-    .badge-status.cancelada   { border-color: rgba(248,113,113,0.9); }
-
-    .tipo-chip {
-      display:inline-block;
-      padding:0.08rem 0.45rem;
-      border-radius:999px;
-      font-size:.7rem;
-      border:1px solid rgba(148,163,184,0.9);
-      margin-left:.3rem;
-      opacity:.85;
-    }
-
-    .tipo-chip.compra { border-color: rgba(34,197,94,0.9); }
-    .tipo-chip.venta  { border-color: rgba(248,113,113,0.9); }
-
-    .tipo-toggle {
-      display:flex;
-      gap:.4rem;
-    }
-
-    .tipo-toggle button {
-      flex:1;
-      padding:0.3rem 0.4rem;
-      border-radius:0.5rem;
-      border:1px solid rgba(148,163,184,0.7);
-      background:#020617;
-      color:#e5e7eb;
-      font-size:.85rem;
-      cursor:pointer;
-    }
-
-    .tipo-toggle button.active {
-      background:#22c55e;
-      color:#020617;
-      border-color:#22c55e;
-      font-weight:600;
     }
 
     /* Barras de filtros */
@@ -256,7 +153,7 @@
   <div id="site-header"></div>
 
   <main class="solicitudes-main">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
+    <div class="sol-header-row">
       <div>
         <h2>Solicitudes</h2>
         <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
@@ -272,7 +169,9 @@
 
     <!-- BLOQUE 1: FORMULARIO -->
     <div class="card">
-      <h3 style="margin-top:0;">Nueva solicitud</h3>
+      <div class="card-header">
+        <h3>Nueva solicitud</h3>
+      </div>
       <p id="sol-perms-label" class="help-text" style="margin-bottom:.8rem;"></p>
 
       <form id="sol-form" class="sol-form">
@@ -281,8 +180,8 @@
           <div class="field">
             <label>Tipo de solicitud</label>
             <div class="tipo-toggle">
-              <button type="button" data-type="compra" class="active">Compra</button>
-              <button type="button" data-type="venta">Venta</button>
+              <button type="button" data-type="compra" class="btn btn-secondary btn-sm active">Compra</button>
+              <button type="button" data-type="venta" class="btn btn-secondary btn-sm">Venta</button>
             </div>
             <input type="hidden" id="request_type" value="compra"/>
           </div>
@@ -326,8 +225,8 @@
 
     <!-- BLOQUE 2: SOLICITUDES ABIERTAS -->
     <div class="card" style="margin-top:1.25rem;">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;">
-        <h3 style="margin-top:0;">Mis solicitudes abiertas</h3>
+      <div class="card-header">
+        <h3>Mis solicitudes abiertas</h3>
       </div>
 
       <div class="sol-toolbar">
@@ -349,30 +248,32 @@
       </div>
 
       <div style="max-height:260px;overflow:auto;margin-top:.2rem;">
-        <table class="sol-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Tipo</th>
-              <th>Ítem</th>
-              <th>Cant.</th>
-              <th>Estado</th>
-              <th>Creada</th>
-              <th>Detalle</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="sol-open-tbody">
-            <!-- JS -->
-          </tbody>
-        </table>
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tipo</th>
+                <th>Ítem</th>
+                <th>Cant.</th>
+                <th>Estado</th>
+                <th>Creada</th>
+                <th>Detalle</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="sol-open-tbody">
+              <!-- JS -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
     <!-- BLOQUE 3: HISTÓRICO -->
     <div class="card" style="margin-top:1.25rem;">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;">
-        <h3 style="margin-top:0;">Histórico de mis solicitudes</h3>
+      <div class="card-header">
+        <h3>Histórico de mis solicitudes</h3>
       </div>
 
       <div class="sol-toolbar">
@@ -395,23 +296,25 @@
       </div>
 
       <div style="max-height:260px;overflow:auto;margin-top:.2rem;">
-        <table class="sol-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Tipo</th>
-              <th>Ítem</th>
-              <th>Cant.</th>
-              <th>Estado</th>
-              <th>Creada</th>
-              <th>Cierre</th>
-              <th>Detalle</th>
-            </tr>
-          </thead>
-          <tbody id="sol-history-tbody">
-            <!-- JS -->
-          </tbody>
-        </table>
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tipo</th>
+                <th>Ítem</th>
+                <th>Cant.</th>
+                <th>Estado</th>
+                <th>Creada</th>
+                <th>Cierre</th>
+                <th>Detalle</th>
+              </tr>
+            </thead>
+            <tbody id="sol-history-tbody">
+              <!-- JS -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </main>
@@ -424,11 +327,11 @@
 
       function formatStatus(st) {
         const map = {
-          pendiente: 'pendiente',
-          aprobada: 'aprobada',
-          rechazada: 'rechazada',
-          completada: 'completada',
-          cancelada: 'cancelada'
+          pendiente: 'Pendiente',
+          aprobada: 'Aprobada',
+          rechazada: 'Rechazada',
+          completada: 'Completada',
+          cancelada: 'Cancelada'
         };
         return map[st] || st;
       }
@@ -567,7 +470,7 @@
         });
       }
 
-      // 7.1) Cargar almacenes (para preferencia de entrega + detalle estándar)
+      // 7.1) Cargar almacenes
       const preferredSelect = document.getElementById('preferred-warehouse');
       const { data: warehouses, error: whError } = await supa
         .from('warehouses')
@@ -578,7 +481,6 @@
       const warehousesById = {};
       (warehouses || []).forEach(w => {
         warehousesById[w.id] = w;
-        // opciones preferencia de entrega
         const opt = document.createElement('option');
         opt.value = w.id;
         opt.textContent = w.name || 'Almacén';
@@ -597,6 +499,16 @@
       const histTypeFilter   = document.getElementById('sol-history-type-filter');
 
       let myRequests = [];
+
+      function statusTagClass(st) {
+        // st: pendiente, aprobada, rechazada, completada, cancelada
+        return `tag tag--${st}`;
+      }
+
+      function tipoTagClass(tipo) {
+        if (tipo === 'venta') return 'tag tag--venta';
+        return 'tag tag--compra';
+      }
 
       function renderOpenTable() {
         openTbody.innerHTML = '';
@@ -628,10 +540,10 @@
 
           tr.innerHTML = `
             <td>#${r.id}</td>
-            <td><span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span></td>
+            <td><span class="${tipoTagClass(r.request_type)}">${renderTipo(r.request_type)}</span></td>
             <td>${itemName}</td>
             <td>${r.quantity}</td>
-            <td><span class="badge-status ${st}">${formatStatus(st)}</span></td>
+            <td><span class="${statusTagClass(st)}">${formatStatus(st)}</span></td>
             <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
           `;
 
@@ -639,8 +551,7 @@
           const tdDetalle = document.createElement('td');
           const btnDetalle = document.createElement('button');
           btnDetalle.type = 'button';
-          btnDetalle.className = 'btn btn-secondary';
-          btnDetalle.style.padding = '0.2rem 0.6rem';
+          btnDetalle.className = 'btn btn-secondary btn-sm';
           btnDetalle.textContent = 'Ver';
           btnDetalle.addEventListener('click', (ev) => {
             ev.stopPropagation();
@@ -732,10 +643,10 @@
 
           tr.innerHTML = `
             <td>#${r.id}</td>
-            <td><span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span></td>
+            <td><span class="${tipoTagClass(r.request_type)}">${renderTipo(r.request_type)}</span></td>
             <td>${itemName}</td>
             <td>${r.quantity}</td>
-            <td><span class="badge-status ${st}">${formatStatus(st)}</span></td>
+            <td><span class="${statusTagClass(st)}">${formatStatus(st)}</span></td>
             <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
             <td>${cierre ? new Date(cierre).toLocaleString() : '-'}</td>
           `;
@@ -743,8 +654,7 @@
           const tdDetalle = document.createElement('td');
           const btnDetalle = document.createElement('button');
           btnDetalle.type = 'button';
-          btnDetalle.className = 'btn btn-secondary';
-          btnDetalle.style.padding = '0.2rem 0.6rem';
+          btnDetalle.className = 'btn btn-secondary btn-sm';
           btnDetalle.textContent = 'Ver';
           btnDetalle.addEventListener('click', (ev) => {
             ev.stopPropagation();
@@ -863,7 +773,6 @@
         tipoButtons.forEach(btn => {
           btn.classList.toggle('active', btn.dataset.type === 'compra');
         });
-        // restaurar preferencia
         preferredSelect.value = '';
 
         await loadMyRequests();
