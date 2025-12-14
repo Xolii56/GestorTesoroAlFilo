@@ -23,23 +23,18 @@
 }
 
 /* === BASE === */
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 html, body {
   margin: 0;
   padding: 0;
   font-family: 'Rajdhani', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-weight: 500;
-  background: radial-gradient(circle at 0% 0%, rgba(56,189,248,0.07), transparent 55%),
-              #020617;
+  background: radial-gradient(circle at 0% 0%, rgba(56,189,248,0.07), transparent 55%), #020617;
   color: var(--text-primary);
 }
 
-body {
-  min-height: 100vh;
-}
+body { min-height: 100vh; }
 
 /* === PAGE LAYOUT MUESTRARIO === */
 .page {
@@ -48,9 +43,7 @@ body {
   padding: 1.8rem 1.4rem 3rem;
 }
 
-.page-header {
-  margin-bottom: 1.5rem;
-}
+.page-header { margin-bottom: 1.5rem; }
 
 .page-title {
   font-size: 1.6rem;
@@ -69,9 +62,7 @@ body {
   color: var(--text-muted);
 }
 
-.sample-section {
-  margin-bottom: 1.8rem;
-}
+.sample-section { margin-bottom: 1.8rem; }
 
 .sample-section-title {
   font-size: .95rem;
@@ -95,9 +86,7 @@ body {
   background: radial-gradient(circle at 0% 0%, rgba(15,23,42,0.9), rgba(15,23,42,1));
 }
 
-.sample-item-inner {
-  margin-top: .35rem;
-}
+.sample-item-inner { margin-top: .35rem; }
 
 .sample-label {
   display: inline-flex;
@@ -120,7 +109,6 @@ body {
    HEADINGS · Tipografía principal
    ============================================================ */
 
-/* Heading 1 — Título de página (Aura fuerte) */
 .heading-1 {
   font-size: 1.5rem;
   text-transform: uppercase;
@@ -130,7 +118,6 @@ body {
     0 0 12px rgba(56, 189, 248, 0.5);
 }
 
-/* Heading 2 — Título de bloque (Aura suave) */
 .heading-2 {
   font-size: 1.2rem;
   text-transform: uppercase;
@@ -140,7 +127,6 @@ body {
     0 0 8px rgba(56, 189, 248, 0.28);
 }
 
-/* Heading 3 — Subtítulo / sección (sin glow) */
 .heading-3 {
   font-size: 1rem;
   text-transform: uppercase;
@@ -223,9 +209,7 @@ body {
   border-color:transparent;
 }
 
-.btn:hover {
-  filter:brightness(1.1);
-}
+.btn:hover { filter:brightness(1.1); }
 
 /* === TAGS / ETIQUETAS === */
 .tag {
@@ -248,7 +232,6 @@ body {
   font-weight:600;
 }
 
-/* Estados genéricos */
 .tag--info {
   border-color: var(--accent);
   background: var(--accent-soft);
@@ -305,7 +288,7 @@ body {
 }
 
 .tag--prestamo {
-  border-color: #0ea5e9; /* azul cyan */
+  border-color: #0ea5e9;
   background: rgba(14,165,233,0.20);
   color: #bae6fd;
 }
@@ -314,13 +297,14 @@ body {
 .tag--aprobada { border-color: var(--status-ok); background: rgba(34,197,94,0.18); color:#bbf7d0; }
 .tag--rechazada{ border-color: var(--status-bad); background: rgba(248,113,113,0.2); color:#fee2e2; }
 .tag--pendiente{ border-color: var(--status-warn); background: rgba(234,179,8,0.18); color:#fef9c3; }
-.tag--cancelada {  border-color: var(--status-bad);  background: rgba(248,113,113,0.12);  color: #fecaca; }
-.tag--esperando-aval {  border-color: #facc15;  background: rgba(250,204,21,0.15);   color: #fef9c3; }
-.tag--aval-aceptado {  border-color: #22c55e;  background: rgba(34,197,94,0.15);  color: #dcfce7; }
-.tag--aval-rechazado {  border-color: #ef4444;  background: rgba(239,68,68,0.15);  color: #fee2e2; }
-.tag--concedido {  border-color: #22c55e;  background: rgba(34,197,94,0.18);  color: #bbf7d0; }
-.tag--cobrado {  border-color: #3b82f6;  background: rgba(59,130,246,0.20);  color: #dbeafe; }
-.tag--completada {  border-color: #3b82f6;  background: rgba(59,130,246,0.20);  color: #dbeafe; }
+.tag--cancelada { border-color: var(--status-bad); background: rgba(248,113,113,0.12); color: #fecaca; }
+
+.tag--esperando-aval { border-color: #facc15; background: rgba(250,204,21,0.15); color: #fef9c3; }
+.tag--aval-aceptado { border-color: #22c55e; background: rgba(34,197,94,0.15); color: #dcfce7; }
+.tag--aval-rechazado { border-color: #ef4444; background: rgba(239,68,68,0.15); color: #fee2e2; }
+.tag--concedido { border-color: #22c55e; background: rgba(34,197,94,0.18); color: #bbf7d0; }
+.tag--cobrado { border-color: #3b82f6; background: rgba(59,130,246,0.20); color: #dbeafe; }
+.tag--completada { border-color: #3b82f6; background: rgba(59,130,246,0.20); color: #dbeafe; }
 
 /* === TABLAS === */
 .table-container {
@@ -358,8 +342,56 @@ body {
   background:rgba(30,64,175,0.35);
 }
 
-.table-row-clickable {
-  cursor:pointer;
+.table-row-clickable { cursor:pointer; }
+
+/* ============================================================
+   TABLAS · COMMODITIES (alineación estándar)
+   ============================================================ */
+
+/* Open */
+.table-commodities-open th,
+.table-commodities-open td {
+  white-space: nowrap;
+}
+
+.table-commodities-open th:nth-child(1),
+.table-commodities-open td:nth-child(1),
+.table-commodities-open th:nth-child(2),
+.table-commodities-open td:nth-child(2),
+.table-commodities-open th:nth-child(4),
+.table-commodities-open td:nth-child(4),
+.table-commodities-open th:nth-child(5),
+.table-commodities-open td:nth-child(5),
+.table-commodities-open th:nth-child(6),
+.table-commodities-open td:nth-child(6),
+.table-commodities-open th:nth-child(7),
+.table-commodities-open td:nth-child(7),
+.table-commodities-open th:nth-child(8),
+.table-commodities-open td:nth-child(8) {
+  text-align: center;
+}
+
+/* History */
+.table-commodities-history th,
+.table-commodities-history td {
+  white-space: nowrap;
+}
+
+.table-commodities-history th:nth-child(1),
+.table-commodities-history td:nth-child(1),
+.table-commodities-history th:nth-child(2),
+.table-commodities-history td:nth-child(2),
+.table-commodities-history th:nth-child(4),
+.table-commodities-history td:nth-child(4),
+.table-commodities-history th:nth-child(5),
+.table-commodities-history td:nth-child(5),
+.table-commodities-history th:nth-child(6),
+.table-commodities-history td:nth-child(6),
+.table-commodities-history th:nth-child(7),
+.table-commodities-history td:nth-child(7),
+.table-commodities-history th:nth-child(8),
+.table-commodities-history td:nth-child(8) {
+  text-align: center;
 }
 
 /* === DETALLE (solicitudes / préstamos) === */
@@ -377,13 +409,9 @@ body {
   opacity:.7;
 }
 
-.detail-value {
-  font-size:.9rem;
-}
+.detail-value { font-size:.9rem; }
 
-.detail-row-full {
-  grid-column:1 / -1;
-}
+.detail-row-full { grid-column:1 / -1; }
 
 /* === TARJETA MÓDULO (tipo app_ui) === */
 .module-card {
@@ -432,9 +460,7 @@ body {
   align-items:flex-start;
 }
 
-.alert-icon {
-  font-size:1.1rem;
-}
+.alert-icon { font-size:1.1rem; }
 
 .alert--info {
   border:1px solid var(--accent);
@@ -450,10 +476,10 @@ body {
   border:1px solid var(--status-bad);
   background:rgba(69,10,10,0.8);
 }
+
 /* ============================================================
    TOGGLE BINARIO (Compra / Venta)
    ============================================================ */
-
 .toggle-binario {
   display: inline-flex;
   gap: 0.35rem;
@@ -462,7 +488,7 @@ body {
 .toggle-binario .toggle-btn {
   padding: 0.28rem 0.8rem;
   border-radius: 999px;
-  border: 1px solid var(--border-subtle); /* borde siempre visible */
+  border: 1px solid var(--border-subtle);
   background: transparent;
   color: var(--text-primary);
   font-size: 0.8rem;
@@ -476,12 +502,10 @@ body {
   border-color: var(--accent);
 }
 
-/* Estado activo genérico: le metemos un pelín de glow */
 .toggle-binario .toggle-btn.active {
   box-shadow: 0 0 6px rgba(15,23,42,0.8);
 }
 
-/* Activo COMPRA → mismo color que TAG compra */
 .toggle-binario .toggle-btn[data-value="compra"].active {
   border-color: var(--accent);
   background: var(--accent-soft);
@@ -489,7 +513,6 @@ body {
   box-shadow: 0 0 10px rgba(56,189,248,0.6);
 }
 
-/* Activo VENTA → mismo color que TAG venta */
 .toggle-binario .toggle-btn[data-value="venta"].active {
   border-color: #f97316;
   background: rgba(248,148,60,0.18);
