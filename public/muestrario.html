@@ -19,7 +19,7 @@
     <section class="sample-section">
       <h2 class="sample-section-title">Tipografía (TIT-xx)</h2>
       <div class="sample-grid">
-    
+
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TIT-01</span>
@@ -29,7 +29,7 @@
             <div class="heading-1">Departamento del Tesoro</div>
           </div>
         </div>
-    
+
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TIT-02</span>
@@ -39,7 +39,7 @@
             <div class="heading-2">Solicitudes</div>
           </div>
         </div>
-    
+
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TIT-03</span>
@@ -49,7 +49,7 @@
             <div class="heading-3">Información adicional</div>
           </div>
         </div>
-    
+
       </div>
     </section>
 
@@ -215,44 +215,48 @@
     <section class="sample-section">
       <h2 class="sample-section-title">Tablas (TAB-xx)</h2>
       <div class="sample-grid">
+
+        <!-- TAB-01: Solicitudes abiertas (commodities) -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAB-01</span>
-            <span>Tabla de solicitudes</span>
+            <span>Solicitudes abiertas · Commodities</span>
           </div>
           <div class="sample-item-inner">
             <div class="table-container">
-              <table class="table">
+              <table class="table table-commodities-open">
                 <thead>
                   <tr>
                     <th>ID</th>
                     <th>Tipo</th>
-                    <th>Solicitante</th>
+                    <th>Item</th>
+                    <th>Cantidad</th>
                     <th>Estado</th>
-                    <th>Valor</th>
+                    <th>Fecha creación</th>
+                    <th>Detalle</th>
+                    <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr class="table-row-clickable">
                     <td>#123</td>
                     <td><span class="tag tag--compra">Compra</span></td>
-                    <td>HandleUno</td>
+                    <td>Quantanium (QUA)</td>
+                    <td>200</td>
                     <td><span class="tag tag--pendiente">Pendiente</span></td>
-                    <td>1.5 M UEC</td>
+                    <td>12/12/2953 21:37</td>
+                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
+                    <td><button class="btn btn-primary btn-sm">Firmar</button></td>
                   </tr>
                   <tr class="table-row-clickable">
                     <td>#124</td>
                     <td><span class="tag tag--venta">Venta</span></td>
-                    <td>HandleDos</td>
+                    <td>Hephaestanite (HEP)</td>
+                    <td>50</td>
                     <td><span class="tag tag--aprobada">Aprobada</span></td>
-                    <td>0.8 M UEC</td>
-                  </tr>
-                  <tr class="table-row-clickable">
-                    <td>#125</td>
-                    <td><span class="tag tag--taller">Taller</span></td>
-                    <td>HandleTres</td>
-                    <td><span class="tag tag--rechazada">Rechazada</span></td>
-                    <td>0.3 M UEC</td>
+                    <td>13/12/2953 09:12</td>
+                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
+                    <td><button class="btn btn-primary btn-sm">Firmar</button></td>
                   </tr>
                 </tbody>
               </table>
@@ -260,9 +264,68 @@
           </div>
         </div>
 
+        <!-- TAB-02: Histórico solicitudes (commodities) -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAB-02</span>
+            <span>Histórico · Commodities</span>
+          </div>
+          <div class="sample-item-inner">
+            <div class="table-container">
+              <table class="table table-commodities-history">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Tipo</th>
+                    <th>Item</th>
+                    <th>Cantidad</th>
+                    <th>Estado</th>
+                    <th>Fecha creación</th>
+                    <th>Fecha cierre</th>
+                    <th>Detalle</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="table-row-clickable">
+                    <td>#100</td>
+                    <td><span class="tag tag--compra">Compra</span></td>
+                    <td>Laranite (LAR)</td>
+                    <td>120</td>
+                    <td><span class="tag tag--completada">Completada</span></td>
+                    <td>01/12/2953 18:05</td>
+                    <td>02/12/2953 20:15</td>
+                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
+                  </tr>
+                  <tr class="table-row-clickable">
+                    <td>#101</td>
+                    <td><span class="tag tag--venta">Venta</span></td>
+                    <td>Bexalite (BEX)</td>
+                    <td>80</td>
+                    <td><span class="tag tag--rechazada">Rechazada</span></td>
+                    <td>03/12/2953 11:22</td>
+                    <td>03/12/2953 12:10</td>
+                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
+                  </tr>
+                  <tr class="table-row-clickable">
+                    <td>#102</td>
+                    <td><span class="tag tag--compra">Compra</span></td>
+                    <td>Quantanium (QUA)</td>
+                    <td>40</td>
+                    <td><span class="tag tag--cancelada">Cancelada</span></td>
+                    <td>05/12/2953 09:01</td>
+                    <td>05/12/2953 09:45</td>
+                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB-03: Tabla de préstamos (se mantiene como ejemplo) -->
+        <div class="sample-item">
+          <div class="sample-label">
+            <span class="sample-label-code">TAB-03</span>
             <span>Tabla de préstamos</span>
           </div>
           <div class="sample-item-inner">
@@ -300,6 +363,7 @@
             </div>
           </div>
         </div>
+
       </div>
     </section>
 
@@ -365,7 +429,7 @@
           </div>
         </div>
 
-        <!-- DET-02: Detalle solicitud/préstamo (detalle_sol_prestamo.html) -->
+        <!-- DET-02: Detalle préstamo -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">DET-02</span>
