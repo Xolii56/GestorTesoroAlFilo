@@ -78,9 +78,15 @@ body { min-height: 100vh; }
   gap: .9rem;
 }
 
-/* ✅ NUEVO: para que las tablas vayan UNA POR FILA */
+/* ✅ Para que las TABLAS vayan una por fila */
 .sample-grid--tablas {
   grid-template-columns: 1fr;
+}
+
+/* ✅ IMPORTANTÍSIMO: evita que contenido ancho empuje el grid */
+.sample-item,
+.sample-item-inner {
+  min-width: 0;
 }
 
 .sample-item {
@@ -312,24 +318,22 @@ body { min-height: 100vh; }
 .tag--completada { border-color: #3b82f6; background: rgba(59,130,246,0.20); color: #dbeafe; }
 
 /* === TABLAS === */
+/* ✅ “Tarjeta” adaptable, contenido swipeable dentro */
 .table-container {
+  width: 100%;
+  max-width: 100%;
   border-radius:0.6rem;
   border:1px solid var(--border-strong);
   background:radial-gradient(circle at 0% 0%, rgba(37,99,235,0.08), transparent 60%);
 
-  /* ✅ CAMBIO CLAVE: permitir mover contenido dentro del borde */
-  overflow-x: auto;
+  overflow-x: auto;           /* ✅ aquí está el swipe */
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
 }
 
-/* ✅ opcional: que el scroll solo aparezca si hace falta (en PC no molesta) */
-.table-container::-webkit-scrollbar {
-  height: 10px;
-}
-.table-container::-webkit-scrollbar-track {
-  background: rgba(15,23,42,0.7);
-}
+/* ✅ scrollbar discretita (solo si aparece) */
+.table-container::-webkit-scrollbar { height: 10px; }
+.table-container::-webkit-scrollbar-track { background: rgba(15,23,42,0.7); }
 .table-container::-webkit-scrollbar-thumb {
   background: rgba(148,163,184,0.35);
   border-radius: 999px;
@@ -339,9 +343,13 @@ body { min-height: 100vh; }
 }
 
 .table {
-  width:100%;
   border-collapse:collapse;
   font-size:.82rem;
+
+  /* ✅ CLAVE: la tabla puede ser más ancha que el contenedor,
+     pero el contenedor NO crece */
+  width: max-content;
+  min-width: 100%;
 }
 
 .table th,
@@ -542,4 +550,19 @@ body { min-height: 100vh; }
   background: rgba(248,148,60,0.18);
   color: #ffedd5;
   box-shadow: 0 0 10px rgba(248,148,60,0.55);
+}
+
+/* ============================================================
+   RESPONSIVE: en móvil, el grid NO debe forzar 260px mínimos
+   ============================================================ */
+@media (max-width: 560px) {
+  .page { padding: 1.2rem 0.85rem 2.2rem; }
+
+  /* ✅ en móvil, una columna real y sin mínimo “gordo” */
+  .sample-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* etiqueta/headers un pelín más cómodos */
+  .page-title { font-size: 1.35rem; }
 }
