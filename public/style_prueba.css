@@ -648,7 +648,7 @@ body { min-height: 100vh; }
 }
 
 /* ============================================================
-   DATE PICKER (DAT-01)
+   DATE PICKER (DAT-01) — sin botón
    ============================================================ */
 
 .date-picker {
@@ -674,10 +674,6 @@ body { min-height: 100vh; }
 
 .date-input:hover {
   border-color: var(--accent);
-}
-
-.date-trigger {
-  white-space: nowrap;
 }
 
 .date-popover {
