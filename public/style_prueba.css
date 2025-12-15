@@ -488,6 +488,77 @@ body { min-height: 100vh; }
 
 .detail-row-full { grid-column:1 / -1; }
 
+/* ✅ NUEVO: Firmas (DET-01) */
+.signature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .7rem;
+}
+
+@media (max-width: 520px) {
+  .signature-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.signature-card {
+  border-radius: .7rem;
+  border: 1px solid rgba(148,163,184,0.35);
+  background: rgba(15,23,42,0.65);
+  padding: .65rem .7rem;
+}
+
+.signature-title {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .10em;
+  opacity: .8;
+  margin-bottom: .4rem;
+}
+
+.signature-box {
+  border-radius: .55rem;
+  border: 1px solid rgba(148,163,184,0.35);
+  padding: .55rem .65rem;
+  font-size: .85rem;
+  text-align: center;
+  user-select: none;
+}
+
+.signature-box--pending {
+  background: rgba(148,163,184,0.12);
+  color: rgba(229,231,235,0.75);
+}
+
+/* (Preparado para futuro, por si luego quieres estados de firma)
+.signature-box--ok {
+  border-color: var(--status-ok);
+  background: rgba(34,197,94,0.16);
+  color: #bbf7d0;
+}
+.signature-box--bad {
+  border-color: var(--status-bad);
+  background: rgba(248,113,113,0.14);
+  color: #fee2e2;
+}
+*/
+
+/* ✅ NUEVO: Logs (DET-01) */
+.log-list {
+  margin: .2rem 0 0;
+  padding-left: 1.05rem;
+  color: rgba(229,231,235,0.9);
+  line-height: 1.35;
+}
+
+.log-list li {
+  margin: .25rem 0;
+}
+
+.log-date {
+  color: rgba(156,163,175,0.95);
+}
+
 /* === TARJETA MÓDULO (tipo app_ui) === */
 .module-card {
   cursor: pointer;
