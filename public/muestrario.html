@@ -122,9 +122,10 @@
     <!-- TAGS / ETIQUETAS -->
     <section class="sample-section">
       <h2 class="sample-section-title">Etiquetas / Tags (TAG-xx)</h2>
-      <div class="sample-grid">
 
-        <!-- 1) TAG-TIPO -->
+      <!-- ✅ CAMBIO REAL: forzamos este grid a 2 columnas -->
+      <div class="sample-grid sample-grid--tags">
+
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAG-TIPO-01</span>
@@ -140,7 +141,6 @@
           </div>
         </div>
 
-        <!-- 2) TAG-ESTADO -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAG-ESTADO-01</span>
@@ -162,7 +162,7 @@
           </div>
         </div>
 
-        <!-- 3) TAG-STOCK (⬇️ movida a la siguiente fila) -->
+        <!-- ✅ NUEVO: TAGS stock almacén -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAG-STOCK-01</span>
@@ -175,7 +175,6 @@
           </div>
         </div>
 
-        <!-- 4) TAG-MOD (⬇️ movida a la siguiente fila) -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAG-MOD-01</span>
@@ -231,7 +230,7 @@
 
       <div class="sample-grid sample-grid--tablas">
 
-        <!-- TAB-01 -->
+        <!-- TAB-01: Solicitudes abiertas (commodities) -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAB-01</span>
@@ -279,7 +278,7 @@
           </div>
         </div>
 
-        <!-- TAB-02 -->
+        <!-- TAB-02: Histórico solicitudes (commodities) -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAB-02</span>
@@ -337,7 +336,7 @@
           </div>
         </div>
 
-        <!-- TAB-03 -->
+        <!-- TAB-03: Tabla de préstamos -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAB-03</span>
@@ -379,7 +378,7 @@
           </div>
         </div>
 
-        <!-- TAB-04 -->
+        <!-- ✅ TAB-04: Revisión (igual que TAB-01) -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAB-04</span>
@@ -427,7 +426,7 @@
           </div>
         </div>
 
-        <!-- TAB-05 -->
+        <!-- ✅ TAB-05: Inventario almacén -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAB-05</span>
@@ -477,7 +476,7 @@
           </div>
         </div>
 
-        <!-- TAB-06 -->
+        <!-- ✅ TAB-06 CORREGIDA: Acciones = SOLO Firmar -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAB-06</span>
@@ -535,8 +534,7 @@
     <section class="sample-section">
       <h2 class="sample-section-title">Detalle (DET-xx)</h2>
       <div class="sample-grid">
-
-        <!-- DET-01 -->
+        <!-- DET-01: Detalle solicitud commodities -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">DET-01</span>
@@ -550,17 +548,20 @@
               </div>
 
               <div class="detail-grid">
-                <div class="detail-label">ID Solicitud</div>
-                <div class="detail-value">#123</div>
-
                 <div class="detail-label">Tipo de solicitud</div>
                 <div class="detail-value">
                   <span class="tag tag--compra">Compra</span>
                 </div>
 
-                <div class="detail-label">Estado de solicitud</div>
+                <div class="detail-label">Estado de la solicitud</div>
                 <div class="detail-value">
                   <span class="tag tag--pendiente">Pendiente</span>
+                </div>
+
+                <div class="detail-label">Log de actualización de estado</div>
+                <div class="detail-value detail-row-full text-muted">
+                  12/12/2953 · Solicitud creada por HandleUno<br>
+                  13/12/2953 · Enviada a almacén para revisión
                 </div>
 
                 <div class="detail-label">Solicitante</div>
@@ -575,42 +576,23 @@
                 <div class="detail-label">Preferencia de entrega</div>
                 <div class="detail-value">Almacén principal · Orison</div>
 
-                <div class="detail-label">Lugar de entrega</div>
+                <div class="detail-label">Lugar de transacción</div>
                 <div class="detail-value">Orison · Stratus Platform</div>
 
-                <div class="detail-label">Fecha límite de entrega</div>
+                <div class="detail-label">Fecha límite</div>
                 <div class="detail-value">20/12/2953</div>
 
                 <div class="detail-label">Firmas</div>
-                <div class="detail-value detail-row-full">
-                  <div class="signature-grid">
-                    <div class="signature-card">
-                      <div class="signature-title">Solicitante</div>
-                      <div class="signature-box signature-box--pending">Entrega</div>
-                    </div>
-                    <div class="signature-card">
-                      <div class="signature-title">Tesoro</div>
-                      <div class="signature-box signature-box--pending">Entrega</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="detail-label">Logs</div>
-                <div class="detail-value detail-row-full">
-                  <ul class="log-list">
-                    <li><span class="log-date">12/12/2953 21:37</span> · Creación de solicitud</li>
-                    <li><span class="log-date">13/12/2953 09:12</span> · Aprobada / Rechazada (pendiente de decisión)</li>
-                    <li><span class="log-date">—</span> · Firma del solicitante (pendiente)</li>
-                    <li><span class="log-date">—</span> · Firma del tesoro (pendiente)</li>
-                  </ul>
+                <div class="detail-value detail-row-full text-muted">
+                  Almacén: Pendiente de firma.<br>
+                  Solicitante: Pendiente de firma.
                 </div>
               </div>
-
             </div>
           </div>
         </div>
 
-        <!-- DET-02 -->
+        <!-- DET-02: Detalle préstamo -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">DET-02</span>
