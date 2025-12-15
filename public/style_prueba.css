@@ -76,14 +76,22 @@ body { min-height: 100vh; }
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: .9rem;
-
-  /* ✅ FIX CLAVE: permite que los hijos hagan overflow interno */
-  min-width: 0;
 }
 
 /* ✅ Tablas: SIEMPRE una por fila (y en móvil igual) */
 .sample-grid--tablas {
   grid-template-columns: 1fr;
+}
+
+/* ✅ Tags: forzar 2 columnas (2 arriba + 2 abajo), y en móvil 1 */
+.sample-grid--tags {
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+}
+
+@media (max-width: 620px) {
+  .sample-grid--tags {
+    grid-template-columns: 1fr;
+  }
 }
 
 .sample-item {
@@ -92,9 +100,6 @@ body { min-height: 100vh; }
   border: 1px dashed rgba(148,163,184,0.4);
   padding: .75rem .75rem .75rem;
   background: radial-gradient(circle at 0% 0%, rgba(15,23,42,0.9), rgba(15,23,42,1));
-
-  /* ✅ FIX CLAVE: necesario en grid para que el overflow interno funcione */
-  min-width: 0;
 }
 
 .sample-item-inner { margin-top: .35rem; }
@@ -341,28 +346,19 @@ body { min-height: 100vh; }
   border-radius:0.6rem;
   border:1px solid var(--border-strong);
   background:radial-gradient(circle at 0% 0%, rgba(37,99,235,0.08), transparent 60%);
-
-  /* ✅ swipe interno */
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-
-  /* ✅ FIX: el contenedor NO se estira fuera de pantalla */
-  width: 100%;
-  max-width: 100%;
-  display: block;
 }
 
 .table {
   border-collapse:collapse;
   font-size:.82rem;
 
-  /* ✅ clave: ocupa el contenedor pero si necesita más, crece y se swipea */
+  /* ✅ clave: en PC ocupa el ancho del contenedor;
+     si la tabla “necesita más”, crece y aparece el scroll del contenedor */
   min-width: 100%;
   width: max-content;
-
-  /* ✅ FIX extra en algunos móviles */
-  display: table;
 }
 
 .table th,
@@ -502,64 +498,6 @@ body { min-height: 100vh; }
 .detail-value { font-size:.9rem; }
 
 .detail-row-full { grid-column:1 / -1; }
-
-/* ✅ Firmas (DET-01) */
-.signature-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: .7rem;
-}
-
-@media (max-width: 520px) {
-  .signature-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.signature-card {
-  border-radius: .7rem;
-  border: 1px solid rgba(148,163,184,0.35);
-  background: rgba(15,23,42,0.65);
-  padding: .65rem .7rem;
-}
-
-.signature-title {
-  font-size: .72rem;
-  text-transform: uppercase;
-  letter-spacing: .10em;
-  opacity: .8;
-  margin-bottom: .4rem;
-}
-
-.signature-box {
-  border-radius: .55rem;
-  border: 1px solid rgba(148,163,184,0.35);
-  padding: .55rem .65rem;
-  font-size: .85rem;
-  text-align: center;
-  user-select: none;
-}
-
-.signature-box--pending {
-  background: rgba(148,163,184,0.12);
-  color: rgba(229,231,235,0.75);
-}
-
-/* ✅ Logs (DET-01) */
-.log-list {
-  margin: .2rem 0 0;
-  padding-left: 1.05rem;
-  color: rgba(229,231,235,0.9);
-  line-height: 1.35;
-}
-
-.log-list li {
-  margin: .25rem 0;
-}
-
-.log-date {
-  color: rgba(156,163,175,0.95);
-}
 
 /* === TARJETA MÓDULO (tipo app_ui) === */
 .module-card {
