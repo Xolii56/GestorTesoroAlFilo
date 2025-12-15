@@ -134,7 +134,6 @@
           <div class="sample-item-inner">
             <div class="date-picker" data-locale="es-ES">
               <input type="text" class="date-input" placeholder="Selecciona una fecha" readonly />
-              <button class="date-trigger btn btn-secondary btn-sm" type="button">📅</button>
 
               <div class="date-popover" aria-hidden="true">
                 <div class="date-header">
@@ -576,7 +575,7 @@
       <h2 class="sample-section-title">Detalle (DET-xx)</h2>
       <div class="sample-grid">
 
-        <!-- ✅ DET-01: Detalle solicitud (estructura NUEVA + firmas + logs cronológicos) -->
+        <!-- ✅ DET-01 -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">DET-01</span>
@@ -646,7 +645,7 @@
           </div>
         </div>
 
-        <!-- DET-02: Detalle préstamo -->
+        <!-- DET-02 -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">DET-02</span>
@@ -773,7 +772,7 @@
     });
   </script>
 
-  <!-- ✅ Script Date Picker DAT-01 (propio) -->
+  <!-- ✅ Script Date Picker DAT-01 (sin botón calendario) -->
   <script>
     (function () {
       const monthNames = [
@@ -823,7 +822,7 @@
           gridEl.appendChild(d);
         }
 
-        // Next month filler to complete rows (optional neatness)
+        // Next month filler
         const totalCells = gridEl.children.length;
         const remainder = totalCells % 7;
         if (remainder !== 0) {
@@ -847,7 +846,6 @@
 
       document.querySelectorAll('.date-picker').forEach(picker => {
         const input = picker.querySelector('.date-input');
-        const trigger = picker.querySelector('.date-trigger');
         const popover = picker.querySelector('.date-popover');
         const monthLabel = picker.querySelector('.date-month');
         const grid = picker.querySelector('.date-grid');
@@ -855,7 +853,6 @@
         const btnClear = picker.querySelector('.date-clear');
         const btnToday = picker.querySelector('.date-today');
 
-        // Base date: hoy real
         let view = new Date();
         view.setDate(1);
 
@@ -884,7 +881,6 @@
         }
 
         input.addEventListener('click', toggle);
-        trigger.addEventListener('click', toggle);
 
         navs.forEach(btn => {
           btn.addEventListener('click', () => {
