@@ -123,9 +123,8 @@
     <section class="sample-section">
       <h2 class="sample-section-title">Etiquetas / Tags (TAG-xx)</h2>
 
-      <!-- ✅ CAMBIO REAL: forzamos este grid a 2 columnas -->
-      <div class="sample-grid sample-grid--tags">
-
+      <!-- ✅ Fila 1: dos tarjetas -->
+      <div class="sample-grid">
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAG-TIPO-01</span>
@@ -161,8 +160,10 @@
             <span class="tag tag--aval-rechazado">Aval rechazado</span>
           </div>
         </div>
+      </div>
 
-        <!-- ✅ NUEVO: TAGS stock almacén -->
+      <!-- ✅ Fila 2: TAG-STOCK + TAG-MOD -->
+      <div class="sample-grid" style="margin-top:.9rem;">
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAG-STOCK-01</span>
@@ -184,7 +185,6 @@
             <span class="tag tag-lg tag--info">Reabastecimiento</span>
           </div>
         </div>
-
       </div>
     </section>
 
@@ -230,7 +230,7 @@
 
       <div class="sample-grid sample-grid--tablas">
 
-        <!-- TAB-01: Solicitudes abiertas (commodities) -->
+        <!-- TAB-01 -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAB-01</span>
@@ -278,7 +278,7 @@
           </div>
         </div>
 
-        <!-- TAB-02: Histórico solicitudes (commodities) -->
+        <!-- TAB-02 -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAB-02</span>
@@ -336,7 +336,7 @@
           </div>
         </div>
 
-        <!-- TAB-03: Tabla de préstamos -->
+        <!-- TAB-03 -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAB-03</span>
@@ -378,7 +378,7 @@
           </div>
         </div>
 
-        <!-- ✅ TAB-04: Revisión (igual que TAB-01) -->
+        <!-- TAB-04 -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAB-04</span>
@@ -426,7 +426,7 @@
           </div>
         </div>
 
-        <!-- ✅ TAB-05: Inventario almacén -->
+        <!-- TAB-05 -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAB-05</span>
@@ -476,7 +476,7 @@
           </div>
         </div>
 
-        <!-- ✅ TAB-06 CORREGIDA: Acciones = SOLO Firmar -->
+        <!-- TAB-06 -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAB-06</span>
@@ -534,7 +534,8 @@
     <section class="sample-section">
       <h2 class="sample-section-title">Detalle (DET-xx)</h2>
       <div class="sample-grid">
-        <!-- DET-01: Detalle solicitud commodities -->
+
+        <!-- ✅ DET-01: Detalle solicitud (estructura NUEVA + firmas + logs cronológicos) -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">DET-01</span>
@@ -548,21 +549,14 @@
               </div>
 
               <div class="detail-grid">
+                <div class="detail-label">ID solicitud</div>
+                <div class="detail-value">#123</div>
+
                 <div class="detail-label">Tipo de solicitud</div>
-                <div class="detail-value">
-                  <span class="tag tag--compra">Compra</span>
-                </div>
+                <div class="detail-value"><span class="tag tag--compra">Compra</span></div>
 
-                <div class="detail-label">Estado de la solicitud</div>
-                <div class="detail-value">
-                  <span class="tag tag--pendiente">Pendiente</span>
-                </div>
-
-                <div class="detail-label">Log de actualización de estado</div>
-                <div class="detail-value detail-row-full text-muted">
-                  12/12/2953 · Solicitud creada por HandleUno<br>
-                  13/12/2953 · Enviada a almacén para revisión
-                </div>
+                <div class="detail-label">Estado de solicitud</div>
+                <div class="detail-value"><span class="tag tag--pendiente">Pendiente</span></div>
 
                 <div class="detail-label">Solicitante</div>
                 <div class="detail-value">HandleUno</div>
@@ -576,18 +570,44 @@
                 <div class="detail-label">Preferencia de entrega</div>
                 <div class="detail-value">Almacén principal · Orison</div>
 
-                <div class="detail-label">Lugar de transacción</div>
+                <div class="detail-label">Lugar de entrega</div>
                 <div class="detail-value">Orison · Stratus Platform</div>
 
-                <div class="detail-label">Fecha límite</div>
+                <div class="detail-label">Fecha límite de entrega</div>
                 <div class="detail-value">20/12/2953</div>
 
                 <div class="detail-label">Firmas</div>
-                <div class="detail-value detail-row-full text-muted">
-                  Almacén: Pendiente de firma.<br>
-                  Solicitante: Pendiente de firma.
+                <div class="detail-value detail-row-full">
+                  <!-- Nota: “gris hasta firmar” (positiva o negativa) -->
+                  <div class="signature-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:.6rem;">
+                    <div class="signature-card" style="border:1px solid rgba(148,163,184,0.35); border-radius:.75rem; padding:.55rem .65rem; background: rgba(15,23,42,0.75);">
+                      <div class="detail-label" style="margin-bottom:.35rem;">Solicitante</div>
+                      <div class="signature-box signature-box--pending" style="border:1px solid rgba(148,163,184,0.35); border-radius:.6rem; padding:.55rem; text-align:center; background: rgba(148,163,184,0.08); color:#9ca3af; text-transform:uppercase; letter-spacing:.10em; font-size:.72rem;">
+                        Entrega
+                      </div>
+                    </div>
+
+                    <div class="signature-card" style="border:1px solid rgba(148,163,184,0.35); border-radius:.75rem; padding:.55rem .65rem; background: rgba(15,23,42,0.75);">
+                      <div class="detail-label" style="margin-bottom:.35rem;">Tesoro</div>
+                      <div class="signature-box signature-box--pending" style="border:1px solid rgba(148,163,184,0.35); border-radius:.6rem; padding:.55rem; text-align:center; background: rgba(148,163,184,0.08); color:#9ca3af; text-transform:uppercase; letter-spacing:.10em; font-size:.72rem;">
+                        Entrega
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="detail-label">Logs</div>
+                <div class="detail-value detail-row-full">
+                  <!-- Cronológico: lo primero arriba -->
+                  <div class="text-muted" style="line-height:1.35;">
+                    12/12/2953 21:37 · Solicitud creada<br>
+                    13/12/2953 09:12 · Solicitud aprobada<br>
+                    13/12/2953 10:05 · Firma solicitante (entrega) · Pendiente<br>
+                    13/12/2953 10:06 · Firma tesoro (entrega) · Pendiente
+                  </div>
                 </div>
               </div>
+
             </div>
           </div>
         </div>
