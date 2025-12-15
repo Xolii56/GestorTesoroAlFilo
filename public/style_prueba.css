@@ -78,15 +78,9 @@ body { min-height: 100vh; }
   gap: .9rem;
 }
 
-/* ✅ SOLO para la sección de TABLAS: una tarjeta por fila */
+/* ✅ Tablas: SIEMPRE una por fila (y en móvil igual) */
 .sample-grid--tablas {
   grid-template-columns: 1fr;
-}
-
-/* ✅ Evita que contenido ancho (tablas) empuje el grid */
-.sample-item,
-.sample-item-inner {
-  min-width: 0;
 }
 
 .sample-item {
@@ -317,43 +311,50 @@ body { min-height: 100vh; }
 .tag--cobrado { border-color: #3b82f6; background: rgba(59,130,246,0.20); color: #dbeafe; }
 .tag--completada { border-color: #3b82f6; background: rgba(59,130,246,0.20); color: #dbeafe; }
 
+/* ✅ NUEVO: Estado stock (almacén) */
+.tag--stock-critico {
+  border-color: var(--status-bad);
+  background: rgba(248,113,113,0.18);
+  color: #fee2e2;
+}
+.tag--stock-seguro {
+  border-color: var(--status-ok);
+  background: rgba(34,197,94,0.18);
+  color: #bbf7d0;
+}
+.tag--stock-excedente {
+  border-color: var(--accent);
+  background: rgba(56,189,248,0.18);
+  color: #e0f2fe;
+}
+
 /* === TABLAS === */
-/* ✅ Contenedor adaptable + swipe dentro */
+
+/* ✅ Contenedor adaptable, contenido swipeable si hace falta */
 .table-container {
-  width: 100%;
-  max-width: 100%;
   border-radius:0.6rem;
   border:1px solid var(--border-strong);
   background:radial-gradient(circle at 0% 0%, rgba(37,99,235,0.08), transparent 60%);
-
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
 }
 
-/* scrollbar discretito */
-.table-container::-webkit-scrollbar { height: 10px; }
-.table-container::-webkit-scrollbar-track { background: rgba(15,23,42,0.7); }
-.table-container::-webkit-scrollbar-thumb {
-  background: rgba(148,163,184,0.35);
-  border-radius: 999px;
-}
-.table-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(148,163,184,0.55);
-}
-
-/* ✅ tabla: no fuerza al contenedor a crecer */
 .table {
   border-collapse:collapse;
   font-size:.82rem;
-  width: max-content;
+
+  /* ✅ clave: en PC ocupa el ancho del contenedor;
+     si la tabla “necesita más”, crece y aparece el scroll del contenedor */
   min-width: 100%;
+  width: max-content;
 }
 
 .table th,
 .table td {
   padding:0.35rem 0.5rem;
   border-bottom:1px solid rgba(31,41,55,0.9);
+  white-space: nowrap;
 }
 
 .table th {
@@ -362,6 +363,9 @@ body { min-height: 100vh; }
   letter-spacing:.06em;
   opacity:.75;
   background:rgba(15,23,42,0.95);
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .table tbody tr:nth-child(even){
@@ -379,11 +383,6 @@ body { min-height: 100vh; }
    ============================================================ */
 
 /* Open */
-.table-commodities-open th,
-.table-commodities-open td {
-  white-space: nowrap;
-}
-
 .table-commodities-open th:nth-child(1),
 .table-commodities-open td:nth-child(1),
 .table-commodities-open th:nth-child(2),
@@ -402,11 +401,6 @@ body { min-height: 100vh; }
 }
 
 /* History */
-.table-commodities-history th,
-.table-commodities-history td {
-  white-space: nowrap;
-}
-
 .table-commodities-history th:nth-child(1),
 .table-commodities-history td:nth-child(1),
 .table-commodities-history th:nth-child(2),
@@ -421,6 +415,57 @@ body { min-height: 100vh; }
 .table-commodities-history td:nth-child(7),
 .table-commodities-history th:nth-child(8),
 .table-commodities-history td:nth-child(8) {
+  text-align: center;
+}
+
+/* ============================================================
+   TABLAS · REVISIÓN (igual a commodities-open)
+   ============================================================ */
+.table-revision-open th:nth-child(1),
+.table-revision-open td:nth-child(1),
+.table-revision-open th:nth-child(2),
+.table-revision-open td:nth-child(2),
+.table-revision-open th:nth-child(4),
+.table-revision-open td:nth-child(4),
+.table-revision-open th:nth-child(5),
+.table-revision-open td:nth-child(5),
+.table-revision-open th:nth-child(6),
+.table-revision-open td:nth-child(6),
+.table-revision-open th:nth-child(7),
+.table-revision-open td:nth-child(7),
+.table-revision-open th:nth-child(8),
+.table-revision-open td:nth-child(8) {
+  text-align: center;
+}
+
+/* ============================================================
+   TABLAS · ALMACENES (inventario + asignadas)
+   ============================================================ */
+.table-warehouse-inventory th:nth-child(3),
+.table-warehouse-inventory td:nth-child(3),
+.table-warehouse-inventory th:nth-child(4),
+.table-warehouse-inventory td:nth-child(4),
+.table-warehouse-inventory th:nth-child(5),
+.table-warehouse-inventory td:nth-child(5),
+.table-warehouse-inventory th:nth-child(6),
+.table-warehouse-inventory td:nth-child(6) {
+  text-align: center;
+}
+
+.table-warehouse-assigned th:nth-child(1),
+.table-warehouse-assigned td:nth-child(1),
+.table-warehouse-assigned th:nth-child(2),
+.table-warehouse-assigned td:nth-child(2),
+.table-warehouse-assigned th:nth-child(4),
+.table-warehouse-assigned td:nth-child(4),
+.table-warehouse-assigned th:nth-child(6),
+.table-warehouse-assigned td:nth-child(6),
+.table-warehouse-assigned th:nth-child(7),
+.table-warehouse-assigned td:nth-child(7),
+.table-warehouse-assigned th:nth-child(8),
+.table-warehouse-assigned td:nth-child(8),
+.table-warehouse-assigned th:nth-child(9),
+.table-warehouse-assigned td:nth-child(9) {
   text-align: center;
 }
 
@@ -548,11 +593,4 @@ body { min-height: 100vh; }
   background: rgba(248,148,60,0.18);
   color: #ffedd5;
   box-shadow: 0 0 10px rgba(248,148,60,0.55);
-}
-
-/* Responsive: en móvil 1 por fila (como querías) */
-@media (max-width: 560px) {
-  .page { padding: 1.2rem 0.85rem 2.2rem; }
-  .sample-grid { grid-template-columns: 1fr; }
-  .page-title { font-size: 1.35rem; }
 }
