@@ -159,6 +159,19 @@
           </div>
         </div>
 
+        <!-- ✅ NUEVO: TAGS stock almacén -->
+        <div class="sample-item">
+          <div class="sample-label">
+            <span class="sample-label-code">TAG-STOCK-01</span>
+            <span>Estado del stock (almacén)</span>
+          </div>
+          <div class="sample-item-inner">
+            <span class="tag tag--stock-critico">Crítico</span>
+            <span class="tag tag--stock-seguro">Seguro</span>
+            <span class="tag tag--stock-excedente">Excedente</span>
+          </div>
+        </div>
+
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAG-MOD-01</span>
@@ -213,6 +226,7 @@
 
       <div class="sample-grid sample-grid--tablas">
 
+        <!-- TAB-01: Solicitudes abiertas (commodities) -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAB-01</span>
@@ -260,6 +274,7 @@
           </div>
         </div>
 
+        <!-- TAB-02: Histórico solicitudes (commodities) -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAB-02</span>
@@ -317,6 +332,7 @@
           </div>
         </div>
 
+        <!-- TAB-03: Tabla de préstamos -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">TAB-03</span>
@@ -358,6 +374,161 @@
           </div>
         </div>
 
+        <!-- ✅ TAB-04: Revisión (igual que TAB-01) -->
+        <div class="sample-item">
+          <div class="sample-label">
+            <span class="sample-label-code">TAB-04</span>
+            <span>Solicitudes en revisión · (módulo Revisión)</span>
+          </div>
+          <div class="sample-item-inner">
+            <div class="table-container">
+              <table class="table table-revision-open">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Tipo</th>
+                    <th>Item</th>
+                    <th>Cantidad</th>
+                    <th>Estado</th>
+                    <th>Fecha creación</th>
+                    <th>Detalle</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="table-row-clickable">
+                    <td>#301</td>
+                    <td><span class="tag tag--compra">Compra</span></td>
+                    <td>Titanium (TIT)</td>
+                    <td>300</td>
+                    <td><span class="tag tag--pendiente">Pendiente</span></td>
+                    <td>14/12/2953 10:02</td>
+                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
+                    <td><button class="btn btn-primary btn-sm">Firmar</button></td>
+                  </tr>
+                  <tr class="table-row-clickable">
+                    <td>#302</td>
+                    <td><span class="tag tag--venta">Venta</span></td>
+                    <td>Gold (GOL)</td>
+                    <td>20</td>
+                    <td><span class="tag tag--aprobada">Aprobada</span></td>
+                    <td>14/12/2953 12:41</td>
+                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
+                    <td><button class="btn btn-primary btn-sm">Firmar</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ✅ TAB-05: Inventario almacén -->
+        <div class="sample-item">
+          <div class="sample-label">
+            <span class="sample-label-code">TAB-05</span>
+            <span>Inventario · (módulo Almacenes)</span>
+          </div>
+          <div class="sample-item-inner">
+            <div class="table-container">
+              <table class="table table-warehouse-inventory">
+                <thead>
+                  <tr>
+                    <th>Commodity</th>
+                    <th>Símbolo</th>
+                    <th>Cantidad</th>
+                    <th>Pendiente</th>
+                    <th>Rango Stock</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="table-row-clickable">
+                    <td>Quantanium</td>
+                    <td>QUA</td>
+                    <td>120</td>
+                    <td>30</td>
+                    <td>50–150</td>
+                    <td><span class="tag tag--stock-seguro">Seguro</span></td>
+                  </tr>
+                  <tr class="table-row-clickable">
+                    <td>Laranite</td>
+                    <td>LAR</td>
+                    <td>12</td>
+                    <td>18</td>
+                    <td>40–120</td>
+                    <td><span class="tag tag--stock-critico">Crítico</span></td>
+                  </tr>
+                  <tr class="table-row-clickable">
+                    <td>Titanium</td>
+                    <td>TIT</td>
+                    <td>420</td>
+                    <td>0</td>
+                    <td>80–200</td>
+                    <td><span class="tag tag--stock-excedente">Excedente</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ✅ TAB-06: Solicitudes asignadas (almacenes) -->
+        <div class="sample-item">
+          <div class="sample-label">
+            <span class="sample-label-code">TAB-06</span>
+            <span>Solicitudes asignadas · (módulo Almacenes)</span>
+          </div>
+          <div class="sample-item-inner">
+            <div class="table-container">
+              <table class="table table-warehouse-assigned">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Tipo</th>
+                    <th>Item</th>
+                    <th>Cantidad</th>
+                    <th>Solicitante</th>
+                    <th>Plazo Max</th>
+                    <th>Estado</th>
+                    <th>Detalle</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="table-row-clickable">
+                    <td>#501</td>
+                    <td><span class="tag tag--compra">Compra</span></td>
+                    <td>Hephaestanite (HEP)</td>
+                    <td>60</td>
+                    <td>HandleUno</td>
+                    <td>24h</td>
+                    <td><span class="tag tag--aprobada">Aprobada</span></td>
+                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
+                    <td>
+                      <button class="btn btn-primary btn-sm">Firmar</button>
+                      <button class="btn btn-danger btn-sm">Cancelar</button>
+                    </td>
+                  </tr>
+                  <tr class="table-row-clickable">
+                    <td>#502</td>
+                    <td><span class="tag tag--venta">Venta</span></td>
+                    <td>Gold (GOL)</td>
+                    <td>10</td>
+                    <td>HandleDos</td>
+                    <td>48h</td>
+                    <td><span class="tag tag--pendiente">Pendiente</span></td>
+                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
+                    <td>
+                      <button class="btn btn-primary btn-sm">Firmar</button>
+                      <button class="btn btn-danger btn-sm">Cancelar</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -365,6 +536,7 @@
     <section class="sample-section">
       <h2 class="sample-section-title">Detalle (DET-xx)</h2>
       <div class="sample-grid">
+        <!-- DET-01: Detalle solicitud commodities -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">DET-01</span>
@@ -422,6 +594,7 @@
           </div>
         </div>
 
+        <!-- DET-02: Detalle préstamo -->
         <div class="sample-item">
           <div class="sample-label">
             <span class="sample-label-code">DET-02</span>
@@ -535,6 +708,7 @@
 
   </div>
 
+  <!-- Script para que los toggles funcionen en el muestrario -->
   <script>
     document.querySelectorAll('.toggle-binario').forEach(group => {
       const buttons = group.querySelectorAll('.toggle-btn');
