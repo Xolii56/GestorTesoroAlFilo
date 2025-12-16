@@ -25,13 +25,13 @@
     .sol-header-row {
       display:flex;
       justify-content:space-between;
-      align-items:center;
+      align-items:flex-end;
       margin-bottom:1rem;
       gap:.75rem;
       flex-wrap:wrap;
     }
 
-    /* FORM EN HORIZONTAL */
+    /* FORM EN HORIZONTAL (inputs NO casteados) */
     .sol-form-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -44,9 +44,7 @@
       }
     }
 
-    .sol-form .field {
-      margin-bottom: 0;
-    }
+    .sol-form .field { margin-bottom: 0; }
 
     .sol-form label {
       display: block;
@@ -65,6 +63,7 @@
       background: #020617;
       color: #e5e7eb;
       font-size: .9rem;
+      font-family: inherit;
     }
 
     .sol-form textarea {
@@ -145,7 +144,11 @@
       background:#020617;
       color:#e5e7eb;
       font-size:.8rem;
+      font-family: inherit;
     }
+
+    /* Contenedores de componentes casteados */
+    .cmp-inline { display:inline-flex; align-items:center; }
   </style>
 </head>
 
@@ -169,21 +172,20 @@
 
     <!-- BLOQUE 1: FORMULARIO -->
     <div class="card">
-      <div class="card-header">
-        <h3>Nueva solicitud</h3>
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;">
+        <h3 style="margin:0;">Nueva solicitud</h3>
+
+        <!-- CAST: TOG-01 -->
+        <div id="cmp-tog-01" class="cmp-inline"></div>
       </div>
+
       <p id="sol-perms-label" class="help-text" style="margin-bottom:.8rem;"></p>
 
       <form id="sol-form" class="sol-form">
-        <div class="sol-form-grid">
-          <!-- Tipo de solicitud -->
-          <div class="field">
-            <label>Tipo de solicitud</label>
-            <!-- CAST: TOG-01 (muestrario) -->
-            <div id="cmp-tog-01" class="tipo-toggle"></div>
-            <input type="hidden" id="request_type" value="compra"/>
-          </div>
+        <!-- La lógica usa este hidden -->
+        <input type="hidden" id="request_type" value="compra"/>
 
+        <div class="sol-form-grid">
           <!-- Solicitante -->
           <div class="field">
             <label>Solicitante</label>
@@ -205,7 +207,7 @@
           </div>
 
           <!-- Preferencia de entrega -->
-          <div class="field" style="grid-column:1 / -1;">
+          <div class="field">
             <label for="preferred-warehouse">Preferencia de entrega</label>
             <select id="preferred-warehouse">
               <option value="">Cualquier almacén</option>
@@ -246,8 +248,7 @@
       </div>
 
       <div style="max-height:260px;overflow:auto;margin-top:.2rem;">
-        <!-- CAST: TAB-01 (muestrario) -->
-        <div id="cmp-tab-01"></div>
+        <div class="table-container" id="cmp-tab-open"></div>
       </div>
     </div>
 
@@ -277,39 +278,72 @@
       </div>
 
       <div style="max-height:260px;overflow:auto;margin-top:.2rem;">
-        <!-- CAST: TAB-02 (muestrario) -->
-        <div id="cmp-tab-02"></div>
+        <div class="table-container" id="cmp-tab-history"></div>
       </div>
     </div>
   </main>
 
-  <!-- Casteo de componentes (partials) ANTES de que arranque la lógica del módulo -->
+  <!-- 1) CASTEADO DE COMPONENTES (antes de la lógica del módulo) -->
   <script type="module">
-    import { loadComponentById, getSlot } from './modules/ui_components.js';
+    import { loadComponentById } from './modules/ui_components.js';
+
+    function ensureTbodyId(containerId, wantedId) {
+      const host = document.getElementById(containerId);
+      if (!host) return;
+
+      // 1) si el componente ya trae el tbody con ID correcto, perfecto
+      const direct = host.querySelector(`#${CSS.escape(wantedId)}`);
+      if (direct) return;
+
+      // 2) preferimos slot
+      const slot = host.querySelector('[data-slot="tbody"]');
+      if (slot) {
+        slot.id = wantedId;
+        return;
+      }
+
+      // 3) fallback: primer tbody
+      const tb = host.querySelector('tbody');
+      if (tb) tb.id = wantedId;
+    }
+
+    function ensureToggleCompatibility() {
+      // Queremos que tu lógica (dataset.type) funcione aunque el componente use data-value
+      const root = document.getElementById('cmp-tog-01');
+      if (!root) return;
+
+      const buttons = Array.from(root.querySelectorAll('button'));
+      buttons.forEach(btn => {
+        // blindaje anti-submit
+        btn.type = 'button';
+
+        // compat: si tiene data-value y no data-type, lo replicamos
+        if (btn.dataset.value && !btn.dataset.type) {
+          btn.dataset.type = btn.dataset.value;
+        }
+      });
+
+      // si por lo que sea el componente no trae active, fijamos compra por defecto
+      const anyActive = buttons.some(b => b.classList.contains('active'));
+      if (!anyActive && buttons.length) {
+        buttons.forEach(b => b.classList.toggle('active', (b.dataset.type === 'compra')));
+      }
+    }
 
     // TOG-01
     await loadComponentById('./components/tog-01.html', 'cmp-tog-01');
-    // Adaptación mínima para que la lógica existente funcione tal cual
-    document.querySelectorAll('#cmp-tog-01 .toggle-btn').forEach(btn => {
-      // La lógica del módulo usa data-type. El componente lleva data-type y data-value.
-      if (!btn.dataset.type && btn.dataset.value) btn.dataset.type = btn.dataset.value;
-      // El módulo esperaba clases de botones existentes: mantenemos sin tocar.
-      // Si quisieras usar .btn aquí, se haría en el propio componente, no en los módulos.
-    });
+    ensureToggleCompatibility();
 
-    // TAB-01
-    await loadComponentById('./components/tab-01.html', 'cmp-tab-01');
-    const tab01Root = document.getElementById('cmp-tab-01');
-    const tab01Body = getSlot(tab01Root, 'tbody');
-    if (tab01Body) tab01Body.id = 'sol-open-tbody';
+    // TAB-01 y TAB-02 (casteadas)
+    await loadComponentById('./components/tab-01.html', 'cmp-tab-open');
+    await loadComponentById('./components/tab-02.html', 'cmp-tab-history');
 
-    // TAB-02
-    await loadComponentById('./components/tab-02.html', 'cmp-tab-02');
-    const tab02Root = document.getElementById('cmp-tab-02');
-    const tab02Body = getSlot(tab02Root, 'tbody');
-    if (tab02Body) tab02Body.id = 'sol-history-tbody';
+    // Enlazamos IDs que la lógica usa
+    ensureTbodyId('cmp-tab-open', 'sol-open-tbody');
+    ensureTbodyId('cmp-tab-history', 'sol-history-tbody');
   </script>
 
+  <!-- 2) LÓGICA ORIGINAL DEL MÓDULO (sin cambios) -->
   <script type="module">
     import { getOrgStatus } from './modules/profile.js';
 
