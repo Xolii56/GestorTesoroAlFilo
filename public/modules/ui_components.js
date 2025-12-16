@@ -1,41 +1,73 @@
 // modules/ui_components.js
-// Loader simple de "componentes" HTML (partials) para castear desde /components.
-// Sin frameworks. Diseñado para que el markup viva en un solo sitio.
 
 /**
- * Descarga un HTML parcial y lo inserta dentro de un elemento target.
- * @param {string} url Ruta del partial (ej: './components/tab-01.html')
- * @param {HTMLElement} target Elemento destino
+ * Carga un componente HTML dentro de un elemento DOM
+ * @param {string} url - ruta al componente
+ * @param {HTMLElement} targetEl - elemento destino
  */
-export async function loadComponent(url, target) {
-  if (!target) throw new Error('loadComponent: target no existe');
-
-  const res = await fetch(url, { cache: 'no-store' });
+export async function loadComponent(url, targetEl) {
+  const res = await fetch(url);
   if (!res.ok) {
-    throw new Error(`loadComponent: no se ha podido cargar ${url} (${res.status})`);
+    console.error(`Error cargando componente: ${url}`);
+    return;
   }
-
   const html = await res.text();
-  target.innerHTML = html;
+  targetEl.innerHTML = html;
 }
 
 /**
- * Sugar: carga un componente en el elemento con id `targetId`.
- * @param {string} url
- * @param {string} targetId
+ * Carga un componente HTML por ID
+ * @param {string} url - ruta al componente
+ * @param {string} targetId - id del contenedor
  */
 export async function loadComponentById(url, targetId) {
   const el = document.getElementById(targetId);
+  if (!el) {
+    console.warn(`Contenedor no encontrado: #${targetId}`);
+    return;
+  }
   await loadComponent(url, el);
 }
 
 /**
- * Busca dentro de `root` el primer elemento marcado como slot.
- * @param {HTMLElement} root
- * @param {string} slotName
- * @returns {HTMLElement|null}
+ * Carga TODOS los componentes definidos en components/index.json
+ * y los renderiza como escaparate
+ * @param {string} containerId - contenedor principal del muestrario
  */
-export function getSlot(root, slotName) {
-  if (!root) return null;
-  return root.querySelector(`[data-slot="${slotName}"]`);
+export async function loadAllComponents(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) {
+    console.error(`Contenedor principal no encontrado: #${containerId}`);
+    return;
+  }
+
+  const res = await fetch('./components/index.json');
+  if (!res.ok) {
+    console.error('No se ha podido cargar components/index.json');
+    return;
+  }
+
+  const cfg = await res.json();
+  const exclude = cfg.exclude || [];
+  const list = cfg.components || [];
+
+  for (const file of list) {
+    if (exclude.includes(file)) continue;
+
+    const block = document.createElement('section');
+    block.className = 'demo-block';
+
+    const label = document.createElement('div');
+    label.className = 'demo-label';
+    label.textContent = file.replace('.html', '').toUpperCase();
+
+    const surface = document.createElement('div');
+    surface.className = 'demo-surface';
+
+    block.appendChild(label);
+    block.appendChild(surface);
+    container.appendChild(block);
+
+    await loadComponent(`./components/${file}`, surface);
+  }
 }
