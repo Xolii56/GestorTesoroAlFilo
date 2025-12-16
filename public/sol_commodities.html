@@ -16,13 +16,13 @@
   <script src="./modules/layout.js" defer></script>
 
   <style>
-    main.solicitudes-main {
-      padding: 1.5rem;
-      max-width: 1100px;
-      margin: 0 auto;
+    main.solicitudes-main{
+      padding:1.5rem;
+      max-width:1100px;
+      margin:0 auto;
     }
 
-    .sol-header-row {
+    .sol-header-row{
       display:flex;
       justify-content:space-between;
       align-items:flex-end;
@@ -31,92 +31,73 @@
       flex-wrap:wrap;
     }
 
+    /* ───────── NUEVA SOLICITUD: layout nuevo ───────── */
+    .sol-new-wrap{
+      display:grid;
+      grid-template-columns: 1.6fr .9fr;
+      gap:1rem;
+      align-items:start;
+    }
+    @media (max-width: 900px){
+      .sol-new-wrap{ grid-template-columns: 1fr; }
+    }
+
+    .sol-new-left{
+      padding-right:.25rem;
+    }
+
+    .sol-new-right{
+      border:1px solid rgba(148,163,184,0.14);
+      background: rgba(2,6,23,0.35);
+      border-radius:.85rem;
+      padding: .9rem;
+      position: sticky;
+      top: 1rem;
+    }
+    @media (max-width: 900px){
+      .sol-new-right{ position: static; }
+    }
+
+    .sol-side-title{
+      font-size:.8rem;
+      opacity:.75;
+      margin:0 0 .35rem 0;
+    }
+
     /* Inputs NO casteados */
-    .sol-form-grid {
-      display: grid;
+    .sol-form-grid{
+      display:grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.8rem 1rem;
+      gap: .8rem 1rem;
+    }
+    @media (max-width: 800px){
+      .sol-form-grid{ grid-template-columns: 1fr; }
     }
 
-    @media (max-width: 800px) {
-      .sol-form-grid { grid-template-columns: minmax(0, 1fr); }
+    .sol-form .field{ margin-bottom:0; }
+    .sol-form label{
+      display:block;
+      font-size:.8rem;
+      opacity:.8;
+      margin-bottom:.2rem;
     }
-
-    .sol-form .field { margin-bottom: 0; }
-
-    .sol-form label {
-      display: block;
-      font-size: .8rem;
-      opacity: .8;
-      margin-bottom: .2rem;
-    }
-
     .sol-form select,
     .sol-form input,
-    .sol-form textarea {
-      width: 100%;
-      padding: 0.4rem 0.5rem;
-      border-radius: 0.4rem;
-      border: 1px solid rgba(148,163,184,0.8);
-      background: #020617;
-      color: #e5e7eb;
-      font-size: .9rem;
-      font-family: inherit;
+    .sol-form textarea{
+      width:100%;
+      padding:0.4rem 0.55rem;
+      border-radius:0.55rem;
+      border:1px solid rgba(148,163,184,0.8);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.9rem;
+      font-family:inherit;
     }
 
-    .sol-form textarea {
-      resize: vertical;
-      min-height: 60px;
-    }
-
-    .sol-form input[readonly],
-    .sol-form select[disabled],
-    .sol-form textarea[readonly] {
-      opacity: .8;
-    }
-
-    /* Botones de firma redondos (OK / KO) */
-    .btn-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.7);
-      background: #020617;
-      color: #e5e7eb;
-      font-size: .8rem;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      cursor: pointer;
-    }
-
-    .btn-icon.ok {
-      background: #22c55e;
-      color: #022c22;
-      border-color: #22c55e;
-    }
-
-    .btn-icon.ko {
-      background: #ef4444;
-      color: #fef2f2;
-      border-color: #ef4444;
-    }
-
-    .btn-icon:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-    }
-
-    .btn-disabled {
-      opacity: .6;
-      cursor: not-allowed;
-    }
-
-    .help-text { margin-top: .2rem; }
+    .help-text{ margin-top:.2rem; }
 
     /* Barras de filtros */
-    .sol-toolbar {
+    .sol-toolbar{
       display:flex;
       justify-content:space-between;
       align-items:center;
@@ -124,26 +105,50 @@
       flex-wrap:wrap;
       margin-bottom:.6rem;
     }
-
-    .sol-toolbar-group {
+    .sol-toolbar-group{
       display:flex;
       gap:.4rem;
       flex-wrap:wrap;
       align-items:center;
     }
-
     .sol-toolbar input[type="search"],
-    .sol-toolbar select {
+    .sol-toolbar select{
       padding:0.35rem 0.55rem;
       border-radius:999px;
       border:1px solid rgba(148,163,184,0.7);
       background:#020617;
       color:#e5e7eb;
       font-size:.8rem;
-      font-family: inherit;
+      font-family:inherit;
     }
 
-    .cmp-inline { display:inline-flex; align-items:center; }
+    /* Botones de firma redondos (OK / KO) */
+    .btn-icon{
+      width:28px;
+      height:28px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.7);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.8rem;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:0;
+      cursor:pointer;
+    }
+    .btn-icon.ok{
+      background:#22c55e;
+      color:#022c22;
+      border-color:#22c55e;
+    }
+    .btn-icon.ko{
+      background:#ef4444;
+      color:#fef2f2;
+      border-color:#ef4444;
+    }
+    .btn-icon:disabled{ opacity:.5; cursor:not-allowed; }
+    .btn-disabled{ opacity:.6; cursor:not-allowed; }
   </style>
 </head>
 
@@ -165,55 +170,69 @@
       </button>
     </div>
 
-    <!-- BLOQUE 1: FORMULARIO -->
+    <!-- BLOQUE 1: FORMULARIO (REESTRUCTURADO) -->
     <div class="card">
-      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;">
-        <h3 style="margin:0;">Nueva solicitud</h3>
-
-        <!-- CAST: TOG-01 -->
-        <div id="cmp-tog-01" class="cmp-inline"></div>
+      <div class="card-header">
+        <h3>Nueva solicitud</h3>
       </div>
-
-      <p id="sol-perms-label" class="help-text" style="margin-bottom:.8rem;"></p>
 
       <form id="sol-form" class="sol-form">
         <!-- La lógica usa este hidden -->
         <input type="hidden" id="request_type" value="compra"/>
 
-        <div class="sol-form-grid">
-          <!-- Solicitante -->
-          <div class="field">
-            <label>Solicitante</label>
-            <input id="solicitante" type="text" readonly />
+        <div class="sol-new-wrap">
+          <!-- IZQUIERDA: campos -->
+          <div class="sol-new-left">
+            <div class="sol-form-grid">
+              <!-- Solicitante -->
+              <div class="field">
+                <label>Solicitante</label>
+                <input id="solicitante" type="text" readonly />
+              </div>
+
+              <!-- Objeto -->
+              <div class="field">
+                <label for="item-select">Objeto</label>
+                <select id="item-select" required>
+                  <option value="">Selecciona un ítem...</option>
+                </select>
+              </div>
+
+              <!-- Cantidad -->
+              <div class="field">
+                <label for="quantity">Cantidad</label>
+                <input id="quantity" type="number" min="1" required />
+              </div>
+
+              <!-- Preferencia de entrega -->
+              <div class="field">
+                <label for="preferred-warehouse">Preferencia de entrega</label>
+                <select id="preferred-warehouse">
+                  <option value="">Cualquier almacén</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          <!-- Objeto -->
-          <div class="field">
-            <label for="item-select">Objeto</label>
-            <select id="item-select" required>
-              <option value="">Selecciona un ítem...</option>
-            </select>
-          </div>
+          <!-- DERECHA: tipo + submit + permisos -->
+          <aside class="sol-new-right">
+            <p class="sol-side-title">Tipo de solicitud</p>
 
-          <!-- Cantidad -->
-          <div class="field">
-            <label for="quantity">Cantidad</label>
-            <input id="quantity" type="number" min="1" required />
-          </div>
+            <!-- CAST: TOG-01 (aquí) -->
+            <div id="cmp-tog-01"></div>
 
-          <!-- Preferencia de entrega -->
-          <div class="field">
-            <label for="preferred-warehouse">Preferencia de entrega</label>
-            <select id="preferred-warehouse">
-              <option value="">Cualquier almacén</option>
-            </select>
-          </div>
-        </div>
+            <div style="height:.75rem;"></div>
 
-        <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.8rem;">
-          <button type="submit" class="btn btn-primary" id="sol-submit-btn">
-            Enviar solicitud
-          </button>
+            <button type="submit" class="btn btn-primary" id="sol-submit-btn" style="width:100%;">
+              Enviar solicitud
+            </button>
+
+            <p id="sol-perms-label" class="help-text" style="margin-top:.75rem;"></p>
+
+            <div style="margin-top:.6rem;opacity:.65;font-size:.8rem;line-height:1.25;">
+              Consejo: selecciona <b>Compra</b> si el almacén te entrega material, o <b>Venta</b> si tú entregas material al almacén.
+            </div>
+          </aside>
         </div>
       </form>
     </div>
@@ -278,23 +297,17 @@
     </div>
   </main>
 
-  <!-- 1) CASTEADO DE COMPONENTES (antes de la lógica del módulo) -->
+  <!-- CASTEADO TOG + TABLAS -->
   <script type="module">
     import { loadComponentById } from './modules/ui_components.js';
 
     function ensureTbodyId(containerId, wantedId) {
       const host = document.getElementById(containerId);
       if (!host) return;
-
-      // si ya existe el tbody con ese id, perfecto
       const direct = host.querySelector(`#${CSS.escape(wantedId)}`);
       if (direct) return;
-
-      // preferimos slot
       const slot = host.querySelector('[data-slot="tbody"]');
       if (slot) { slot.id = wantedId; return; }
-
-      // fallback: primer tbody
       const tb = host.querySelector('tbody');
       if (tb) tb.id = wantedId;
     }
@@ -303,11 +316,15 @@
       const root = document.getElementById('cmp-tog-01');
       if (!root) return;
 
+      // Importante: la lógica existente busca ".tipo-toggle button"
+      // así que garantizamos la clase en el wrapper.
+      root.classList.add('tipo-toggle');
+
       const buttons = Array.from(root.querySelectorAll('button'));
       buttons.forEach(btn => {
         // blindaje anti-submit
         btn.type = 'button';
-        // compat: si tiene data-value y no data-type, lo replicamos
+        // compat: si viene con data-value, lo copiamos a data-type
         if (btn.dataset.value && !btn.dataset.type) {
           btn.dataset.type = btn.dataset.value;
         }
@@ -320,20 +337,17 @@
       }
     }
 
-    // TOG-01
     await loadComponentById('./components/tog-01.html', 'cmp-tog-01');
     ensureToggleCompatibility();
 
-    // TAB-01 y TAB-02
     await loadComponentById('./components/tab-01.html', 'cmp-tab-open');
     await loadComponentById('./components/tab-02.html', 'cmp-tab-history');
 
-    // Enlazamos IDs que la lógica usa
     ensureTbodyId('cmp-tab-open', 'sol-open-tbody');
     ensureTbodyId('cmp-tab-history', 'sol-history-tbody');
   </script>
 
-  <!-- 2) LÓGICA ORIGINAL DEL MÓDULO (sin cambios funcionales) -->
+  <!-- LÓGICA ORIGINAL (SIN CAMBIOS) -->
   <script type="module">
     import { getOrgStatus } from './modules/profile.js';
 
@@ -382,9 +396,7 @@
             await supa.auth.signOut();
             window.location.href = "./index.html";
           },
-          () => {
-            window.location.href = './perfil.html';
-          }
+          () => { window.location.href = './perfil.html'; }
         );
       }
 
@@ -465,7 +477,7 @@
         });
       });
 
-      // 7) Cargar ítems desde commodities_master
+      // 7) Cargar ítems
       const itemSelect = document.getElementById('item-select');
       const { data: items, error: itemsError } = await supa
         .from('commodities_master')
@@ -483,7 +495,7 @@
         });
       }
 
-      // 7.1) Cargar almacenes
+      // 7.1) Almacenes
       const preferredSelect = document.getElementById('preferred-warehouse');
       const { data: warehouses, error: whError } = await supa
         .from('warehouses')
@@ -491,16 +503,14 @@
         .order('name', { ascending: true });
       if (whError) console.error('Error cargando almacenes:', whError);
 
-      const warehousesById = {};
       (warehouses || []).forEach(w => {
-        warehousesById[w.id] = w;
         const opt = document.createElement('option');
         opt.value = w.id;
         opt.textContent = w.name || 'Almacén';
         preferredSelect.appendChild(opt);
       });
 
-      // 8) Listar solicitudes del usuario actual
+      // 8) Listar solicitudes
       const openTbody        = document.getElementById('sol-open-tbody');
       const historyTbody     = document.getElementById('sol-history-tbody');
       const openSearchInput  = document.getElementById('sol-open-search');
@@ -513,14 +523,8 @@
 
       let myRequests = [];
 
-      function statusTagClass(st) {
-        return `tag tag--${st}`;
-      }
-
-      function tipoTagClass(tipo) {
-        if (tipo === 'venta') return 'tag tag--venta';
-        return 'tag tag--compra';
-      }
+      function statusTagClass(st) { return `tag tag--${st}`; }
+      function tipoTagClass(tipo) { return (tipo === 'venta') ? 'tag tag--venta' : 'tag tag--compra'; }
 
       function renderOpenTable() {
         openTbody.innerHTML = '';
@@ -528,7 +532,6 @@
         const term   = (openSearchInput.value || '').toLowerCase();
         const est    = openStatusFilter.value;
         const tipoF  = openTypeFilter.value;
-
         const openStatuses = ['pendiente', 'aprobada'];
 
         myRequests.forEach(r => {
@@ -539,9 +542,7 @@
           if (tipoF !== 'todas' && r.request_type !== tipoF) return;
 
           const cm = r.commodities_master;
-          const itemName = cm
-            ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
-            : (r.item_id || '-');
+          const itemName = cm ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name) : (r.item_id || '-');
 
           if (term) {
             const haystack = (itemName || '').toLowerCase();
@@ -549,7 +550,6 @@
           }
 
           const tr = document.createElement('tr');
-
           tr.innerHTML = `
             <td>#${r.id}</td>
             <td><span class="${tipoTagClass(r.request_type)}">${renderTipo(r.request_type)}</span></td>
@@ -559,7 +559,6 @@
             <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
           `;
 
-          // Detalle
           const tdDetalle = document.createElement('td');
           const btnDetalle = document.createElement('button');
           btnDetalle.type = 'button';
@@ -567,16 +566,11 @@
           btnDetalle.textContent = 'Ver';
           btnDetalle.addEventListener('click', (ev) => {
             ev.stopPropagation();
-            window.open(
-              `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
-              '_blank',
-              'width=720,height=760'
-            );
+            window.open(`./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`, '_blank', 'width=720,height=760');
           });
           tdDetalle.appendChild(btnDetalle);
           tr.appendChild(tdDetalle);
 
-          // Acciones (firma solicitante)
           const tdAcc = document.createElement('td');
           const canSign =
             !readOnly &&
@@ -629,7 +623,6 @@
         const term   = (histSearchInput.value || '').toLowerCase();
         const est    = histStatusFilter.value;
         const tipoF  = histTypeFilter.value;
-
         const historyStatuses = ['completada', 'rechazada', 'cancelada'];
 
         myRequests.forEach(r => {
@@ -640,9 +633,7 @@
           if (tipoF !== 'todas' && r.request_type !== tipoF) return;
 
           const cm = r.commodities_master;
-          const itemName = cm
-            ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
-            : (r.item_id || '-');
+          const itemName = cm ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name) : (r.item_id || '-');
 
           if (term) {
             const haystack = (itemName || '').toLowerCase();
@@ -650,7 +641,6 @@
           }
 
           const tr = document.createElement('tr');
-
           const cierre = r.completed_at || r.approved_at || null;
 
           tr.innerHTML = `
@@ -670,11 +660,7 @@
           btnDetalle.textContent = 'Ver';
           btnDetalle.addEventListener('click', (ev) => {
             ev.stopPropagation();
-            window.open(
-              `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
-              '_blank',
-              'width=720,height=760'
-            );
+            window.open(`./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`, '_blank', 'width=720,height=760');
           });
           tdDetalle.appendChild(btnDetalle);
           tr.appendChild(tdDetalle);
@@ -692,10 +678,7 @@
         }
       }
 
-      function renderTables() {
-        renderOpenTable();
-        renderHistoryTable();
-      }
+      function renderTables() { renderOpenTable(); renderHistoryTable(); }
 
       async function loadMyRequests() {
         const { data: reqs, error: reqError } = await supa
@@ -722,11 +705,7 @@
           .eq('requester_discord_id', session.user.id)
           .order('created_at', { ascending: false });
 
-        if (reqError) {
-          console.error('Error cargando solicitudes:', reqError);
-          return;
-        }
-
+        if (reqError) { console.error('Error cargando solicitudes:', reqError); return; }
         myRequests = reqs || [];
         renderTables();
       }
@@ -734,20 +713,16 @@
       openSearchInput.addEventListener('input', renderTables);
       openStatusFilter.addEventListener('change', renderTables);
       openTypeFilter.addEventListener('change', renderTables);
-
       histSearchInput.addEventListener('input', renderTables);
       histStatusFilter.addEventListener('change', renderTables);
       histTypeFilter.addEventListener('change', renderTables);
 
       await loadMyRequests();
 
-      // 9) Envío de formulario (solo nivel 2)
+      // 9) Submit (sin cambios)
       solForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (readOnly) {
-          alert('Tienes permisos de solo lectura en este módulo.');
-          return;
-        }
+        if (readOnly) { alert('Tienes permisos de solo lectura en este módulo.'); return; }
 
         const type   = typeHidden.value || 'compra';
         const itemId = itemSelect.value;
@@ -769,7 +744,6 @@
         };
 
         const { error: insError } = await supa.from('requests').insert(payload);
-
         if (insError) {
           console.error('Error creando solicitud:', insError);
           alert('No se ha podido crear la solicitud.\n\nDetalle: ' + insError.message);
@@ -779,16 +753,12 @@
         solForm.reset();
         solicitanteInput.value = handle;
         typeHidden.value = 'compra';
-        tipoButtons.forEach(btn => {
-          btn.classList.toggle('active', btn.dataset.type === 'compra');
-        });
+        tipoButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.type === 'compra'));
         preferredSelect.value = '';
 
         await loadMyRequests();
         alert('Solicitud creada correctamente.');
       });
-
-      /* ───────────── 10) Firmas del lado solicitante ───────────── */
 
       async function maybeFinalizeRequest(reqRow, actorId) {
         const wSign = reqRow.warehouse_sign_result || 'pendiente';
@@ -944,4 +914,3 @@
   </script>
 </body>
 </html>
-
