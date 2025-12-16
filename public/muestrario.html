@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Muestrario UI — Gestor Tesoro</title>
 
-  <!-- Estilos -->
   <link rel="stylesheet" href="./style.css"/>
   <link rel="stylesheet" href="./style_prueba.css"/>
 
@@ -22,7 +21,7 @@
       align-items:flex-end;
       gap:1rem;
       flex-wrap:wrap;
-      margin-bottom:1rem;
+      margin-bottom:1.25rem;
     }
 
     .muestrario-header p {
@@ -30,70 +29,26 @@
       opacity:.75;
     }
 
-    .section {
-      margin-top: 1.25rem;
-    }
-
-    .section-title {
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:1rem;
-      flex-wrap:wrap;
-      margin: 0 0 .75rem 0;
-    }
-
-    .section-title h2 {
-      margin:0;
-      font-size:1.1rem;
-      opacity:.95;
-    }
-
-    .grid-demo {
-      display:grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: .9rem;
-    }
-
-    @media (max-width: 900px) {
-      .grid-demo { grid-template-columns: 1fr; }
-    }
-
     .demo-block {
-      padding: .85rem;
+      margin-bottom: 1.25rem;
+      padding: .9rem;
       border-radius: .75rem;
-      background: rgba(15, 23, 42, 0.45);
+      background: rgba(15,23,42,0.45);
       border: 1px solid rgba(148,163,184,0.15);
     }
 
     .demo-label {
-      font-size: .72rem;
+      font-size: .7rem;
       opacity: .65;
-      margin-bottom: .55rem;
-      letter-spacing: .02em;
+      margin-bottom: .5rem;
+      letter-spacing: .03em;
     }
 
-    .demo-row {
-      display:flex;
-      flex-wrap:wrap;
-      gap:.6rem;
-      align-items:center;
+    .demo-surface {
+      padding: .75rem;
+      border-radius: .6rem;
+      background: rgba(2,6,23,0.6);
     }
-
-    .demo-stack {
-      display:flex;
-      flex-direction:column;
-      gap:.75rem;
-    }
-
-    /* Para tablas: que se vean bien en el muestrario */
-    .table-wrap {
-      overflow:auto;
-      max-height: 320px;
-    }
-
-    /* Si algún componente necesita “aire” */
-    .spacer-sm { height: .25rem; }
   </style>
 </head>
 
@@ -104,298 +59,30 @@
     <header class="muestrario-header">
       <div>
         <h1 style="margin:0;">Muestrario UI</h1>
-        <p>Escaparate vivo: <strong>todo se carga desde <code>/components</code></strong>. Aquí no se copia markup.</p>
+        <p>Escaparate vivo · Todo se carga automáticamente desde <code>/components</code></p>
       </div>
 
-      <div class="demo-row">
-        <a class="btn btn-secondary" href="./app_ui.html">← Volver al panel</a>
+      <div>
+        <a href="./app_ui.html" class="btn btn-secondary">← Volver al panel</a>
       </div>
     </header>
 
-    <!-- =========================
-         TIPOGRAFÍA (TIT-xx)
-         ========================= -->
-    <section class="section card">
-      <div class="card-header section-title">
-        <h2>Tipografía</h2>
-      </div>
-
-      <div class="grid-demo">
-        <div class="demo-block">
-          <div class="demo-label">TIT-01</div>
-          <div id="cmp-tit-01"></div>
-        </div>
-        <div class="demo-block">
-          <div class="demo-label">TIT-02</div>
-          <div id="cmp-tit-02"></div>
-        </div>
-        <div class="demo-block">
-          <div class="demo-label">TIT-03</div>
-          <div id="cmp-tit-03"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================
-         BOTONES (BTN-xx)
-         ========================= -->
-    <section class="section card">
-      <div class="card-header section-title">
-        <h2>Botones</h2>
-      </div>
-
-      <div class="grid-demo">
-        <div class="demo-block">
-          <div class="demo-label">BTN-01</div>
-          <div class="demo-row" id="cmp-btn-01"></div>
-        </div>
-        <div class="demo-block">
-          <div class="demo-label">BTN-02</div>
-          <div class="demo-row" id="cmp-btn-02"></div>
-        </div>
-        <div class="demo-block">
-          <div class="demo-label">BTN-03</div>
-          <div class="demo-row" id="cmp-btn-03"></div>
-        </div>
-        <div class="demo-block">
-          <div class="demo-label">BTN-04</div>
-          <div class="demo-row" id="cmp-btn-04"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================
-         TOGGLES (TOG-xx)
-         ========================= -->
-    <section class="section card">
-      <div class="card-header section-title">
-        <h2>Toggles</h2>
-      </div>
-
-      <div class="grid-demo">
-        <div class="demo-block">
-          <div class="demo-label">TOG-01</div>
-          <div id="cmp-tog-01"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================
-         DATE PICKER (DAT-xx)
-         ========================= -->
-    <section class="section card">
-      <div class="card-header section-title">
-        <h2>Date picker</h2>
-      </div>
-
-      <div class="grid-demo">
-        <div class="demo-block">
-          <div class="demo-label">DAT-01</div>
-          <div id="cmp-dat-01"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================
-         TAGS (TAG-xx)
-         ========================= -->
-    <section class="section card">
-      <div class="card-header section-title">
-        <h2>Tags</h2>
-      </div>
-
-      <div class="grid-demo">
-        <div class="demo-block">
-          <div class="demo-label">TAG-TIPO-01</div>
-          <div class="demo-row" id="cmp-tag-tipo-01"></div>
-        </div>
-
-        <div class="demo-block">
-          <div class="demo-label">TAG-ESTADO-01</div>
-          <div class="demo-row" id="cmp-tag-estado-01"></div>
-        </div>
-
-        <div class="demo-block">
-          <div class="demo-label">TAG-STOCK-01</div>
-          <div class="demo-row" id="cmp-tag-stock-01"></div>
-        </div>
-
-        <div class="demo-block">
-          <div class="demo-label">TAG-MOD-01</div>
-          <div class="demo-row" id="cmp-tag-mod-01"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================
-         TARJETAS DE MÓDULO (MOD-xx)
-         ========================= -->
-    <section class="section card">
-      <div class="card-header section-title">
-        <h2>Tarjetas de módulo</h2>
-      </div>
-
-      <div class="grid-demo">
-        <div class="demo-block">
-          <div class="demo-label">MOD-01</div>
-          <div id="cmp-mod-01"></div>
-        </div>
-
-        <div class="demo-block">
-          <div class="demo-label">MOD-02</div>
-          <div id="cmp-mod-02"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================
-         TABLAS (TAB-xx)
-         ========================= -->
-    <section class="section card">
-      <div class="card-header section-title">
-        <h2>Tablas</h2>
-      </div>
-
-      <div class="demo-stack">
-        <div class="demo-block">
-          <div class="demo-label">TAB-01</div>
-          <div class="table-container table-wrap" id="cmp-tab-01"></div>
-        </div>
-
-        <div class="demo-block">
-          <div class="demo-label">TAB-02</div>
-          <div class="table-container table-wrap" id="cmp-tab-02"></div>
-        </div>
-
-        <div class="demo-block">
-          <div class="demo-label">TAB-03</div>
-          <div class="table-container table-wrap" id="cmp-tab-03"></div>
-        </div>
-
-        <div class="demo-block">
-          <div class="demo-label">TAB-04</div>
-          <div class="table-container table-wrap" id="cmp-tab-04"></div>
-        </div>
-
-        <div class="demo-block">
-          <div class="demo-label">TAB-05</div>
-          <div class="table-container table-wrap" id="cmp-tab-05"></div>
-        </div>
-
-        <div class="demo-block">
-          <div class="demo-label">TAB-06</div>
-          <div class="table-container table-wrap" id="cmp-tab-06"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================
-         DETALLES (DET-xx)
-         ========================= -->
-    <section class="section card">
-      <div class="card-header section-title">
-        <h2>Detalles / Modales</h2>
-      </div>
-
-      <div class="grid-demo">
-        <div class="demo-block">
-          <div class="demo-label">DET-01</div>
-          <div id="cmp-det-01"></div>
-        </div>
-
-        <div class="demo-block">
-          <div class="demo-label">DET-02</div>
-          <div id="cmp-det-02"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================
-         ALERTAS (ALR-xx)
-         ========================= -->
-    <section class="section card">
-      <div class="card-header section-title">
-        <h2>Alertas</h2>
-      </div>
-
-      <div class="grid-demo">
-        <div class="demo-block">
-          <div class="demo-label">ALR-01</div>
-          <div id="cmp-alr-01"></div>
-        </div>
-
-        <div class="demo-block">
-          <div class="demo-label">ALR-02</div>
-          <div id="cmp-alr-02"></div>
-        </div>
-
-        <div class="demo-block">
-          <div class="demo-label">ALR-03</div>
-          <div id="cmp-alr-03"></div>
-        </div>
-      </div>
-    </section>
-
+    <!-- CONTENEDOR ÚNICO -->
+    <div id="muestrario-components"></div>
   </main>
 
   <script type="module">
-    import { loadComponentById } from './modules/ui_components.js';
+    import { loadAllComponents } from './modules/ui_components.js';
 
-    // Header (si tu layout.js expone esto en window)
-    // OJO: si aquí no quieres header, puedes borrar esto sin afectar a nada.
+    // Header opcional
     try {
       if (typeof window.loadHeader === 'function') {
         await window.loadHeader('app');
       }
     } catch (e) {}
 
-    // === Tipografía
-    await loadComponentById('./components/tit-01.html', 'cmp-tit-01');
-    await loadComponentById('./components/tit-02.html', 'cmp-tit-02');
-    await loadComponentById('./components/tit-03.html', 'cmp-tit-03');
-
-    // === Botones
-    await loadComponentById('./components/btn-01.html', 'cmp-btn-01');
-    await loadComponentById('./components/btn-02.html', 'cmp-btn-02');
-    await loadComponentById('./components/btn-03.html', 'cmp-btn-03');
-    await loadComponentById('./components/btn-04.html', 'cmp-btn-04');
-
-    // === Toggles
-    await loadComponentById('./components/tog-01.html', 'cmp-tog-01');
-
-    // === Date picker
-    await loadComponentById('./components/dat-01.html', 'cmp-dat-01');
-
-    // === Tags
-    await loadComponentById('./components/tag-tipo-01.html', 'cmp-tag-tipo-01');
-    await loadComponentById('./components/tag-estado-01.html', 'cmp-tag-estado-01');
-    await loadComponentById('./components/tag-stock-01.html', 'cmp-tag-stock-01');
-    await loadComponentById('./components/tag-mod-01.html', 'cmp-tag-mod-01');
-
-    // === Cards de módulo
-    await loadComponentById('./components/mod-01.html', 'cmp-mod-01');
-    await loadComponentById('./components/mod-02.html', 'cmp-mod-02');
-
-    // === Tablas
-    await loadComponentById('./components/tab-01.html', 'cmp-tab-01');
-    await loadComponentById('./components/tab-02.html', 'cmp-tab-02');
-    await loadComponentById('./components/tab-03.html', 'cmp-tab-03');
-    await loadComponentById('./components/tab-04.html', 'cmp-tab-04');
-    await loadComponentById('./components/tab-05.html', 'cmp-tab-05');
-    await loadComponentById('./components/tab-06.html', 'cmp-tab-06');
-
-    // === Detalles / modales
-    await loadComponentById('./components/det-01.html', 'cmp-det-01');
-    await loadComponentById('./components/det-02.html', 'cmp-det-02');
-
-    // === Alertas
-    await loadComponentById('./components/alr-01.html', 'cmp-alr-01');
-    await loadComponentById('./components/alr-02.html', 'cmp-alr-02');
-    await loadComponentById('./components/alr-03.html', 'cmp-alr-03');
-
-    // Si DAT-01 (date picker) necesita inicialización JS, enchúfala aquí:
-    // Ejemplo:
-    // if (window.initDatePickerDemo) window.initDatePickerDemo();
+    // Carga TOTAL automática
+    await loadAllComponents('muestrario-components');
   </script>
 </body>
 </html>
