@@ -15,70 +15,68 @@
   <script src="./modules/db.js" defer></script>
   <script src="./modules/layout.js" defer></script>
 
+  <!--
+    SOLO CSS de ajuste estructural para encajar con style_prueba/muestrario.
+    (No toca lógica: IDs, clases usadas por JS, ni comportamiento.)
+  -->
   <style>
-    main.solicitudes-main {
+    /* Contenedor principal alineado al patrón "page" */
+    main.page {
       padding: 1.5rem;
       max-width: 1100px;
       margin: 0 auto;
     }
 
-    .sol-header-row {
+    .page-header {
       display:flex;
       justify-content:space-between;
-      align-items:center;
+      align-items:flex-end;
       margin-bottom:1rem;
       gap:.75rem;
       flex-wrap:wrap;
     }
 
-    /* FORM EN HORIZONTAL */
-    .sol-form-grid {
+    .page-title p {
+      margin:.25rem 0 0 0;
+      opacity:.8;
+      font-size:.95rem;
+    }
+
+    /* Grid de formulario, estilo "muestrario" */
+    .form-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 0.8rem 1rem;
     }
-
     @media (max-width: 800px) {
-      .sol-form-grid {
-        grid-template-columns: minmax(0, 1fr);
-      }
+      .form-grid { grid-template-columns: minmax(0, 1fr); }
     }
 
-    .sol-form .field {
-      margin-bottom: 0;
+    /* Mantener tu hook .tipo-toggle (JS lo necesita) pero con look de toggle "bonito" */
+    .tipo-toggle {
+      display:flex;
+      gap:.5rem;
+      flex-wrap:wrap;
+      align-items:center;
     }
 
-    .sol-form label {
-      display: block;
-      font-size: .8rem;
-      opacity: .8;
-      margin-bottom: .2rem;
+    /* Toolbars coherentes */
+    .toolbar {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:.6rem;
+      flex-wrap:wrap;
+      margin-bottom:.6rem;
+    }
+    .toolbar-group {
+      display:flex;
+      gap:.4rem;
+      flex-wrap:wrap;
+      align-items:center;
     }
 
-    .sol-form select,
-    .sol-form input,
-    .sol-form textarea {
-      width: 100%;
-      padding: 0.4rem 0.5rem;
-      border-radius: 0.4rem;
-      border: 1px solid rgba(148,163,184,0.8);
-      background: #020617;
-      color: #e5e7eb;
-      font-size: .9rem;
-    }
-
-    .sol-form textarea {
-      resize: vertical;
-      min-height: 60px;
-    }
-
-    .sol-form input[readonly],
-    .sol-form select[disabled],
-    .sol-form textarea[readonly] {
-      opacity: .8;
-    }
-
-    /* Botones de firma redondos (OK / KO) */
+    /* Mantengo estos estilos porque tu JS crea .btn-icon ok/ko dinámicamente */
     .btn-icon {
       width: 28px;
       height: 28px;
@@ -93,58 +91,30 @@
       padding: 0;
       cursor: pointer;
     }
-
     .btn-icon.ok {
       background: #22c55e;
       color: #022c22;
       border-color: #22c55e;
     }
-
     .btn-icon.ko {
       background: #ef4444;
       color: #fef2f2;
       border-color: #ef4444;
     }
-
     .btn-icon:disabled {
       opacity: .5;
       cursor: not-allowed;
     }
-
     .btn-disabled {
       opacity: .6;
       cursor: not-allowed;
     }
 
-    .help-text {
+    /* Scroll contenedor tabla */
+    .table-scroll {
+      max-height: 260px;
+      overflow: auto;
       margin-top: .2rem;
-    }
-
-    /* Barras de filtros */
-    .sol-toolbar {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:.6rem;
-      flex-wrap:wrap;
-      margin-bottom:.6rem;
-    }
-
-    .sol-toolbar-group {
-      display:flex;
-      gap:.4rem;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
-    .sol-toolbar input[type="search"],
-    .sol-toolbar select {
-      padding:0.35rem 0.55rem;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,0.7);
-      background:#020617;
-      color:#e5e7eb;
-      font-size:.8rem;
     }
   </style>
 </head>
@@ -152,31 +122,34 @@
 <body>
   <div id="site-header"></div>
 
-  <main class="solicitudes-main">
-    <div class="sol-header-row">
-      <div>
+  <main class="page">
+    <!-- Cabecera estilo "page header" -->
+    <section class="page-header">
+      <div class="page-title">
         <h2>Solicitudes</h2>
-        <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
-          Crea solicitudes de compra o venta y consulta su estado.
-        </p>
+        <p>Crea solicitudes de compra o venta y consulta su estado.</p>
       </div>
-      <button type="button"
-              class="btn btn-secondary"
-              onclick="window.location.href='./app_ui.html'">
-        ← Volver al panel
-      </button>
-    </div>
+
+      <div class="page-actions">
+        <button type="button"
+                class="btn btn-secondary"
+                onclick="window.location.href='./app_ui.html'">
+          ← Volver al panel
+        </button>
+      </div>
+    </section>
 
     <!-- BLOQUE 1: FORMULARIO -->
-    <div class="card">
+    <section class="card">
       <div class="card-header">
         <h3>Nueva solicitud</h3>
       </div>
-      <p id="sol-perms-label" class="help-text" style="margin-bottom:.8rem;"></p>
+
+      <p id="sol-perms-label" class="help-text" style="margin:0 0 .8rem 0;"></p>
 
       <form id="sol-form" class="sol-form">
-        <div class="sol-form-grid">
-          <!-- Tipo de solicitud -->
+        <div class="form-grid">
+          <!-- Tipo de solicitud (mantengo .tipo-toggle + data-type + active) -->
           <div class="field">
             <label>Tipo de solicitud</label>
             <div class="tipo-toggle">
@@ -215,25 +188,25 @@
           </div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.8rem;">
+        <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.9rem;">
           <button type="submit" class="btn btn-primary" id="sol-submit-btn">
             Enviar solicitud
           </button>
         </div>
       </form>
-    </div>
+    </section>
 
     <!-- BLOQUE 2: SOLICITUDES ABIERTAS -->
-    <div class="card" style="margin-top:1.25rem;">
+    <section class="card" style="margin-top:1.25rem;">
       <div class="card-header">
         <h3>Mis solicitudes abiertas</h3>
       </div>
 
-      <div class="sol-toolbar">
-        <div class="sol-toolbar-group">
+      <div class="toolbar">
+        <div class="toolbar-group">
           <input type="search" id="sol-open-search" placeholder="Buscar por ítem..."/>
         </div>
-        <div class="sol-toolbar-group">
+        <div class="toolbar-group">
           <select id="sol-open-status-filter">
             <option value="todas">Todas</option>
             <option value="pendiente">Pendientes</option>
@@ -247,7 +220,7 @@
         </div>
       </div>
 
-      <div style="max-height:260px;overflow:auto;margin-top:.2rem;">
+      <div class="table-scroll">
         <div class="table-container">
           <table class="table">
             <thead>
@@ -268,19 +241,19 @@
           </table>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- BLOQUE 3: HISTÓRICO -->
-    <div class="card" style="margin-top:1.25rem;">
+    <section class="card" style="margin-top:1.25rem;">
       <div class="card-header">
         <h3>Histórico de mis solicitudes</h3>
       </div>
 
-      <div class="sol-toolbar">
-        <div class="sol-toolbar-group">
+      <div class="toolbar">
+        <div class="toolbar-group">
           <input type="search" id="sol-history-search" placeholder="Buscar por ítem..."/>
         </div>
-        <div class="sol-toolbar-group">
+        <div class="toolbar-group">
           <select id="sol-history-status-filter">
             <option value="todas">Todos los estados</option>
             <option value="completada">Completadas</option>
@@ -295,7 +268,7 @@
         </div>
       </div>
 
-      <div style="max-height:260px;overflow:auto;margin-top:.2rem;">
+      <div class="table-scroll">
         <div class="table-container">
           <table class="table">
             <thead>
@@ -316,9 +289,12 @@
           </table>
         </div>
       </div>
-    </div>
+    </section>
   </main>
 
+  <!-- =========================
+       LÓGICA ORIGINAL (INTACTA)
+       ========================= -->
   <script type="module">
     import { getOrgStatus } from './modules/profile.js';
 
