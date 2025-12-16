@@ -31,7 +31,7 @@
       flex-wrap:wrap;
     }
 
-    /* FORM EN HORIZONTAL (inputs NO casteados) */
+    /* Inputs NO casteados */
     .sol-form-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -39,9 +39,7 @@
     }
 
     @media (max-width: 800px) {
-      .sol-form-grid {
-        grid-template-columns: minmax(0, 1fr);
-      }
+      .sol-form-grid { grid-template-columns: minmax(0, 1fr); }
     }
 
     .sol-form .field { margin-bottom: 0; }
@@ -115,9 +113,7 @@
       cursor: not-allowed;
     }
 
-    .help-text {
-      margin-top: .2rem;
-    }
+    .help-text { margin-top: .2rem; }
 
     /* Barras de filtros */
     .sol-toolbar {
@@ -147,7 +143,6 @@
       font-family: inherit;
     }
 
-    /* Contenedores de componentes casteados */
     .cmp-inline { display:inline-flex; align-items:center; }
   </style>
 </head>
@@ -291,24 +286,20 @@
       const host = document.getElementById(containerId);
       if (!host) return;
 
-      // 1) si el componente ya trae el tbody con ID correcto, perfecto
+      // si ya existe el tbody con ese id, perfecto
       const direct = host.querySelector(`#${CSS.escape(wantedId)}`);
       if (direct) return;
 
-      // 2) preferimos slot
+      // preferimos slot
       const slot = host.querySelector('[data-slot="tbody"]');
-      if (slot) {
-        slot.id = wantedId;
-        return;
-      }
+      if (slot) { slot.id = wantedId; return; }
 
-      // 3) fallback: primer tbody
+      // fallback: primer tbody
       const tb = host.querySelector('tbody');
       if (tb) tb.id = wantedId;
     }
 
     function ensureToggleCompatibility() {
-      // Queremos que tu lógica (dataset.type) funcione aunque el componente use data-value
       const root = document.getElementById('cmp-tog-01');
       if (!root) return;
 
@@ -316,14 +307,13 @@
       buttons.forEach(btn => {
         // blindaje anti-submit
         btn.type = 'button';
-
         // compat: si tiene data-value y no data-type, lo replicamos
         if (btn.dataset.value && !btn.dataset.type) {
           btn.dataset.type = btn.dataset.value;
         }
       });
 
-      // si por lo que sea el componente no trae active, fijamos compra por defecto
+      // default compra si no hay active
       const anyActive = buttons.some(b => b.classList.contains('active'));
       if (!anyActive && buttons.length) {
         buttons.forEach(b => b.classList.toggle('active', (b.dataset.type === 'compra')));
@@ -334,7 +324,7 @@
     await loadComponentById('./components/tog-01.html', 'cmp-tog-01');
     ensureToggleCompatibility();
 
-    // TAB-01 y TAB-02 (casteadas)
+    // TAB-01 y TAB-02
     await loadComponentById('./components/tab-01.html', 'cmp-tab-open');
     await loadComponentById('./components/tab-02.html', 'cmp-tab-history');
 
@@ -343,7 +333,7 @@
     ensureTbodyId('cmp-tab-history', 'sol-history-tbody');
   </script>
 
-  <!-- 2) LÓGICA ORIGINAL DEL MÓDULO (sin cambios) -->
+  <!-- 2) LÓGICA ORIGINAL DEL MÓDULO (sin cambios funcionales) -->
   <script type="module">
     import { getOrgStatus } from './modules/profile.js';
 
@@ -487,10 +477,8 @@
       } else {
         (items || []).forEach(it => {
           const opt = document.createElement('option');
-          opt.value = it.id; // uuid de commodities_master
-          opt.textContent = it.symbol
-            ? `${it.name} (${it.symbol})`
-            : it.name;
+          opt.value = it.id;
+          opt.textContent = it.symbol ? `${it.name} (${it.symbol})` : it.name;
           itemSelect.appendChild(opt);
         });
       }
@@ -526,7 +514,6 @@
       let myRequests = [];
 
       function statusTagClass(st) {
-        // st: pendiente, aprobada, rechazada, completada, cancelada
         return `tag tag--${st}`;
       }
 
@@ -774,16 +761,14 @@
 
         const payload = {
           request_type: type,
-          item_id: itemId, // uuid de commodities_master
+          item_id: itemId,
           quantity: qty,
           requester_discord_id: session.user.id,
           status: 'pendiente',
           preferred_warehouse_id: preferredWarehouseId
         };
 
-        const { error: insError } = await supa
-          .from('requests')
-          .insert(payload);
+        const { error: insError } = await supa.from('requests').insert(payload);
 
         if (insError) {
           console.error('Error creando solicitud:', insError);
@@ -792,7 +777,6 @@
         }
 
         solForm.reset();
-        // restaurar solicitante y tipo después del reset
         solicitanteInput.value = handle;
         typeHidden.value = 'compra';
         tipoButtons.forEach(btn => {
@@ -810,7 +794,6 @@
         const wSign = reqRow.warehouse_sign_result || 'pendiente';
         const rSign = reqRow.requester_sign_result || 'pendiente';
 
-        // Solo se completa si el estado es aprobada y ambas firmas son OK
         if (reqRow.status !== 'aprobada') return;
         if (!(wSign === 'ok' && rSign === 'ok')) return;
 
@@ -840,12 +823,7 @@
         const currentQty = Number(wiRow.quantity || 0);
         const qty = Number(reqRow.quantity || 0);
 
-        // COMPRA → el almacén vende → pierde stock → delta negativo
-        // VENTA  → el almacén compra → gana stock → delta positivo
-        const delta = reqRow.request_type === 'venta'
-          ?  qty   // venta → entra material
-          : -qty;  // compra → sale material
-
+        const delta = reqRow.request_type === 'venta' ? qty : -qty;
         const newQty = currentQty + delta;
 
         const { error: updStockError } = await supa
@@ -874,7 +852,6 @@
           return;
         }
 
-        // 🔔 Notificación al solicitante: solicitud completada
         if (reqRow.requester_discord_id) {
           await supa.from('notifications').insert({
             user_id: reqRow.requester_discord_id,
@@ -967,3 +944,4 @@
   </script>
 </body>
 </html>
+
