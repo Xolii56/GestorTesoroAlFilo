@@ -1,0 +1,29 @@
+<!-- DAT-01 · Date Picker -->
+<div class="date-picker" data-locale="es-ES">
+  <input type="text" class="date-input" placeholder="Selecciona una fecha" readonly />
+
+  <div class="date-popover" aria-hidden="true">
+    <div class="date-header">
+      <button class="date-nav" type="button" data-dir="-1">‹</button>
+      <div class="date-month" aria-live="polite"></div>
+      <button class="date-nav" type="button" data-dir="1">›</button>
+    </div>
+
+    <div class="date-weekdays">
+      <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+    </div>
+
+    <div class="date-grid" role="grid"></div>
+
+    <div class="date-footer">
+      <button type="button" class="btn btn-secondary btn-sm date-clear">Limpiar</button>
+
+      <div class="date-quick">
+        <button type="button" class="btn btn-secondary btn-sm date-plus" data-days="7">7 días</button>
+        <button type="button" class="btn btn-secondary btn-sm date-plus" data-days="14">14 días</button>
+      </div>
+
+      <button type="button" class="btn btn-primary btn-sm date-today">Hoy</button>
+    </div>
+  </div>
+</div>
