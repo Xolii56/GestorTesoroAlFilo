@@ -15,68 +15,70 @@
   <script src="./modules/db.js" defer></script>
   <script src="./modules/layout.js" defer></script>
 
-  <!--
-    SOLO CSS de ajuste estructural para encajar con style_prueba/muestrario.
-    (No toca lógica: IDs, clases usadas por JS, ni comportamiento.)
-  -->
   <style>
-    /* Contenedor principal alineado al patrón "page" */
-    main.page {
+    main.solicitudes-main {
       padding: 1.5rem;
       max-width: 1100px;
       margin: 0 auto;
     }
 
-    .page-header {
+    .sol-header-row {
       display:flex;
       justify-content:space-between;
-      align-items:flex-end;
+      align-items:center;
       margin-bottom:1rem;
       gap:.75rem;
       flex-wrap:wrap;
     }
 
-    .page-title p {
-      margin:.25rem 0 0 0;
-      opacity:.8;
-      font-size:.95rem;
-    }
-
-    /* Grid de formulario, estilo "muestrario" */
-    .form-grid {
+    /* FORM EN HORIZONTAL */
+    .sol-form-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 0.8rem 1rem;
     }
+
     @media (max-width: 800px) {
-      .form-grid { grid-template-columns: minmax(0, 1fr); }
+      .sol-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
 
-    /* Mantener tu hook .tipo-toggle (JS lo necesita) pero con look de toggle "bonito" */
-    .tipo-toggle {
-      display:flex;
-      gap:.5rem;
-      flex-wrap:wrap;
-      align-items:center;
+    .sol-form .field {
+      margin-bottom: 0;
     }
 
-    /* Toolbars coherentes */
-    .toolbar {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:.6rem;
-      flex-wrap:wrap;
-      margin-bottom:.6rem;
-    }
-    .toolbar-group {
-      display:flex;
-      gap:.4rem;
-      flex-wrap:wrap;
-      align-items:center;
+    .sol-form label {
+      display: block;
+      font-size: .8rem;
+      opacity: .8;
+      margin-bottom: .2rem;
     }
 
-    /* Mantengo estos estilos porque tu JS crea .btn-icon ok/ko dinámicamente */
+    .sol-form select,
+    .sol-form input,
+    .sol-form textarea {
+      width: 100%;
+      padding: 0.4rem 0.5rem;
+      border-radius: 0.4rem;
+      border: 1px solid rgba(148,163,184,0.8);
+      background: #020617;
+      color: #e5e7eb;
+      font-size: .9rem;
+    }
+
+    .sol-form textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .sol-form input[readonly],
+    .sol-form select[disabled],
+    .sol-form textarea[readonly] {
+      opacity: .8;
+    }
+
+    /* Botones de firma redondos (OK / KO) */
     .btn-icon {
       width: 28px;
       height: 28px;
@@ -91,30 +93,58 @@
       padding: 0;
       cursor: pointer;
     }
+
     .btn-icon.ok {
       background: #22c55e;
       color: #022c22;
       border-color: #22c55e;
     }
+
     .btn-icon.ko {
       background: #ef4444;
       color: #fef2f2;
       border-color: #ef4444;
     }
+
     .btn-icon:disabled {
       opacity: .5;
       cursor: not-allowed;
     }
+
     .btn-disabled {
       opacity: .6;
       cursor: not-allowed;
     }
 
-    /* Scroll contenedor tabla */
-    .table-scroll {
-      max-height: 260px;
-      overflow: auto;
+    .help-text {
       margin-top: .2rem;
+    }
+
+    /* Barras de filtros */
+    .sol-toolbar {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:.6rem;
+      flex-wrap:wrap;
+      margin-bottom:.6rem;
+    }
+
+    .sol-toolbar-group {
+      display:flex;
+      gap:.4rem;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .sol-toolbar input[type="search"],
+    .sol-toolbar select {
+      padding:0.35rem 0.55rem;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.7);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.8rem;
     }
   </style>
 </head>
@@ -122,40 +152,35 @@
 <body>
   <div id="site-header"></div>
 
-  <main class="page">
-    <!-- Cabecera estilo "page header" -->
-    <section class="page-header">
-      <div class="page-title">
+  <main class="solicitudes-main">
+    <div class="sol-header-row">
+      <div>
         <h2>Solicitudes</h2>
-        <p>Crea solicitudes de compra o venta y consulta su estado.</p>
+        <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
+          Crea solicitudes de compra o venta y consulta su estado.
+        </p>
       </div>
-
-      <div class="page-actions">
-        <button type="button"
-                class="btn btn-secondary"
-                onclick="window.location.href='./app_ui.html'">
-          ← Volver al panel
-        </button>
-      </div>
-    </section>
+      <button type="button"
+              class="btn btn-secondary"
+              onclick="window.location.href='./app_ui.html'">
+        ← Volver al panel
+      </button>
+    </div>
 
     <!-- BLOQUE 1: FORMULARIO -->
-    <section class="card">
+    <div class="card">
       <div class="card-header">
         <h3>Nueva solicitud</h3>
       </div>
-
-      <p id="sol-perms-label" class="help-text" style="margin:0 0 .8rem 0;"></p>
+      <p id="sol-perms-label" class="help-text" style="margin-bottom:.8rem;"></p>
 
       <form id="sol-form" class="sol-form">
-        <div class="form-grid">
-          <!-- Tipo de solicitud (mantengo .tipo-toggle + data-type + active) -->
+        <div class="sol-form-grid">
+          <!-- Tipo de solicitud -->
           <div class="field">
             <label>Tipo de solicitud</label>
-            <div class="tipo-toggle">
-              <button type="button" data-type="compra" class="btn btn-secondary btn-sm active">Compra</button>
-              <button type="button" data-type="venta" class="btn btn-secondary btn-sm">Venta</button>
-            </div>
+            <!-- CAST: TOG-01 (muestrario) -->
+            <div id="cmp-tog-01" class="tipo-toggle"></div>
             <input type="hidden" id="request_type" value="compra"/>
           </div>
 
@@ -188,25 +213,25 @@
           </div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.9rem;">
+        <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.8rem;">
           <button type="submit" class="btn btn-primary" id="sol-submit-btn">
             Enviar solicitud
           </button>
         </div>
       </form>
-    </section>
+    </div>
 
     <!-- BLOQUE 2: SOLICITUDES ABIERTAS -->
-    <section class="card" style="margin-top:1.25rem;">
+    <div class="card" style="margin-top:1.25rem;">
       <div class="card-header">
         <h3>Mis solicitudes abiertas</h3>
       </div>
 
-      <div class="toolbar">
-        <div class="toolbar-group">
+      <div class="sol-toolbar">
+        <div class="sol-toolbar-group">
           <input type="search" id="sol-open-search" placeholder="Buscar por ítem..."/>
         </div>
-        <div class="toolbar-group">
+        <div class="sol-toolbar-group">
           <select id="sol-open-status-filter">
             <option value="todas">Todas</option>
             <option value="pendiente">Pendientes</option>
@@ -220,40 +245,23 @@
         </div>
       </div>
 
-      <div class="table-scroll">
-        <div class="table-container">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Tipo</th>
-                <th>Ítem</th>
-                <th>Cant.</th>
-                <th>Estado</th>
-                <th>Creada</th>
-                <th>Detalle</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="sol-open-tbody">
-              <!-- JS -->
-            </tbody>
-          </table>
-        </div>
+      <div style="max-height:260px;overflow:auto;margin-top:.2rem;">
+        <!-- CAST: TAB-01 (muestrario) -->
+        <div id="cmp-tab-01"></div>
       </div>
-    </section>
+    </div>
 
     <!-- BLOQUE 3: HISTÓRICO -->
-    <section class="card" style="margin-top:1.25rem;">
+    <div class="card" style="margin-top:1.25rem;">
       <div class="card-header">
         <h3>Histórico de mis solicitudes</h3>
       </div>
 
-      <div class="toolbar">
-        <div class="toolbar-group">
+      <div class="sol-toolbar">
+        <div class="sol-toolbar-group">
           <input type="search" id="sol-history-search" placeholder="Buscar por ítem..."/>
         </div>
-        <div class="toolbar-group">
+        <div class="sol-toolbar-group">
           <select id="sol-history-status-filter">
             <option value="todas">Todos los estados</option>
             <option value="completada">Completadas</option>
@@ -268,33 +276,40 @@
         </div>
       </div>
 
-      <div class="table-scroll">
-        <div class="table-container">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Tipo</th>
-                <th>Ítem</th>
-                <th>Cant.</th>
-                <th>Estado</th>
-                <th>Creada</th>
-                <th>Cierre</th>
-                <th>Detalle</th>
-              </tr>
-            </thead>
-            <tbody id="sol-history-tbody">
-              <!-- JS -->
-            </tbody>
-          </table>
-        </div>
+      <div style="max-height:260px;overflow:auto;margin-top:.2rem;">
+        <!-- CAST: TAB-02 (muestrario) -->
+        <div id="cmp-tab-02"></div>
       </div>
-    </section>
+    </div>
   </main>
 
-  <!-- =========================
-       LÓGICA ORIGINAL (INTACTA)
-       ========================= -->
+  <!-- Casteo de componentes (partials) ANTES de que arranque la lógica del módulo -->
+  <script type="module">
+    import { loadComponentById, getSlot } from './modules/ui_components.js';
+
+    // TOG-01
+    await loadComponentById('./components/tog-01.html', 'cmp-tog-01');
+    // Adaptación mínima para que la lógica existente funcione tal cual
+    document.querySelectorAll('#cmp-tog-01 .toggle-btn').forEach(btn => {
+      // La lógica del módulo usa data-type. El componente lleva data-type y data-value.
+      if (!btn.dataset.type && btn.dataset.value) btn.dataset.type = btn.dataset.value;
+      // El módulo esperaba clases de botones existentes: mantenemos sin tocar.
+      // Si quisieras usar .btn aquí, se haría en el propio componente, no en los módulos.
+    });
+
+    // TAB-01
+    await loadComponentById('./components/tab-01.html', 'cmp-tab-01');
+    const tab01Root = document.getElementById('cmp-tab-01');
+    const tab01Body = getSlot(tab01Root, 'tbody');
+    if (tab01Body) tab01Body.id = 'sol-open-tbody';
+
+    // TAB-02
+    await loadComponentById('./components/tab-02.html', 'cmp-tab-02');
+    const tab02Root = document.getElementById('cmp-tab-02');
+    const tab02Body = getSlot(tab02Root, 'tbody');
+    if (tab02Body) tab02Body.id = 'sol-history-tbody';
+  </script>
+
   <script type="module">
     import { getOrgStatus } from './modules/profile.js';
 
