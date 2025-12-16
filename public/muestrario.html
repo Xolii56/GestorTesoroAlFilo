@@ -1,1001 +1,157 @@
 <!doctype html>
 <html lang="es">
-
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Muestrario UI — Tesoro</title>
-  <link rel="stylesheet" href="./style_prueba.css" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Muestrario UI — Gestor Tesoro</title>
+
+  <link rel="stylesheet" href="./style_prueba.css"/>
+
+  <style>
+    body {
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    section {
+      margin-bottom: 3rem;
+    }
+
+    section > h2 {
+      margin-bottom: 1rem;
+      font-size: 1.4rem;
+    }
+
+    .demo-block {
+      margin-bottom: 1.5rem;
+    }
+
+    .demo-label {
+      font-size: .75rem;
+      opacity: .6;
+      margin-bottom: .35rem;
+    }
+
+    .demo-surface {
+      padding: 1rem;
+      border-radius: .75rem;
+      background: rgba(15,23,42,.6);
+    }
+
+    .demo-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+  </style>
 </head>
 
 <body>
-  <div class="page">
-    <header class="page-header">
-      <h1 class="page-title">Muestrario UI Tesoro</h1>
-      <p class="page-subtitle">
-        Catálogo de componentes. Usa los códigos (BTN-01, TAG-ESTADO-OK, etc.) para decir qué te gusta o qué hay que
-        cambiar.
-      </p>
-    </header>
+  <h1>Muestrario UI</h1>
+  <p style="opacity:.7;margin-bottom:2rem;">
+    Escaparate vivo de componentes UI.  
+    <strong>Todo lo que ves aquí se carga desde <code>/components</code></strong>.
+  </p>
 
-    <!-- TIPOGRAFÍA -->
-    <section class="sample-section">
-      <h2 class="sample-section-title">Tipografía (TIT-xx)</h2>
-      <div class="sample-grid">
+  <!-- =======================
+       TOGGLES
+       ======================= -->
+  <section>
+    <h2>Toggles</h2>
 
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">TIT-01</span>
-            <span>Heading 1 · Título de página</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="heading-1">Departamento del Tesoro</div>
-          </div>
-        </div>
-
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">TIT-02</span>
-            <span>Heading 2 · Título de bloque</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="heading-2">Solicitudes</div>
-          </div>
-        </div>
-
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">TIT-03</span>
-            <span>Heading 3 · Subtítulo / sección</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="heading-3">Información adicional</div>
-          </div>
-        </div>
-
+    <div class="demo-block">
+      <div class="demo-label">TOG-01 · Toggle binario</div>
+      <div class="demo-surface">
+        <div id="demo-tog-01"></div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- BOTONES -->
-    <section class="sample-section">
-      <h2 class="sample-section-title">Botones (BTN-xx)</h2>
-      <div class="sample-grid">
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">BTN-01</span>
-            <span>Botón primario</span>
-          </div>
-          <div class="sample-item-inner">
-            <button class="btn btn-primary">Confirmar acción</button>
-          </div>
-        </div>
+  <!-- =======================
+       TAGS
+       ======================= -->
+  <section>
+    <h2>Tags</h2>
 
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">BTN-02</span>
-            <span>Botón secundario</span>
-          </div>
-          <div class="sample-item-inner">
-            <button class="btn btn-secondary">Cancelar</button>
-          </div>
-        </div>
-
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">BTN-03</span>
-            <span>Botón de peligro</span>
-          </div>
-          <div class="sample-item-inner">
-            <button class="btn btn-danger">Reset BD</button>
-          </div>
-        </div>
-
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">BTN-04</span>
-            <span>Botón pequeño</span>
-          </div>
-          <div class="sample-item-inner">
-            <button class="btn btn-secondary btn-sm">Editar</button>
-            <button class="btn btn-danger btn-sm">Borrar</button>
-          </div>
-        </div>
+    <div class="demo-block">
+      <div class="demo-label">TAG · Tipo</div>
+      <div class="demo-surface demo-row">
+        <div id="demo-tag-tipo"></div>
       </div>
-    </section>
+    </div>
 
-    <!-- TOGGLES -->
-    <section class="sample-section">
-      <h2 class="sample-section-title">Toggles (TOG-xx)</h2>
-      <div class="sample-grid">
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">TOG-01</span>
-            <span>Toggle binario Compra / Venta</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="toggle-binario">
-              <button class="toggle-btn active" data-value="compra">Compra</button>
-              <button class="toggle-btn" data-value="venta">Venta</button>
-            </div>
-          </div>
-        </div>
+    <div class="demo-block">
+      <div class="demo-label">TAG · Estado</div>
+      <div class="demo-surface demo-row">
+        <div id="demo-tag-estado"></div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- DATE PICKER -->
-    <section class="sample-section">
-      <h2 class="sample-section-title">Date Picker (DAT-xx)</h2>
-      <div class="sample-grid">
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">DAT-01</span>
-            <span>Selector de fecha</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="date-picker" data-locale="es-ES">
-              <input type="text" class="date-input" placeholder="Selecciona una fecha" readonly />
+  <!-- =======================
+       TABLAS
+       ======================= -->
+  <section>
+    <h2>Tablas</h2>
 
-              <div class="date-popover" aria-hidden="true">
-                <div class="date-header">
-                  <button class="date-nav" type="button" data-dir="-1">‹</button>
-                  <div class="date-month" aria-live="polite"></div>
-                  <button class="date-nav" type="button" data-dir="1">›</button>
-                </div>
-
-                <div class="date-weekdays">
-                  <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
-                </div>
-
-                <div class="date-grid" role="grid"></div>
-
-                <div class="date-footer">
-                  <button type="button" class="btn btn-secondary btn-sm date-clear">Limpiar</button>
-
-                  <div class="date-quick">
-                    <button type="button" class="btn btn-secondary btn-sm date-plus" data-days="7">7 días</button>
-                    <button type="button" class="btn btn-secondary btn-sm date-plus" data-days="14">14 días</button>
-                  </div>
-
-                  <button type="button" class="btn btn-primary btn-sm date-today">Hoy</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div class="demo-block">
+      <div class="demo-label">TAB-01 · Solicitudes abiertas</div>
+      <div class="demo-surface">
+        <div class="table-container" id="demo-tab-01"></div>
       </div>
-    </section>
+    </div>
 
-    <!-- TAGS / ETIQUETAS -->
-    <section class="sample-section">
-      <h2 class="sample-section-title">Etiquetas / Tags (TAG-xx)</h2>
-
-      <!-- ✅ Fila 1: dos tarjetas -->
-      <div class="sample-grid">
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">TAG-TIPO-01</span>
-            <span>Tipos de solicitud</span>
-          </div>
-          <div class="sample-item-inner">
-            <span class="tag tag--compra">Compra</span>
-            <span class="tag tag--venta">Venta</span>
-            <span class="tag tag--commodities">Commodities</span>
-            <span class="tag tag--prestamo">Préstamo</span>
-            <span class="tag tag--taller">Taller</span>
-            <span class="tag tag--armeria">Armería</span>
-          </div>
-        </div>
-
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">TAG-ESTADO-01</span>
-            <span>Estados de solicitud / préstamo / aval</span>
-          </div>
-          <div class="sample-item-inner">
-            <span class="tag tag--pendiente">Pendiente</span>
-            <span class="tag tag--aprobada">Aprobada</span>
-            <span class="tag tag--rechazada">Rechazada</span>
-            <span class="tag tag--cancelada">Cancelada</span>
-            <span class="tag tag--completada">Completada</span>
-
-            <span class="tag tag--concedido">Concedido</span>
-            <span class="tag tag--cobrado">Cobrado</span>
-
-            <span class="tag tag--esperando-aval">Esperando aval</span>
-            <span class="tag tag--aval-aceptado">Aval aceptado</span>
-            <span class="tag tag--aval-rechazado">Aval rechazado</span>
-          </div>
-        </div>
+    <div class="demo-block">
+      <div class="demo-label">TAB-02 · Histórico</div>
+      <div class="demo-surface">
+        <div class="table-container" id="demo-tab-02"></div>
       </div>
+    </div>
+  </section>
 
-      <!-- ✅ Fila 2: TAG-STOCK + TAG-MOD -->
-      <div class="sample-grid" style="margin-top:.9rem;">
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">TAG-STOCK-01</span>
-            <span>Estado del stock (almacén)</span>
-          </div>
-          <div class="sample-item-inner">
-            <span class="tag tag--stock-critico">Crítico</span>
-            <span class="tag tag--stock-seguro">Seguro</span>
-            <span class="tag tag--stock-excedente">Excedente</span>
-          </div>
-        </div>
+  <!-- =======================
+       ALERTAS
+       ======================= -->
+  <section>
+    <h2>Alertas</h2>
 
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">TAG-MOD-01</span>
-            <span>Etiqueta grande (módulo)</span>
-          </div>
-          <div class="sample-item-inner">
-            <span class="tag tag-lg tag--info">Reabastecimiento</span>
-          </div>
-        </div>
+    <div class="demo-block">
+      <div class="demo-label">ALR-01</div>
+      <div class="demo-surface">
+        <div id="demo-alr-01"></div>
       </div>
-    </section>
+    </div>
 
-    <!-- TARJETA MÓDULO -->
-    <section class="sample-section">
-      <h2 class="sample-section-title">Tarjetas de módulo (MOD-xx)</h2>
-      <div class="sample-grid">
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">MOD-01</span>
-            <span>Tarjeta módulo básica</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="module-card">
-              <span class="tag tag-lg">Solicitudes</span>
-              <div class="module-card-footer">
-                Acceso a todas las solicitudes de commodities del clan.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">MOD-02</span>
-            <span>Tarjeta módulo “Banco”</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="module-card">
-              <span class="tag tag-lg tag--info">Banco</span>
-              <div class="module-card-footer">
-                Interventores, préstamos, fondos y trazabilidad de deuda.
-              </div>
-            </div>
-          </div>
-        </div>
+    <div class="demo-block">
+      <div class="demo-label">ALR-02</div>
+      <div class="demo-surface">
+        <div id="demo-alr-02"></div>
       </div>
-    </section>
-
-    <!-- TABLAS -->
-    <section class="sample-section">
-      <h2 class="sample-section-title">Tablas (TAB-xx)</h2>
-
-      <div class="sample-grid sample-grid--tablas">
-
-        <!-- TAB-01 -->
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">TAB-01</span>
-            <span>Solicitudes abiertas · Commodities</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="table-container">
-              <table class="table table-commodities-open">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Tipo</th>
-                    <th>Item</th>
-                    <th>Cantidad</th>
-                    <th>Estado</th>
-                    <th>Fecha creación</th>
-                    <th>Detalle</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="table-row-clickable">
-                    <td>#123</td>
-                    <td><span class="tag tag--compra">Compra</span></td>
-                    <td>Quantanium (QUA)</td>
-                    <td>200</td>
-                    <td><span class="tag tag--pendiente">Pendiente</span></td>
-                    <td>12/12/2953 21:37</td>
-                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
-                    <td><button class="btn btn-primary btn-sm">Firmar</button></td>
-                  </tr>
-                  <tr class="table-row-clickable">
-                    <td>#124</td>
-                    <td><span class="tag tag--venta">Venta</span></td>
-                    <td>Hephaestanite (HEP)</td>
-                    <td>50</td>
-                    <td><span class="tag tag--aprobada">Aprobada</span></td>
-                    <td>13/12/2953 09:12</td>
-                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
-                    <td><button class="btn btn-primary btn-sm">Firmar</button></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- TAB-02 -->
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">TAB-02</span>
-            <span>Histórico · Commodities</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="table-container">
-              <table class="table table-commodities-history">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Tipo</th>
-                    <th>Item</th>
-                    <th>Cantidad</th>
-                    <th>Estado</th>
-                    <th>Fecha creación</th>
-                    <th>Fecha cierre</th>
-                    <th>Detalle</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="table-row-clickable">
-                    <td>#100</td>
-                    <td><span class="tag tag--compra">Compra</span></td>
-                    <td>Laranite (LAR)</td>
-                    <td>120</td>
-                    <td><span class="tag tag--completada">Completada</span></td>
-                    <td>01/12/2953 18:05</td>
-                    <td>02/12/2953 20:15</td>
-                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
-                  </tr>
-                  <tr class="table-row-clickable">
-                    <td>#101</td>
-                    <td><span class="tag tag--venta">Venta</span></td>
-                    <td>Bexalite (BEX)</td>
-                    <td>80</td>
-                    <td><span class="tag tag--rechazada">Rechazada</span></td>
-                    <td>03/12/2953 11:22</td>
-                    <td>03/12/2953 12:10</td>
-                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
-                  </tr>
-                  <tr class="table-row-clickable">
-                    <td>#102</td>
-                    <td><span class="tag tag--compra">Compra</span></td>
-                    <td>Quantanium (QUA)</td>
-                    <td>40</td>
-                    <td><span class="tag tag--cancelada">Cancelada</span></td>
-                    <td>05/12/2953 09:01</td>
-                    <td>05/12/2953 09:45</td>
-                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- TAB-03 -->
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">TAB-03</span>
-            <span>Tabla de préstamos</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="table-container">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>ID préstamo</th>
-                    <th>Solicitante</th>
-                    <th>Interventor</th>
-                    <th>Valor</th>
-                    <th>Interés</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>#2001</td>
-                    <td>HandlePréstamo</td>
-                    <td>GestorAlpha</td>
-                    <td>2.0 M UEC</td>
-                    <td>10 %</td>
-                    <td><span class="tag tag--concedido">Concedido</span></td>
-                  </tr>
-                  <tr>
-                    <td>#2002</td>
-                    <td>HandleAtrasado</td>
-                    <td>GestorBeta</td>
-                    <td>0.5 M UEC</td>
-                    <td>15 %</td>
-                    <td><span class="tag tag--esperando-aval">Esperando aval</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- TAB-04 -->
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">TAB-04</span>
-            <span>Solicitudes en revisión · (módulo Revisión)</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="table-container">
-              <table class="table table-revision-open">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Tipo</th>
-                    <th>Item</th>
-                    <th>Cantidad</th>
-                    <th>Estado</th>
-                    <th>Fecha creación</th>
-                    <th>Detalle</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="table-row-clickable">
-                    <td>#301</td>
-                    <td><span class="tag tag--compra">Compra</span></td>
-                    <td>Titanium (TIT)</td>
-                    <td>300</td>
-                    <td><span class="tag tag--pendiente">Pendiente</span></td>
-                    <td>14/12/2953 10:02</td>
-                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
-                    <td><button class="btn btn-primary btn-sm">Firmar</button></td>
-                  </tr>
-                  <tr class="table-row-clickable">
-                    <td>#302</td>
-                    <td><span class="tag tag--venta">Venta</span></td>
-                    <td>Gold (GOL)</td>
-                    <td>20</td>
-                    <td><span class="tag tag--aprobada">Aprobada</span></td>
-                    <td>14/12/2953 12:41</td>
-                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
-                    <td><button class="btn btn-primary btn-sm">Firmar</button></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- TAB-05 -->
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">TAB-05</span>
-            <span>Inventario · (módulo Almacenes)</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="table-container">
-              <table class="table table-warehouse-inventory">
-                <thead>
-                  <tr>
-                    <th>Commodity</th>
-                    <th>Símbolo</th>
-                    <th>Cantidad</th>
-                    <th>Pendiente</th>
-                    <th>Rango Stock</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="table-row-clickable">
-                    <td>Quantanium</td>
-                    <td>QUA</td>
-                    <td>120</td>
-                    <td>30</td>
-                    <td>50–150</td>
-                    <td><span class="tag tag--stock-seguro">Seguro</span></td>
-                  </tr>
-                  <tr class="table-row-clickable">
-                    <td>Laranite</td>
-                    <td>LAR</td>
-                    <td>12</td>
-                    <td>18</td>
-                    <td>40–120</td>
-                    <td><span class="tag tag--stock-critico">Crítico</span></td>
-                  </tr>
-                  <tr class="table-row-clickable">
-                    <td>Titanium</td>
-                    <td>TIT</td>
-                    <td>420</td>
-                    <td>0</td>
-                    <td>80–200</td>
-                    <td><span class="tag tag--stock-excedente">Excedente</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- TAB-06 -->
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">TAB-06</span>
-            <span>Solicitudes asignadas · (módulo Almacenes)</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="table-container">
-              <table class="table table-warehouse-assigned">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Tipo</th>
-                    <th>Item</th>
-                    <th>Cantidad</th>
-                    <th>Solicitante</th>
-                    <th>Plazo Max</th>
-                    <th>Estado</th>
-                    <th>Detalle</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="table-row-clickable">
-                    <td>#501</td>
-                    <td><span class="tag tag--compra">Compra</span></td>
-                    <td>Hephaestanite (HEP)</td>
-                    <td>60</td>
-                    <td>HandleUno</td>
-                    <td>24h</td>
-                    <td><span class="tag tag--aprobada">Aprobada</span></td>
-                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
-                    <td><button class="btn btn-primary btn-sm">Firmar</button></td>
-                  </tr>
-                  <tr class="table-row-clickable">
-                    <td>#502</td>
-                    <td><span class="tag tag--venta">Venta</span></td>
-                    <td>Gold (GOL)</td>
-                    <td>10</td>
-                    <td>HandleDos</td>
-                    <td>48h</td>
-                    <td><span class="tag tag--pendiente">Pendiente</span></td>
-                    <td><button class="btn btn-secondary btn-sm">Ver</button></td>
-                    <td><button class="btn btn-primary btn-sm">Firmar</button></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- DETALLE SOLICITUD / PRÉSTAMO -->
-    <section class="sample-section">
-      <h2 class="sample-section-title">Detalle (DET-xx)</h2>
-      <div class="sample-grid">
-
-        <!-- ✅ DET-01 -->
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">DET-01</span>
-            <span>Detalle solicitud · Commodities</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="card">
-              <div class="card-header">
-                <h3>Detalle de solicitud</h3>
-              </div>
-
-              <div class="detail-grid">
-                <div class="detail-label">ID solicitud</div>
-                <div class="detail-value">#123</div>
-
-                <div class="detail-label">Tipo de solicitud</div>
-                <div class="detail-value"><span class="tag tag--compra">Compra</span></div>
-
-                <div class="detail-label">Estado de solicitud</div>
-                <div class="detail-value"><span class="tag tag--pendiente">Pendiente</span></div>
-
-                <div class="detail-label">Solicitante</div>
-                <div class="detail-value">HandleUno</div>
-
-                <div class="detail-label">Material</div>
-                <div class="detail-value">Quantanium Refined</div>
-
-                <div class="detail-label">Cantidad</div>
-                <div class="detail-value">200 SCU</div>
-
-                <div class="detail-label">Preferencia de entrega</div>
-                <div class="detail-value">Almacén principal · Orison</div>
-
-                <div class="detail-label">Lugar de entrega</div>
-                <div class="detail-value">Orison · Stratus Platform</div>
-
-                <div class="detail-label">Fecha límite de entrega</div>
-                <div class="detail-value">20/12/2953</div>
-
-                <div class="detail-label">Firmas</div>
-                <div class="detail-value detail-row-full">
-                  <div class="signature-grid">
-                    <div class="signature-card">
-                      <div class="detail-label signature-title">Solicitante</div>
-                      <div class="signature-box signature-box--pending">Entrega</div>
-                    </div>
-
-                    <div class="signature-card">
-                      <div class="detail-label signature-title">Tesoro</div>
-                      <div class="signature-box signature-box--pending">Entrega</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="detail-label">Logs</div>
-                <div class="detail-value detail-row-full">
-                  <div class="logs-box text-muted">
-                    12/12/2953 21:37 · Solicitud creada<br>
-                    13/12/2953 09:12 · Solicitud aprobada<br>
-                    13/12/2953 10:05 · Firma solicitante (entrega) · Pendiente<br>
-                    13/12/2953 10:06 · Firma tesoro (entrega) · Pendiente
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
-        <!-- DET-02 -->
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">DET-02</span>
-            <span>Detalle de préstamo</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="card">
-              <div class="card-header">
-                <h3>Detalle del préstamo</h3>
-                <span class="tag tag--concedido">Concedido</span>
-              </div>
-
-              <div class="detail-grid">
-                <div class="detail-label">ID</div>
-                <div class="detail-value">#2001</div>
-
-                <div class="detail-label">Fecha</div>
-                <div class="detail-value">12/12/2953 21:37</div>
-
-                <div class="detail-label">Solicitante</div>
-                <div class="detail-value">HandlePréstamo</div>
-
-                <div class="detail-label">Avalista</div>
-                <div class="detail-value">HandleAvalista</div>
-
-                <div class="detail-label">Cantidad</div>
-                <div class="detail-value">2.0 M UEC</div>
-
-                <div class="detail-label">Plazo</div>
-                <div class="detail-value">8 semanas</div>
-
-                <div class="detail-label">Interés</div>
-                <div class="detail-value">10 %</div>
-
-                <div class="detail-label">Cantidad a devolver</div>
-                <div class="detail-value">2.2 M UEC</div>
-
-                <div class="detail-label">Estado solicitud</div>
-                <div class="detail-value">
-                  <span class="tag tag--concedido">Concedido</span>
-                </div>
-
-                <div class="detail-label">Estado aval</div>
-                <div class="detail-value">
-                  <span class="tag tag--aval-aceptado">Aval aceptado</span>
-                </div>
-
-                <div class="detail-label">Creado</div>
-                <div class="detail-value">12/12/2953 21:37</div>
-
-                <div class="detail-label">Decisión de aval</div>
-                <div class="detail-value">13/12/2953 09:15</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ALERTAS / AVISOS -->
-    <section class="sample-section">
-      <h2 class="sample-section-title">Alertas / Avisos (ALR-xx)</h2>
-      <div class="sample-grid">
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">ALR-01</span>
-            <span>Info</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="alert alert--info">
-              <div class="alert-icon">ℹ️</div>
-              <div>
-                Esta operación se registrará en el log del Tesoro para mantener la trazabilidad.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">ALR-02</span>
-            <span>Warning</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="alert alert--warn">
-              <div class="alert-icon">⚠️</div>
-              <div>
-                Este préstamo supera el 80% de la operativa máxima del interventor seleccionado.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="sample-item">
-          <div class="sample-label">
-            <span class="sample-label-code">ALR-03</span>
-            <span>Peligro</span>
-          </div>
-          <div class="sample-item-inner">
-            <div class="alert alert--bad">
-              <div class="alert-icon">🧨</div>
-              <div>
-                Esta acción reseteará datos de la base de datos. No se puede deshacer.
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </div>
-
-  <!-- Script para que los toggles funcionen en el muestrario -->
-  <script>
-    document.querySelectorAll('.toggle-binario').forEach(group => {
-      const buttons = group.querySelectorAll('.toggle-btn');
-      buttons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          buttons.forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-        });
-      });
-    });
-  </script>
-
-  <!-- ✅ Script Date Picker DAT-01 (abre arriba si no cabe abajo + quick 7/14 días) -->
-  <script>
-    (function () {
-      const monthNames = [
-        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
-      ];
-
-      function pad2(n) { return String(n).padStart(2, '0'); }
-
-      function toISO(d) {
-        return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-      }
-
-      function buildCalendar(gridEl, year, month, selectedISO) {
-        gridEl.innerHTML = '';
-
-        const first = new Date(year, month, 1);
-        const last = new Date(year, month + 1, 0);
-        const daysInMonth = last.getDate();
-
-        // Lunes=0 ... Domingo=6
-        const jsDay = first.getDay(); // 0 Domingo ... 6 Sábado
-        const firstWeekday = (jsDay + 6) % 7;
-
-        // Prev month filler
-        const prevLast = new Date(year, month, 0).getDate();
-        for (let i = firstWeekday - 1; i >= 0; i--) {
-          const d = document.createElement('button');
-          d.type = 'button';
-          d.className = 'date-day muted';
-          d.textContent = String(prevLast - i);
-          d.disabled = true;
-          gridEl.appendChild(d);
-        }
-
-        const today = new Date();
-        const todayISO = toISO(today);
-
-        for (let day = 1; day <= daysInMonth; day++) {
-          const iso = `${year}-${pad2(month + 1)}-${pad2(day)}`;
-
-          const d = document.createElement('button');
-          d.type = 'button';
-          d.className = 'date-day';
-          d.textContent = String(day);
-          d.dataset.iso = iso;
-
-          if (iso === todayISO) d.classList.add('today');
-          if (selectedISO && iso === selectedISO) d.classList.add('selected');
-
-          gridEl.appendChild(d);
-        }
-
-        // Next month filler
-        const totalCells = gridEl.children.length;
-        const remainder = totalCells % 7;
-        if (remainder !== 0) {
-          const toAdd = 7 - remainder;
-          for (let i = 1; i <= toAdd; i++) {
-            const d = document.createElement('button');
-            d.type = 'button';
-            d.className = 'date-day muted';
-            d.textContent = String(i);
-            d.disabled = true;
-            gridEl.appendChild(d);
-          }
-        }
-      }
-
-      function formatDisplay(iso) {
-        // iso: YYYY-MM-DD -> DD/MM/YYYY
-        const [y, m, d] = iso.split('-');
-        return `${d}/${m}/${y}`;
-      }
-
-      function decidePopoverDirection(picker, popover) {
-        // Quita estado previo
-        picker.classList.remove('open-up');
-
-        // Medimos espacio real disponible
-        const rect = picker.getBoundingClientRect();
-        const viewportH = window.innerHeight || document.documentElement.clientHeight;
-
-        // Forzamos un "display" temporal para medir height si estuviera cerrado
-        const wasHidden = !picker.classList.contains('open');
-        if (wasHidden) {
-          // lo abrimos a nivel DOM para medir, pero sin “parpadeo” visual (CSS ya lo controla con display)
-          picker.classList.add('open');
-          popover.setAttribute('aria-hidden', 'false');
-        }
-
-        const popH = popover.getBoundingClientRect().height;
-
-        // revertimos si lo abrimos solo para medir
-        if (wasHidden) {
-          picker.classList.remove('open');
-          popover.setAttribute('aria-hidden', 'true');
-        }
-
-        const spaceBelow = viewportH - rect.bottom;
-        const spaceAbove = rect.top;
-
-        // Si no cabe abajo y arriba hay más sitio, abrimos arriba
-        const needsUp = spaceBelow < (popH + 12) && spaceAbove > spaceBelow;
-        if (needsUp) picker.classList.add('open-up');
-      }
-
-      document.querySelectorAll('.date-picker').forEach(picker => {
-        const input = picker.querySelector('.date-input');
-        const popover = picker.querySelector('.date-popover');
-        const monthLabel = picker.querySelector('.date-month');
-        const grid = picker.querySelector('.date-grid');
-        const navs = picker.querySelectorAll('.date-nav');
-        const btnClear = picker.querySelector('.date-clear');
-        const btnToday = picker.querySelector('.date-today');
-        const btnPlus = picker.querySelectorAll('.date-plus');
-
-        let view = new Date();
-        view.setDate(1);
-
-        let selectedISO = '';
-
-        function render() {
-          const y = view.getFullYear();
-          const m = view.getMonth();
-          monthLabel.textContent = `${monthNames[m]} ${y}`;
-          buildCalendar(grid, y, m, selectedISO);
-        }
-
-        function open() {
-          // Decide dirección ANTES de mostrar (evita que “salte”)
-          decidePopoverDirection(picker, popover);
-
-          picker.classList.add('open');
-          popover.setAttribute('aria-hidden', 'false');
-        }
-
-        function close() {
-          picker.classList.remove('open');
-          popover.setAttribute('aria-hidden', 'true');
-        }
-
-        function toggle() {
-          if (picker.classList.contains('open')) close();
-          else open();
-        }
-
-        function selectISO(iso) {
-          selectedISO = iso;
-          input.value = formatDisplay(iso);
-          // ajusta el mes visible al seleccionado
-          const [y, m] = iso.split('-');
-          view = new Date(Number(y), Number(m) - 1, 1);
-          render();
-          close();
-        }
-
-        input.addEventListener('click', toggle);
-
-        navs.forEach(btn => {
-          btn.addEventListener('click', () => {
-            const dir = Number(btn.dataset.dir || 0);
-            view.setMonth(view.getMonth() + dir);
-            view.setDate(1);
-            render();
-            // si estaba abierto y cambia el alto por cualquier cosa, recalcula
-            if (picker.classList.contains('open')) decidePopoverDirection(picker, popover);
-          });
-        });
-
-        grid.addEventListener('click', (e) => {
-          const t = e.target;
-          if (!t.classList.contains('date-day')) return;
-          if (t.classList.contains('muted')) return;
-          const iso = t.dataset.iso;
-          if (!iso) return;
-
-          selectISO(iso);
-        });
-
-        btnClear.addEventListener('click', () => {
-          selectedISO = '';
-          input.value = '';
-          render();
-        });
-
-        btnToday.addEventListener('click', () => {
-          const now = new Date();
-          selectISO(toISO(now));
-        });
-
-        btnPlus.forEach(b => {
-          b.addEventListener('click', () => {
-            const days = Number(b.dataset.days || 0);
-            const now = new Date();
-            now.setDate(now.getDate() + days);
-            selectISO(toISO(now));
-          });
-        });
-
-        // Recalcula dirección si cambia el viewport
-        window.addEventListener('resize', () => {
-          if (picker.classList.contains('open')) decidePopoverDirection(picker, popover);
-        });
-
-        window.addEventListener('scroll', () => {
-          if (picker.classList.contains('open')) decidePopoverDirection(picker, popover);
-        }, { passive: true });
-
-        document.addEventListener('click', (e) => {
-          if (!picker.contains(e.target)) close();
-        });
-
-        render();
-      });
-    })();
+    </div>
+  </section>
+
+  <!-- =======================
+       CARGA DE COMPONENTES
+       ======================= -->
+  <script type="module">
+    import { loadComponentById } from './modules/ui_components.js';
+
+    // Toggles
+    await loadComponentById('./components/tog-01.html', 'demo-tog-01');
+
+    // Tags
+    await loadComponentById('./components/tag-tipo-01.html', 'demo-tag-tipo');
+    await loadComponentById('./components/tag-estado-01.html', 'demo-tag-estado');
+
+    // Tablas
+    await loadComponentById('./components/tab-01.html', 'demo-tab-01');
+    await loadComponentById('./components/tab-02.html', 'demo-tab-02');
+
+    // Alertas
+    await loadComponentById('./components/alr-01.html', 'demo-alr-01');
+    await loadComponentById('./components/alr-02.html', 'demo-alr-02');
   </script>
 </body>
-
 </html>
