@@ -1,0 +1,41 @@
+{
+  "exclude": [
+    "header.html"
+  ],
+  "components": [
+    "tit-01.html",
+    "tit-02.html",
+    "tit-03.html",
+
+    "btn-01.html",
+    "btn-02.html",
+    "btn-03.html",
+    "btn-04.html",
+
+    "tog-01.html",
+
+    "dat-01.html",
+
+    "tag-tipo-01.html",
+    "tag-estado-01.html",
+    "tag-stock-01.html",
+    "tag-mod-01.html",
+
+    "mod-01.html",
+    "mod-02.html",
+
+    "tab-01.html",
+    "tab-02.html",
+    "tab-03.html",
+    "tab-04.html",
+    "tab-05.html",
+    "tab-06.html",
+
+    "det-01.html",
+    "det-02.html",
+
+    "alr-01.html",
+    "alr-02.html",
+    "alr-03.html"
+  ]
+}
