@@ -31,56 +31,27 @@
       flex-wrap:wrap;
     }
 
-    /* ───────── NUEVA SOLICITUD: layout nuevo ───────── */
-    .sol-new-wrap{
+    /* ───────── NUEVA SOLICITUD: layout pedido ───────── */
+    .sol-new-grid{
       display:grid;
-      grid-template-columns: 1.6fr .9fr;
-      gap:1rem;
-      align-items:start;
-    }
-    @media (max-width: 900px){
-      .sol-new-wrap{ grid-template-columns: 1fr; }
-    }
-
-    .sol-new-left{
-      padding-right:.25rem;
-    }
-
-    .sol-new-right{
-      border:1px solid rgba(148,163,184,0.14);
-      background: rgba(2,6,23,0.35);
-      border-radius:.85rem;
-      padding: .9rem;
-      position: sticky;
-      top: 1rem;
-    }
-    @media (max-width: 900px){
-      .sol-new-right{ position: static; }
-    }
-
-    .sol-side-title{
-      font-size:.8rem;
-      opacity:.75;
-      margin:0 0 .35rem 0;
-    }
-
-    /* Inputs NO casteados */
-    .sol-form-grid{
-      display:grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: .8rem 1rem;
+      grid-template-columns: 1fr 1fr;
+      gap: .85rem 1rem;
+      align-items:end;
     }
     @media (max-width: 800px){
-      .sol-form-grid{ grid-template-columns: 1fr; }
+      .sol-new-grid{ grid-template-columns: 1fr; }
     }
 
     .sol-form .field{ margin-bottom:0; }
+
     .sol-form label{
       display:block;
       font-size:.8rem;
       opacity:.8;
       margin-bottom:.2rem;
     }
+
+    /* Inputs NO casteados */
     .sol-form select,
     .sol-form input,
     .sol-form textarea{
@@ -95,6 +66,18 @@
     }
 
     .help-text{ margin-top:.2rem; }
+
+    /* Botón submit alineado abajo derecha */
+    .sol-submit-wrap{
+      display:flex;
+      justify-content:flex-end;
+      align-items:flex-end;
+      height:100%;
+    }
+    @media (max-width: 800px){
+      .sol-submit-wrap{ justify-content:stretch; }
+      .sol-submit-wrap > button{ width:100%; }
+    }
 
     /* Barras de filtros */
     .sol-toolbar{
@@ -170,69 +153,58 @@
       </button>
     </div>
 
-    <!-- BLOQUE 1: FORMULARIO (REESTRUCTURADO) -->
+    <!-- BLOQUE 1: FORMULARIO (layout pedido) -->
     <div class="card">
       <div class="card-header">
         <h3>Nueva solicitud</h3>
       </div>
 
+      <p id="sol-perms-label" class="help-text" style="margin-bottom:.8rem;"></p>
+
       <form id="sol-form" class="sol-form">
-        <!-- La lógica usa este hidden -->
         <input type="hidden" id="request_type" value="compra"/>
 
-        <div class="sol-new-wrap">
-          <!-- IZQUIERDA: campos -->
-          <div class="sol-new-left">
-            <div class="sol-form-grid">
-              <!-- Solicitante -->
-              <div class="field">
-                <label>Solicitante</label>
-                <input id="solicitante" type="text" readonly />
-              </div>
-
-              <!-- Objeto -->
-              <div class="field">
-                <label for="item-select">Objeto</label>
-                <select id="item-select" required>
-                  <option value="">Selecciona un ítem...</option>
-                </select>
-              </div>
-
-              <!-- Cantidad -->
-              <div class="field">
-                <label for="quantity">Cantidad</label>
-                <input id="quantity" type="number" min="1" required />
-              </div>
-
-              <!-- Preferencia de entrega -->
-              <div class="field">
-                <label for="preferred-warehouse">Preferencia de entrega</label>
-                <select id="preferred-warehouse">
-                  <option value="">Cualquier almacén</option>
-                </select>
-              </div>
-            </div>
+        <div class="sol-new-grid">
+          <!-- FILA 1 IZQ: TOG -->
+          <div class="field">
+            <label>Tipo de solicitud</label>
+            <div id="cmp-tog-01"></div>
           </div>
 
-          <!-- DERECHA: tipo + submit + permisos -->
-          <aside class="sol-new-right">
-            <p class="sol-side-title">Tipo de solicitud</p>
+          <!-- FILA 1 DER: SOLICITANTE -->
+          <div class="field">
+            <label>Solicitante</label>
+            <input id="solicitante" type="text" readonly />
+          </div>
 
-            <!-- CAST: TOG-01 (aquí) -->
-            <div id="cmp-tog-01"></div>
+          <!-- FILA 2 IZQ: MATERIAL -->
+          <div class="field">
+            <label for="item-select">Material</label>
+            <select id="item-select" required>
+              <option value="">Selecciona un ítem...</option>
+            </select>
+          </div>
 
-            <div style="height:.75rem;"></div>
+          <!-- FILA 2 DER: CANTIDAD -->
+          <div class="field">
+            <label for="quantity">Cantidad</label>
+            <input id="quantity" type="number" min="1" required />
+          </div>
 
-            <button type="submit" class="btn btn-primary" id="sol-submit-btn" style="width:100%;">
+          <!-- FILA 3 IZQ: PREFERENCIA ENTREGA -->
+          <div class="field">
+            <label for="preferred-warehouse">Preferencia de entrega</label>
+            <select id="preferred-warehouse">
+              <option value="">Cualquier almacén</option>
+            </select>
+          </div>
+
+          <!-- FILA 3 DER: SUBMIT -->
+          <div class="field sol-submit-wrap">
+            <button type="submit" class="btn btn-primary" id="sol-submit-btn">
               Enviar solicitud
             </button>
-
-            <p id="sol-perms-label" class="help-text" style="margin-top:.75rem;"></p>
-
-            <div style="margin-top:.6rem;opacity:.65;font-size:.8rem;line-height:1.25;">
-              Consejo: selecciona <b>Compra</b> si el almacén te entrega material, o <b>Venta</b> si tú entregas material al almacén.
-            </div>
-          </aside>
+          </div>
         </div>
       </form>
     </div>
@@ -301,39 +273,36 @@
   <script type="module">
     import { loadComponentById } from './modules/ui_components.js';
 
-    function ensureTbodyId(containerId, wantedId) {
+    function ensureTbodyId(containerId, wantedId){
       const host = document.getElementById(containerId);
       if (!host) return;
+
       const direct = host.querySelector(`#${CSS.escape(wantedId)}`);
       if (direct) return;
+
       const slot = host.querySelector('[data-slot="tbody"]');
       if (slot) { slot.id = wantedId; return; }
+
       const tb = host.querySelector('tbody');
       if (tb) tb.id = wantedId;
     }
 
-    function ensureToggleCompatibility() {
+    function ensureToggleCompatibility(){
       const root = document.getElementById('cmp-tog-01');
       if (!root) return;
 
-      // Importante: la lógica existente busca ".tipo-toggle button"
-      // así que garantizamos la clase en el wrapper.
+      // La lógica busca ".tipo-toggle button"
       root.classList.add('tipo-toggle');
 
       const buttons = Array.from(root.querySelectorAll('button'));
       buttons.forEach(btn => {
-        // blindaje anti-submit
-        btn.type = 'button';
-        // compat: si viene con data-value, lo copiamos a data-type
-        if (btn.dataset.value && !btn.dataset.type) {
-          btn.dataset.type = btn.dataset.value;
-        }
+        btn.type = 'button'; // anti-submit
+        if (btn.dataset.value && !btn.dataset.type) btn.dataset.type = btn.dataset.value;
       });
 
-      // default compra si no hay active
       const anyActive = buttons.some(b => b.classList.contains('active'));
       if (!anyActive && buttons.length) {
-        buttons.forEach(b => b.classList.toggle('active', (b.dataset.type === 'compra')));
+        buttons.forEach(b => b.classList.toggle('active', b.dataset.type === 'compra'));
       }
     }
 
@@ -396,7 +365,9 @@
             await supa.auth.signOut();
             window.location.href = "./index.html";
           },
-          () => { window.location.href = './perfil.html'; }
+          () => {
+            window.location.href = './perfil.html';
+          }
         );
       }
 
@@ -719,7 +690,6 @@
 
       await loadMyRequests();
 
-      // 9) Submit (sin cambios)
       solForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (readOnly) { alert('Tienes permisos de solo lectura en este módulo.'); return; }
@@ -792,7 +762,6 @@
 
         const currentQty = Number(wiRow.quantity || 0);
         const qty = Number(reqRow.quantity || 0);
-
         const delta = reqRow.request_type === 'venta' ? qty : -qty;
         const newQty = currentQty + delta;
 
