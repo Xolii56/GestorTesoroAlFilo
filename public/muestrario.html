@@ -150,6 +150,12 @@
 
                 <div class="date-footer">
                   <button type="button" class="btn btn-secondary btn-sm date-clear">Limpiar</button>
+
+                  <div class="date-quick">
+                    <button type="button" class="btn btn-secondary btn-sm date-plus" data-days="7">7 días</button>
+                    <button type="button" class="btn btn-secondary btn-sm date-plus" data-days="14">14 días</button>
+                  </div>
+
                   <button type="button" class="btn btn-primary btn-sm date-today">Hoy</button>
                 </div>
               </div>
@@ -772,7 +778,7 @@
     });
   </script>
 
-  <!-- ✅ Script Date Picker DAT-01 (sin botón calendario) -->
+  <!-- ✅ Script Date Picker DAT-01 (abre arriba si no cabe abajo + quick 7/14 días) -->
   <script>
     (function () {
       const monthNames = [
@@ -781,6 +787,10 @@
       ];
 
       function pad2(n) { return String(n).padStart(2, '0'); }
+
+      function toISO(d) {
+        return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+      }
 
       function buildCalendar(gridEl, year, month, selectedISO) {
         gridEl.innerHTML = '';
@@ -805,7 +815,7 @@
         }
 
         const today = new Date();
-        const todayISO = `${today.getFullYear()}-${pad2(today.getMonth() + 1)}-${pad2(today.getDate())}`;
+        const todayISO = toISO(today);
 
         for (let day = 1; day <= daysInMonth; day++) {
           const iso = `${year}-${pad2(month + 1)}-${pad2(day)}`;
@@ -844,6 +854,38 @@
         return `${d}/${m}/${y}`;
       }
 
+      function decidePopoverDirection(picker, popover) {
+        // Quita estado previo
+        picker.classList.remove('open-up');
+
+        // Medimos espacio real disponible
+        const rect = picker.getBoundingClientRect();
+        const viewportH = window.innerHeight || document.documentElement.clientHeight;
+
+        // Forzamos un "display" temporal para medir height si estuviera cerrado
+        const wasHidden = !picker.classList.contains('open');
+        if (wasHidden) {
+          // lo abrimos a nivel DOM para medir, pero sin “parpadeo” visual (CSS ya lo controla con display)
+          picker.classList.add('open');
+          popover.setAttribute('aria-hidden', 'false');
+        }
+
+        const popH = popover.getBoundingClientRect().height;
+
+        // revertimos si lo abrimos solo para medir
+        if (wasHidden) {
+          picker.classList.remove('open');
+          popover.setAttribute('aria-hidden', 'true');
+        }
+
+        const spaceBelow = viewportH - rect.bottom;
+        const spaceAbove = rect.top;
+
+        // Si no cabe abajo y arriba hay más sitio, abrimos arriba
+        const needsUp = spaceBelow < (popH + 12) && spaceAbove > spaceBelow;
+        if (needsUp) picker.classList.add('open-up');
+      }
+
       document.querySelectorAll('.date-picker').forEach(picker => {
         const input = picker.querySelector('.date-input');
         const popover = picker.querySelector('.date-popover');
@@ -852,6 +894,7 @@
         const navs = picker.querySelectorAll('.date-nav');
         const btnClear = picker.querySelector('.date-clear');
         const btnToday = picker.querySelector('.date-today');
+        const btnPlus = picker.querySelectorAll('.date-plus');
 
         let view = new Date();
         view.setDate(1);
@@ -866,6 +909,9 @@
         }
 
         function open() {
+          // Decide dirección ANTES de mostrar (evita que “salte”)
+          decidePopoverDirection(picker, popover);
+
           picker.classList.add('open');
           popover.setAttribute('aria-hidden', 'false');
         }
@@ -880,6 +926,16 @@
           else open();
         }
 
+        function selectISO(iso) {
+          selectedISO = iso;
+          input.value = formatDisplay(iso);
+          // ajusta el mes visible al seleccionado
+          const [y, m] = iso.split('-');
+          view = new Date(Number(y), Number(m) - 1, 1);
+          render();
+          close();
+        }
+
         input.addEventListener('click', toggle);
 
         navs.forEach(btn => {
@@ -888,6 +944,8 @@
             view.setMonth(view.getMonth() + dir);
             view.setDate(1);
             render();
+            // si estaba abierto y cambia el alto por cualquier cosa, recalcula
+            if (picker.classList.contains('open')) decidePopoverDirection(picker, popover);
           });
         });
 
@@ -898,10 +956,7 @@
           const iso = t.dataset.iso;
           if (!iso) return;
 
-          selectedISO = iso;
-          input.value = formatDisplay(iso);
-          render();
-          close();
+          selectISO(iso);
         });
 
         btnClear.addEventListener('click', () => {
@@ -912,13 +967,26 @@
 
         btnToday.addEventListener('click', () => {
           const now = new Date();
-          const iso = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
-          selectedISO = iso;
-          input.value = formatDisplay(iso);
-          view = new Date(now.getFullYear(), now.getMonth(), 1);
-          render();
-          close();
+          selectISO(toISO(now));
         });
+
+        btnPlus.forEach(b => {
+          b.addEventListener('click', () => {
+            const days = Number(b.dataset.days || 0);
+            const now = new Date();
+            now.setDate(now.getDate() + days);
+            selectISO(toISO(now));
+          });
+        });
+
+        // Recalcula dirección si cambia el viewport
+        window.addEventListener('resize', () => {
+          if (picker.classList.contains('open')) decidePopoverDirection(picker, popover);
+        });
+
+        window.addEventListener('scroll', () => {
+          if (picker.classList.contains('open')) decidePopoverDirection(picker, popover);
+        }, { passive: true });
 
         document.addEventListener('click', (e) => {
           if (!picker.contains(e.target)) close();
