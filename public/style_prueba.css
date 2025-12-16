@@ -648,7 +648,7 @@ body { min-height: 100vh; }
 }
 
 /* ============================================================
-   DATE PICKER (DAT-01) — sin botón
+   DATE PICKER (DAT-01) — abre arriba si hace falta
    ============================================================ */
 
 .date-picker {
@@ -657,7 +657,7 @@ body { min-height: 100vh; }
   align-items: center;
   gap: .45rem;
   width: 100%;
-  max-width: 320px;
+  max-width: 360px;
 }
 
 .date-input {
@@ -688,6 +688,12 @@ body { min-height: 100vh; }
   background: rgba(2,6,23,0.98);
   box-shadow: 0 20px 50px rgba(0,0,0,.6);
   display: none;
+}
+
+/* ✅ Abre arriba */
+.date-picker.open-up .date-popover {
+  top: auto;
+  bottom: calc(100% + .45rem);
 }
 
 .date-picker.open .date-popover {
@@ -775,6 +781,14 @@ body { min-height: 100vh; }
 .date-footer {
   display:flex;
   justify-content: space-between;
+  align-items: center;
   gap: .5rem;
   margin-top: .55rem;
+}
+
+.date-quick{
+  display:flex;
+  gap:.45rem;
+  justify-content:center;
+  flex: 1;
 }
