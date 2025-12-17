@@ -1,18 +1,23 @@
-<!-- TAB-04 · Solicitudes en revisión -->
+<!-- TAB-04 — Revisión (Pendientes) -->
 <div class="table-container">
-  <table class="table table-revision-open">
+  <table class="table">
     <thead>
       <tr>
         <th>ID</th>
         <th>Tipo</th>
-        <th>Item</th>
-        <th>Cantidad</th>
+        <th>Ítem</th>
+        <th>Cant.</th>
+        <th>Solicitante</th>
         <th>Estado</th>
-        <th>Fecha creación</th>
+        <th>Creada</th>
         <th>Detalle</th>
         <th>Acciones</th>
       </tr>
     </thead>
-    <tbody data-slot="tbody"></tbody>
+
+    <!-- IMPORTANTE: este slot lo usaremos para asignar id="rev-tbody" -->
+    <tbody data-slot="tbody">
+      <!-- JS -->
+    </tbody>
   </table>
 </div>
