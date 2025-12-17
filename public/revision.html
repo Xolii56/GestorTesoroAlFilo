@@ -5,19 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Departamento del Tesoro — Revisión</title>
 
-  <!-- Estilos globales + design system -->
   <link rel="stylesheet" href="./style.css"/>
   <link rel="stylesheet" href="./style_prueba.css"/>
 
-  <!-- Supabase + módulos -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="./config.js" defer></script>
   <script src="./modules/db.js" defer></script>
   <script src="./modules/layout.js" defer></script>
-
-  <!-- Flatpickr -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
   <style>
     main.rev-main{
@@ -35,7 +29,7 @@
       flex-wrap:wrap;
     }
 
-    /* Toolbar (MISMO PATRÓN QUE SOLICITUDES) */
+    /* Toolbar estilo del proyecto */
     .rev-toolbar{
       display:flex;
       justify-content:space-between;
@@ -59,40 +53,6 @@
       font-size:.85rem;
       font-family:inherit;
     }
-
-    .help-text{
-      margin-top:.2rem;
-      opacity:.8;
-      font-size:.85rem;
-    }
-
-    /* Botones de acción redondos (OK/KO) */
-    .btn-icon{
-      width:28px;
-      height:28px;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,0.7);
-      background:#020617;
-      color:#e5e7eb;
-      font-size:.8rem;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:0;
-      cursor:pointer;
-    }
-    .btn-icon.ok{
-      background:#22c55e;
-      color:#022c22;
-      border-color:#22c55e;
-    }
-    .btn-icon.ko{
-      background:#ef4444;
-      color:#fef2f2;
-      border-color:#ef4444;
-    }
-    .btn-icon:disabled{ opacity:.5; cursor:not-allowed; }
-    .btn-disabled{ opacity:.6; cursor:not-allowed; }
 
     /* Modal */
     .rev-modal-backdrop{
@@ -119,8 +79,7 @@
       margin-bottom:.25rem;
     }
     .rev-form input,
-    .rev-form select,
-    .rev-form textarea{
+    .rev-form select{
       width:100%;
       padding:0.4rem 0.55rem;
       border-radius:0.55rem;
@@ -129,10 +88,6 @@
       color:#e5e7eb;
       font-size:.9rem;
       font-family:inherit;
-    }
-    .rev-form textarea{
-      min-height:100px;
-      resize:vertical;
     }
 
     .rev-grid-2{
@@ -146,7 +101,7 @@
 
     .rev-bottom-grid{
       display:grid;
-      grid-template-columns:minmax(0,1.2fr) minmax(0,1.4fr);
+      grid-template-columns:minmax(0,1.1fr) minmax(0,1.2fr);
       gap:.9rem;
       margin-top:.2rem;
     }
@@ -154,13 +109,14 @@
       .rev-bottom-grid{ grid-template-columns:1fr; }
     }
 
-    #rev-calendar-container{
+    .rev-modal-actions{
       display:flex;
-      justify-content:center;
-      margin-top:.2rem;
+      justify-content:flex-end;
+      gap:.5rem;
+      margin-top:.75rem;
+      flex-wrap:wrap;
     }
 
-    /* Stock box */
     .rev-stock-list{
       border-radius:0.65rem;
       border:1px solid rgba(148,163,184,0.6);
@@ -170,6 +126,7 @@
       overflow:auto;
       font-size:.85rem;
     }
+
     .rev-stock-table{
       width:100%;
       border-collapse:collapse;
@@ -187,59 +144,34 @@
       font-size:.75rem;
     }
     .rev-stock-table th:nth-child(2),
-    .rev-stock-table th:nth-child(3),
-    .rev-stock-table th:nth-child(4),
-    .rev-stock-table th:nth-child(5),
-    .rev-stock-table td:nth-child(2),
-    .rev-stock-table td:nth-child(3),
-    .rev-stock-table td:nth-child(4),
-    .rev-stock-table td:nth-child(5){
+    .rev-stock-table td:nth-child(2){
       text-align:right;
       white-space:nowrap;
     }
 
-    .rev-modal-actions{
-      display:flex;
-      justify-content:flex-end;
-      gap:.5rem;
-      margin-top:.75rem;
-      flex-wrap:wrap;
-    }
-
-    /* Flatpickr dark tuning (como veníamos usando) */
-    .flatpickr-calendar{
-      background:#020617;
-      border:1px solid rgba(148,163,184,0.7);
-      box-shadow:0 12px 30px rgba(0,0,0,0.8);
+    /* Botones acciones tabla */
+    .btn-icon{
+      width:32px;
+      height:32px;
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,0.55);
+      background:rgba(2,6,23,0.75);
       color:#e5e7eb;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      padding:0;
     }
-    .flatpickr-months,
-    .flatpickr-current-month{ background:#020617; color:#e5e7eb; }
-    .flatpickr-current-month .flatpickr-monthDropdown-months,
-    .flatpickr-current-month input.cur-year{
-      background:#020617; color:#e5e7eb; border:none;
+    .btn-icon.ok{ border-color:rgba(34,197,94,0.55); color:rgba(134,239,172,0.95); background:rgba(34,197,94,0.12); }
+    .btn-icon.ko{ border-color:rgba(239,68,68,0.55); color:rgba(254,202,202,0.95); background:rgba(239,68,68,0.12); }
+    .btn-icon:disabled{ opacity:.45; cursor:not-allowed; }
+
+    /* Slot alerta condicional */
+    #rev-alert-slot:empty{ display:none; }
+    #rev-alert-slot{
+      margin: .2rem 0 .75rem 0;
     }
-    .flatpickr-weekdays,
-    .flatpickr-weekday{ background:#020617; color:#cbd5f5; font-weight:500; }
-    .flatpickr-day{ color:#e5e7eb; }
-    .flatpickr-day.disabled,
-    .flatpickr-day.disabled:hover{
-      color:rgba(148,163,184,0.25)!important;
-      cursor:not-allowed!important;
-    }
-    .flatpickr-day.selected,
-    .flatpickr-day.startRange,
-    .flatpickr-day.endRange{
-      background:#22c55e;
-      border-color:#22c55e;
-      color:#022c22;
-    }
-    .flatpickr-day.today:not(.selected){ border-color:#38bdf8; }
-    .flatpickr-prev-month svg,
-    .flatpickr-next-month svg{ fill:#e5e7eb; }
-    .flatpickr-prev-month:hover svg,
-    .flatpickr-next-month:hover svg{ fill:#38bdf8; }
-    .flatpickr-months input.numInput{ color-scheme: dark; }
   </style>
 </head>
 
@@ -254,9 +186,7 @@
           Revisa y decide solicitudes pendientes.
         </p>
       </div>
-      <button type="button"
-              class="btn btn-secondary"
-              onclick="window.location.href='./app_ui.html'">
+      <button type="button" class="btn btn-secondary" onclick="window.location.href='./app_ui.html'">
         ← Volver al panel
       </button>
     </div>
@@ -268,7 +198,7 @@
 
       <div class="rev-toolbar" style="padding:0 1rem 0.75rem 1rem;">
         <div class="rev-toolbar-group">
-          <span class="help-text">Solo estado <b>pendiente</b>.</span>
+          <span style="opacity:.8;font-size:.85rem;">Solo estado <b>pendiente</b>.</span>
         </div>
         <div class="rev-toolbar-group">
           <input type="search" id="rev-search" placeholder="Buscar por ítem o solicitante..."/>
@@ -290,9 +220,12 @@
         </div>
 
         <form id="rev-form" class="rev-form" style="padding:1rem 1.2rem;">
+          <!-- ALERTA CONDICIONAL -->
+          <div id="rev-alert-slot"></div>
+
           <div class="rev-grid-2">
             <div class="field">
-              <label>Tipo de solicitud</label>
+              <label>Tipo</label>
               <input id="rev-type" type="text" readonly>
             </div>
             <div class="field">
@@ -313,7 +246,7 @@
           </div>
 
           <div class="field">
-            <label>Preferencia de lugar de entrega</label>
+            <label>Preferencia de entrega</label>
             <input id="rev-preferred" type="text" readonly>
           </div>
 
@@ -327,13 +260,12 @@
           <div class="rev-bottom-grid">
             <div class="field">
               <label>Fecha límite de entrega</label>
-              <div id="rev-calendar-container">
-                <div id="rev-calendar"></div>
-              </div>
+              <!-- DAT-01 casteado aquí -->
+              <div id="cmp-dat-01"></div>
             </div>
 
             <div class="field">
-              <label>Stock por almacén para este ítem</label>
+              <label>Stock por almacén</label>
               <div id="rev-stock-list" class="rev-stock-list"></div>
             </div>
           </div>
@@ -343,7 +275,7 @@
             <button type="submit" id="rev-approve" class="btn btn-primary">Aprobar solicitud</button>
           </div>
 
-          <p class="help-text" style="margin-top:.6rem;">
+          <p style="opacity:.75;font-size:.85rem;margin-top:.6rem;">
             Una vez aprobada o rechazada, la decisión no se puede deshacer desde la aplicación.
           </p>
         </form>
@@ -351,7 +283,7 @@
     </div>
   </div>
 
-  <!-- CAST TABLA DESDE COMPONENTES -->
+  <!-- CAST TABLA + DAT-01 -->
   <script type="module">
     import { loadComponentById } from './modules/ui_components.js';
 
@@ -369,22 +301,17 @@
       if (tb) tb.id = wantedId;
     }
 
-    function renameCreatedHeader(){
-      const host = document.getElementById('cmp-tab-rev');
-      if (!host) return;
-      const ths = host.querySelectorAll('thead th');
-      // En TAB-06 la col 6 era "Plazo Max"; aquí visualmente es "Creada"
-      if (ths && ths.length >= 6) ths[5].textContent = 'Creada';
-    }
-
     await loadComponentById('./components/tab-06.html', 'cmp-tab-rev');
     ensureTbodyId('cmp-tab-rev', 'rev-tbody');
-    renameCreatedHeader();
+
+    await loadComponentById('./components/dat-01.html', 'cmp-dat-01');
   </script>
 
-  <!-- LÓGICA ORIGINAL (SIN CAMBIOS) -->
+  <!-- LÓGICA ORIGINAL (SIN CAMBIOS) + mejoras popup -->
   <script type="module">
     import { getOrgStatus } from './modules/profile.js';
+    import { loadComponentById } from './modules/ui_components.js';
+    import { createDatePicker } from './modules/ui_datepicker.js';
 
     document.addEventListener('DOMContentLoaded', async () => {
       const { supa } = window;
@@ -407,10 +334,7 @@
 
       /* ───── 1) Sesión + org_status ───── */
       const { data: { session } } = await supa.auth.getSession();
-      if (!session) {
-        window.location.href = './index.html';
-        return;
-      }
+      if (!session) { window.location.href = './index.html'; return; }
 
       const orgStatus = await getOrgStatus();
       if (!orgStatus || !['daga','espada','admin'].includes(orgStatus)) {
@@ -419,28 +343,21 @@
         return;
       }
 
-      if (typeof window.loadHeader === 'function') {
-        await window.loadHeader('app');
-      }
+      if (typeof window.loadHeader === 'function') await window.loadHeader('app');
       if (typeof window.initHeaderUserMenu === 'function') {
         window.initHeaderUserMenu(
           session,
-          async () => {
-            await supa.auth.signOut();
-            window.location.href = "./index.html";
-          },
-          () => window.location.href = './perfil.html'
+          async () => { await supa.auth.signOut(); window.location.href="./index.html"; },
+          () => window.location.href='./perfil.html'
         );
       }
 
-      /* ───── 2) Permisos módulo revisión ───── */
-      const { data: meRow, error: meError } = await supa
+      /* ───── 2) Permisos revisión ───── */
+      const { data: meRow } = await supa
         .from('users')
         .select('tesoro_internal_role')
         .eq('id', session.user.id)
         .maybeSingle();
-
-      if (meError) console.error('Error leyendo rol interno:', meError);
 
       let myRole = meRow?.tesoro_internal_role || null;
       if (typeof myRole === 'string') myRole = myRole.trim();
@@ -449,19 +366,11 @@
       if (myRole) {
         const asNumber = Number(myRole);
         if (!Number.isNaN(asNumber) && myRole !== '') {
-          const { data, error } = await supa
-            .from('roles_app')
-            .select('*')
-            .eq('id', asNumber)
-            .maybeSingle();
+          const { data, error } = await supa.from('roles_app').select('*').eq('id', asNumber).maybeSingle();
           if (!error) roleRow = data;
         }
         if (!roleRow) {
-          const { data, error } = await supa
-            .from('roles_app')
-            .select('*')
-            .ilike('role_name', myRole)
-            .maybeSingle();
+          const { data, error } = await supa.from('roles_app').select('*').ilike('role_name', myRole).maybeSingle();
           if (!error) roleRow = data;
         }
       }
@@ -474,12 +383,10 @@
       }
       const readOnly = (revLevel === 1);
 
-      /* ───── 3) Datos auxiliares: usuarios + almacenes ───── */
+      /* ───── 3) Aux: usuarios + almacenes ───── */
       const usersById = {};
-      const { data: users, error: usersError } = await supa
-        .from('users')
-        .select('id, handle_name, discord_username');
-      if (!usersError && users) users.forEach(u => { usersById[u.id] = u; });
+      const { data: users } = await supa.from('users').select('id, handle_name, discord_username');
+      (users || []).forEach(u => { usersById[u.id] = u; });
 
       const warehousesById = {};
       const { data: warehouses, error: whError } = await supa
@@ -513,116 +420,137 @@
       const revPreferred  = document.getElementById('rev-preferred');
       const revStockList  = document.getElementById('rev-stock-list');
 
-      const calendarElem  = document.getElementById('rev-calendar');
-      let dueDatePicker   = null;
-      let selectedDueDate = null;
+      const alertSlot     = document.getElementById('rev-alert-slot');
 
-      function initCalendar() {
-        const today = new Date();
-        const defaultDate = new Date();
-        defaultDate.setDate(today.getDate() + 7);
+      // DAT-01 date picker
+      const datRoot = document.getElementById('cmp-dat-01');
+      let dp = null;
 
-        if (dueDatePicker) dueDatePicker.destroy();
+      function initDatePicker(){
+        // default +7 días
+        const def = new Date();
+        def.setDate(def.getDate() + 7);
 
-        dueDatePicker = flatpickr(calendarElem, {
-          inline: true,
-          dateFormat: "Y-m-d",
-          minDate: "today",
-          defaultDate,
-          disableMobile: true,
-          onChange(selectedDates) {
-            selectedDueDate = selectedDates[0] || null;
-          }
+        dp = createDatePicker(datRoot, {
+          minDate: new Date(),
+          defaultDate: def,
+          onChange(){ /* no-op: leemos dp.getDate() al aprobar */ }
         });
-
-        selectedDueDate = defaultDate;
       }
 
-      initCalendar();
+      // Se asegura de inicializarlo una sola vez (DAT-01 ya casteado)
+      initDatePicker();
+
+      // Stock cache por almacén (del ítem actual)
+      let stockByWarehouse = {}; // { [warehouse_id]: qty }
+      let currentRequest = null;
+
+      function tipoTagClass(tipo) {
+        return (tipo === 'venta') ? 'tag tag--venta' : 'tag tag--compra';
+      }
+      function statusTagClass(st) {
+        return `tag tag--${st}`;
+      }
+
+      function clearAlert(){
+        alertSlot.innerHTML = '';
+      }
+
+      async function showLowStockAlert(){
+        // castear ALR-02 dentro del slot
+        alertSlot.innerHTML = '';
+        await loadComponentById('./components/alr-02.html', 'rev-alert-slot');
+
+        // Intentar rellenar texto de forma robusta
+        const root = alertSlot;
+        const titleEl = root.querySelector('[data-alr-title], .alr__title, strong');
+        const bodyEl  = root.querySelector('[data-alr-body], .alr__body, p');
+
+        if (titleEl) titleEl.textContent = 'Stock insuficiente';
+        if (bodyEl) bodyEl.textContent =
+          'El almacén seleccionado no dispone de stock suficiente para cubrir esta solicitud de COMPRA. ' +
+          'Puedes cambiar el almacén o continuar bajo tu responsabilidad.';
+      }
+
+      async function evaluateStockCondition(){
+        clearAlert();
+        if (!currentRequest) return;
+
+        const type = currentRequest.request_type || 'compra';
+        if (type !== 'compra') return; // en venta, stock indiferente
+
+        const wid = warehouseSelect.value;
+        if (!wid) return;
+
+        const have = Number(stockByWarehouse[wid] || 0);
+        const need = Number(currentRequest.quantity || 0);
+
+        if (need > have) {
+          await showLowStockAlert();
+        }
+      }
+
+      warehouseSelect.addEventListener('change', () => {
+        evaluateStockCondition();
+      });
 
       async function loadStockForItem(itemId) {
-        if (!itemId) {
-          revStockList.textContent = 'Ítem no reconocido.';
-          return;
-        }
-
+        stockByWarehouse = {};
         revStockList.textContent = 'Cargando stock...';
 
         const { data, error } = await supa
           .from('warehouse_items')
-          .select(`
-            warehouse_id,
-            quantity,
-            warehouses(name)
-          `)
-          .eq('commodity_id', itemId)
-          .order('warehouses(name)', { ascending: true });
+          .select(`warehouse_id, quantity, warehouses(name)`)
+          .eq('commodity_id', itemId);
 
         if (error) {
-          console.error('Error cargando stock por almacén:', error);
-          revStockList.textContent = 'No se ha podido cargar el stock de los almacenes.';
+          console.error('Error cargando stock:', error);
+          revStockList.textContent = 'No se ha podido cargar el stock.';
           return;
         }
 
         const rows = data || [];
         if (!rows.length) {
-          revStockList.textContent = 'No hay stock registrado para este ítem en ningún almacén.';
+          revStockList.textContent = 'No hay stock registrado para este ítem.';
           return;
         }
+
+        rows.forEach(r => { stockByWarehouse[r.warehouse_id] = Number(r.quantity || 0); });
 
         const table = document.createElement('table');
         table.className = 'rev-stock-table';
 
         const thead = document.createElement('thead');
-        thead.innerHTML = `
-          <tr>
-            <th>ALMACÉN</th>
-            <th>CANT.</th>
-            <th>ÚLT. SCU</th>
-            <th>MEDIA ALM.</th>
-            <th>MEDIA SIST.</th>
-          </tr>`;
+        thead.innerHTML = `<tr><th>ALMACÉN</th><th>CANT.</th></tr>`;
         table.appendChild(thead);
 
-        const tbodyEl = document.createElement('tbody');
+        const tb = document.createElement('tbody');
+        rows
+          .sort((a,b)=> (a.warehouses?.name||'').localeCompare(b.warehouses?.name||''))
+          .forEach(r => {
+            const tr = document.createElement('tr');
+            const wName = r.warehouses?.name || warehousesById[r.warehouse_id]?.name || r.warehouse_id;
+            tr.innerHTML = `<td>${wName}</td><td>${Number(r.quantity||0)}</td>`;
+            tb.appendChild(tr);
+          });
 
-        rows.forEach(r => {
-          const tr = document.createElement('tr');
-          const wName = r.warehouses?.name || warehousesById[r.warehouse_id]?.name || r.warehouse_id;
-
-          const tdName = document.createElement('td');
-          tdName.textContent = wName || '-';
-
-          const tdQty = document.createElement('td');
-          tdQty.textContent = Number(r.quantity || 0);
-
-          const tdLast = document.createElement('td');
-          const tdAvgW = document.createElement('td');
-          const tdAvgS = document.createElement('td');
-          tdLast.textContent = '-';
-          tdAvgW.textContent = '-';
-          tdAvgS.textContent = '-';
-
-          tr.appendChild(tdName);
-          tr.appendChild(tdQty);
-          tr.appendChild(tdLast);
-          tr.appendChild(tdAvgW);
-          tr.appendChild(tdAvgS);
-
-          tbodyEl.appendChild(tr);
-        });
-
-        table.appendChild(tbodyEl);
-
+        table.appendChild(tb);
         revStockList.innerHTML = '';
         revStockList.appendChild(table);
       }
 
-      let pendingRequests = [];
-      let currentRequest  = null;
-
       async function openModalForRequest(r, itemName, requesterName) {
         currentRequest = r;
+
+        // reset
+        clearAlert();
+        warehouseSelect.value = '';
+        // reset date picker to +7
+        if (dp) {
+          const def = new Date();
+          def.setDate(def.getDate() + 7);
+          dp.setDate(def);
+        }
 
         revType.value      = renderTipo(r.request_type);
         revRequester.value = requesterName || '';
@@ -630,32 +558,27 @@
         revQty.value       = r.quantity ?? '';
 
         const preferredName = r.preferred_warehouse_id
-          ? (warehousesById[r.preferred_warehouse_id]?.name || 'Sin nombre (ID ' + r.preferred_warehouse_id + ')')
-          : 'Sin preferencia registrada';
+          ? (warehousesById[r.preferred_warehouse_id]?.name || `ID ${r.preferred_warehouse_id}`)
+          : 'Cualquier almacén';
 
         revPreferred.value = preferredName;
 
-        warehouseSelect.value = '';
-
-        initCalendar();
         await loadStockForItem(r.item_id);
 
         modalBackdrop.style.display = 'flex';
       }
 
-      function closeModal() {
+      function closeModal(){
         modalBackdrop.style.display = 'none';
         currentRequest = null;
+        clearAlert();
       }
 
-      revCancelBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        closeModal();
-      });
+      revCancelBtn.addEventListener('click', (e) => { e.preventDefault(); closeModal(); });
+      modalBackdrop.addEventListener('click', (e) => { if (e.target === modalBackdrop) closeModal(); });
 
-      modalBackdrop.addEventListener('click', (e) => {
-        if (e.target === modalBackdrop) closeModal();
-      });
+      /* ───── 5) Carga solicitudes pendientes ───── */
+      let pendingRequests = [];
 
       async function loadPendingRequests() {
         const { data, error } = await supa
@@ -667,7 +590,6 @@
             quantity,
             status,
             created_at,
-            due_date,
             requester_discord_id,
             preferred_warehouse_id,
             commodities_master(name, symbol)
@@ -676,7 +598,7 @@
           .order('created_at', { ascending: true });
 
         if (error) {
-          console.error('Error cargando solicitudes pendientes:', error);
+          console.error('Error cargando pendientes:', error);
           return;
         }
 
@@ -684,18 +606,8 @@
         renderTable();
       }
 
-      function tipoTagClass(tipo) {
-        if (tipo === 'venta') return 'tag tag--venta';
-        return 'tag tag--compra';
-      }
-
-      function statusTagClass(st) {
-        return `tag tag--${st}`;
-      }
-
-      function renderTable() {
+      function renderTable(){
         tbody.innerHTML = '';
-
         const term = (searchInput.value || '').toLowerCase();
 
         if (!pendingRequests.length) {
@@ -714,8 +626,8 @@
             ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
             : (r.item_id || '');
 
-          const user = usersById[r.requester_discord_id];
-          const requesterName = user?.handle_name || user?.discord_username || r.requester_discord_id;
+          const u = usersById[r.requester_discord_id];
+          const requesterName = u?.handle_name || u?.discord_username || r.requester_discord_id;
 
           if (term) {
             const haystack = (itemName + ' ' + requesterName).toLowerCase();
@@ -724,29 +636,17 @@
 
           const tr = document.createElement('tr');
 
-          const tdId = document.createElement('td');
-          tdId.textContent = `#${r.id}`;
+          tr.innerHTML = `
+            <td>#${r.id}</td>
+            <td><span class="${tipoTagClass(r.request_type)}">${renderTipo(r.request_type)}</span></td>
+            <td>${itemName}</td>
+            <td>${r.quantity}</td>
+            <td>${requesterName}</td>
+            <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
+            <td><span class="${statusTagClass(r.status || 'pendiente')}">${formatStatus(r.status || 'pendiente')}</span></td>
+          `;
 
-          const tdTipo = document.createElement('td');
-          tdTipo.innerHTML = `<span class="${tipoTagClass(r.request_type)}">${renderTipo(r.request_type)}</span>`;
-
-          const tdItem = document.createElement('td');
-          tdItem.textContent = itemName;
-
-          const tdQty = document.createElement('td');
-          tdQty.textContent = r.quantity;
-
-          const tdReq = document.createElement('td');
-          tdReq.textContent = requesterName;
-
-          const tdCreated = document.createElement('td');
-          tdCreated.textContent = r.created_at
-            ? new Date(r.created_at).toLocaleString()
-            : '-';
-
-          const tdStatus = document.createElement('td');
-          tdStatus.innerHTML = `<span class="${statusTagClass(r.status || 'pendiente')}">${formatStatus(r.status || 'pendiente')}</span>`;
-
+          // Detalle
           const tdDetalle = document.createElement('td');
           const btnDetalle = document.createElement('button');
           btnDetalle.type = 'button';
@@ -754,23 +654,20 @@
           btnDetalle.textContent = 'Ver';
           btnDetalle.addEventListener('click', (ev) => {
             ev.stopPropagation();
-            window.open(
-              `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
-              '_blank',
-              'width=720,height=760'
-            );
+            window.open(`./detalle_solicitud.html?id=${encodeURIComponent(r.id)}`, '_blank', 'width=780,height=820');
           });
           tdDetalle.appendChild(btnDetalle);
+          tr.appendChild(tdDetalle);
 
+          // Acciones
           const tdAcc = document.createElement('td');
           const canAct = !readOnly;
 
           const okBtn = document.createElement('button');
           okBtn.type = 'button';
           okBtn.className = 'btn-icon ok';
-          okBtn.innerHTML = '✔';
+          okBtn.innerHTML = '✓';
           okBtn.disabled = !canAct;
-          if (!canAct) okBtn.classList.add('btn-disabled');
           okBtn.addEventListener('click', async (ev) => {
             ev.stopPropagation();
             if (!canAct) return;
@@ -780,30 +677,23 @@
           const koBtn = document.createElement('button');
           koBtn.type = 'button';
           koBtn.className = 'btn-icon ko';
-          koBtn.style.marginLeft = '0.25rem';
+          koBtn.style.marginLeft = '0.35rem';
           koBtn.innerHTML = '✕';
           koBtn.disabled = !canAct;
-          if (!canAct) koBtn.classList.add('btn-disabled');
           koBtn.addEventListener('click', async (ev) => {
             ev.stopPropagation();
             if (!canAct) return;
 
-            const okConfirm = confirm(
-              '¿Seguro que quieres rechazar esta solicitud?\n' +
-              'Esta acción no se puede deshacer.'
-            );
+            const okConfirm = confirm('¿Seguro que quieres rechazar esta solicitud?');
             if (!okConfirm) return;
 
             const { error } = await supa
               .from('requests')
-              .update({
-                status: 'rechazada',
-                approver_discord_id: session.user.id
-              })
+              .update({ status: 'rechazada', approver_discord_id: session.user.id })
               .eq('id', r.id);
 
             if (error) {
-              console.error('Error rechazando solicitud:', error);
+              console.error('Error rechazando:', error);
               alert('No se ha podido rechazar la solicitud.');
               return;
             }
@@ -814,7 +704,7 @@
                 type: 'request_rejected',
                 title: `Solicitud #${r.id} rechazada`,
                 body: 'Tesoro ha rechazado tu solicitud en la fase de revisión.',
-                link_url: `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
+                link_url: `./detalle_solicitud.html?id=${encodeURIComponent(r.id)}`,
                 related_request_id: r.id,
                 level: 'danger'
               });
@@ -825,15 +715,6 @@
 
           tdAcc.appendChild(okBtn);
           tdAcc.appendChild(koBtn);
-
-          tr.appendChild(tdId);
-          tr.appendChild(tdTipo);
-          tr.appendChild(tdItem);
-          tr.appendChild(tdQty);
-          tr.appendChild(tdReq);
-          tr.appendChild(tdCreated);
-          tr.appendChild(tdStatus);
-          tr.appendChild(tdDetalle);
           tr.appendChild(tdAcc);
 
           tbody.appendChild(tr);
@@ -842,26 +723,22 @@
 
       searchInput.addEventListener('input', renderTable);
 
+      /* ───── 6) Aprobar (submit) ───── */
       revForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (readOnly) {
-          alert('Tienes permisos de solo lectura en este módulo.');
-          return;
-        }
+        if (readOnly) { alert('Tienes permisos de solo lectura.'); return; }
         if (!currentRequest) return;
 
         const warehouseId = warehouseSelect.value;
+        if (!warehouseId) { alert('Debes seleccionar un almacén.'); return; }
 
-        if (!warehouseId) {
-          alert('Debes seleccionar un almacén.');
-          return;
-        }
-        if (!selectedDueDate) {
-          alert('Debes seleccionar una fecha límite de entrega.');
-          return;
-        }
+        const selectedDate = dp ? dp.getDate() : null;
+        if (!selectedDate) { alert('Debes seleccionar una fecha límite de entrega.'); return; }
 
-        const dueDate = selectedDueDate.toISOString().split('T')[0];
+        // Re-evaluar alerta (por si el usuario no cambió select)
+        await evaluateStockCondition();
+
+        const dueDate = selectedDate.toISOString().split('T')[0];
 
         const { error } = await supa
           .from('requests')
@@ -875,7 +752,7 @@
           .eq('id', currentRequest.id);
 
         if (error) {
-          console.error('Error aprobando solicitud:', error);
+          console.error('Error aprobando:', error);
           alert('No se ha podido aprobar la solicitud.');
           return;
         }
@@ -886,7 +763,7 @@
             type: 'request_approved',
             title: `Solicitud #${currentRequest.id} aprobada`,
             body: `Tesoro ha aprobado tu solicitud. Plazo máx.: ${dueDate}.`,
-            link_url: `./solicitud_detalle.html?id=${encodeURIComponent(currentRequest.id)}`,
+            link_url: `./detalle_solicitud.html?id=${encodeURIComponent(currentRequest.id)}`,
             related_request_id: currentRequest.id,
             level: 'info'
           });
