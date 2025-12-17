@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Departamento del Tesoro — Revisión de solicitudes</title>
+  <title>Departamento del Tesoro — Revisión</title>
 
   <!-- Estilos globales + design system -->
   <link rel="stylesheet" href="./style.css"/>
@@ -35,7 +35,7 @@
       flex-wrap:wrap;
     }
 
-    /* Toolbar */
+    /* Toolbar (MISMO PATRÓN QUE SOLICITUDES) */
     .rev-toolbar{
       display:flex;
       justify-content:space-between;
@@ -46,7 +46,7 @@
     }
     .rev-toolbar-group{
       display:flex;
-      gap:.5rem;
+      gap:.4rem;
       flex-wrap:wrap;
       align-items:center;
     }
@@ -61,12 +61,12 @@
     }
 
     .help-text{
-      font-size:.8rem;
+      margin-top:.2rem;
       opacity:.8;
-      margin-top:.15rem;
+      font-size:.85rem;
     }
 
-    /* Botones icono (OK/KO) */
+    /* Botones de acción redondos (OK/KO) */
     .btn-icon{
       width:28px;
       height:28px;
@@ -94,37 +94,6 @@
     .btn-icon:disabled{ opacity:.5; cursor:not-allowed; }
     .btn-disabled{ opacity:.6; cursor:not-allowed; }
 
-    /* Chips (sin tocar lógica: la lógica crea .tipo-chip y .badge-status) */
-    .tipo-chip{
-      display:inline-flex;
-      align-items:center;
-      padding:0.15rem 0.55rem;
-      border-radius:999px;
-      font-size:.75rem;
-      border:1px solid rgba(148,163,184,0.75);
-      background:rgba(2,6,23,0.7);
-      white-space:nowrap;
-    }
-    .tipo-chip.compra{ border-color: rgba(34,197,94,0.9); }
-    .tipo-chip.venta { border-color: rgba(248,113,113,0.9); }
-
-    .badge-status{
-      display:inline-flex;
-      align-items:center;
-      padding:0.15rem 0.55rem;
-      border-radius:999px;
-      font-size:.75rem;
-      border:1px solid rgba(148,163,184,0.7);
-      background:rgba(2,6,23,0.7);
-      white-space:nowrap;
-      text-transform:capitalize;
-    }
-    .badge-status.pendiente  { border-color: rgba(250,204,21,0.9); }
-    .badge-status.aprobada   { border-color: rgba(34,197,94,0.9); }
-    .badge-status.rechazada  { border-color: rgba(248,113,113,0.9); }
-    .badge-status.completada { border-color: rgba(56,189,248,0.9); }
-    .badge-status.cancelada  { border-color: rgba(248,113,113,0.9); }
-
     /* Modal */
     .rev-modal-backdrop{
       position:fixed;
@@ -140,11 +109,6 @@
       width:min(920px, 100%);
       max-height: calc(100vh - 2rem);
       overflow:auto;
-      background:transparent; /* el interior es card */
-    }
-
-    .rev-modal .card{
-      margin:0;
     }
 
     .rev-form .field{ margin-bottom:.85rem; }
@@ -242,7 +206,7 @@
       flex-wrap:wrap;
     }
 
-    /* Flatpickr dark tuning */
+    /* Flatpickr dark tuning (como veníamos usando) */
     .flatpickr-calendar{
       background:#020617;
       border:1px solid rgba(148,163,184,0.7);
@@ -250,30 +214,18 @@
       color:#e5e7eb;
     }
     .flatpickr-months,
-    .flatpickr-current-month{
-      background:#020617;
-      color:#e5e7eb;
-    }
+    .flatpickr-current-month{ background:#020617; color:#e5e7eb; }
     .flatpickr-current-month .flatpickr-monthDropdown-months,
     .flatpickr-current-month input.cur-year{
-      background:#020617;
-      color:#e5e7eb;
-      border:none;
+      background:#020617; color:#e5e7eb; border:none;
     }
     .flatpickr-weekdays,
-    .flatpickr-weekday{
-      background:#020617;
-      color:#cbd5f5;
-      font-weight:500;
-    }
+    .flatpickr-weekday{ background:#020617; color:#cbd5f5; font-weight:500; }
     .flatpickr-day{ color:#e5e7eb; }
-    .flatpickr-day.inRange,
-    .flatpickr-day.nextMonthDay,
-    .flatpickr-day.prevMonthDay{ color:rgba(148,163,184,0.7); }
     .flatpickr-day.disabled,
     .flatpickr-day.disabled:hover{
-      color:rgba(148,163,184,0.25) !important;
-      cursor:not-allowed !important;
+      color:rgba(148,163,184,0.25)!important;
+      cursor:not-allowed!important;
     }
     .flatpickr-day.selected,
     .flatpickr-day.startRange,
@@ -287,17 +239,6 @@
     .flatpickr-next-month svg{ fill:#e5e7eb; }
     .flatpickr-prev-month:hover svg,
     .flatpickr-next-month:hover svg{ fill:#38bdf8; }
-    .flatpickr-months input.numInput::-webkit-inner-spin-button,
-    .flatpickr-months input.numInput::-webkit-outer-spin-button{
-      filter: invert(1);
-      opacity: 0.85;
-      cursor: pointer;
-    }
-    .flatpickr-months input.numInput:hover::-webkit-inner-spin-button,
-    .flatpickr-months input.numInput:hover::-webkit-outer-spin-button{
-      opacity: 1;
-      filter: invert(1) brightness(1.35);
-    }
     .flatpickr-months input.numInput{ color-scheme: dark; }
   </style>
 </head>
@@ -308,9 +249,9 @@
   <main class="rev-main">
     <div class="rev-header-row">
       <div>
-        <h2>Revisión de solicitudes</h2>
+        <h2>Revisión</h2>
         <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
-          Aprueba o rechaza las solicitudes pendientes del Tesoro.
+          Revisa y decide solicitudes pendientes.
         </p>
       </div>
       <button type="button"
@@ -320,22 +261,21 @@
       </button>
     </div>
 
-    <div class="card" style="padding:1rem 1.2rem;">
-      <div class="rev-toolbar">
-        <div class="rev-toolbar-group">
-          <div style="display:flex;flex-direction:column;gap:.1rem;">
-            <strong style="font-size:.9rem;">Solicitudes pendientes</strong>
-            <span class="help-text">Solo se muestran solicitudes en estado <b>pendiente</b>.</span>
-          </div>
-        </div>
+    <div class="card">
+      <div class="card-header">
+        <h3>Solicitudes pendientes</h3>
+      </div>
 
+      <div class="rev-toolbar" style="padding:0 1rem 0.75rem 1rem;">
+        <div class="rev-toolbar-group">
+          <span class="help-text">Solo estado <b>pendiente</b>.</span>
+        </div>
         <div class="rev-toolbar-group">
           <input type="search" id="rev-search" placeholder="Buscar por ítem o solicitante..."/>
         </div>
       </div>
 
-      <div style="max-height:460px;overflow:auto;">
-        <!-- Tabla casteada -->
+      <div style="max-height:520px;overflow:auto;padding:0 1rem 1rem 1rem;">
         <div id="cmp-tab-rev"></div>
       </div>
     </div>
@@ -350,7 +290,6 @@
         </div>
 
         <form id="rev-form" class="rev-form" style="padding:1rem 1.2rem;">
-          <!-- Resumen -->
           <div class="rev-grid-2">
             <div class="field">
               <label>Tipo de solicitud</label>
@@ -378,7 +317,6 @@
             <input id="rev-preferred" type="text" readonly>
           </div>
 
-          <!-- Selección de almacén -->
           <div class="field">
             <label>Almacén / Lugar de transacción</label>
             <select id="rev-warehouse-select" required>
@@ -386,7 +324,6 @@
             </select>
           </div>
 
-          <!-- Fecha + stock -->
           <div class="rev-bottom-grid">
             <div class="field">
               <label>Fecha límite de entrega</label>
@@ -397,19 +334,13 @@
 
             <div class="field">
               <label>Stock por almacén para este ítem</label>
-              <div id="rev-stock-list" class="rev-stock-list">
-                <!-- tabla JS -->
-              </div>
+              <div id="rev-stock-list" class="rev-stock-list"></div>
             </div>
           </div>
 
           <div class="rev-modal-actions">
-            <button type="button" id="rev-cancel" class="btn btn-secondary">
-              Cancelar
-            </button>
-            <button type="submit" id="rev-approve" class="btn btn-primary">
-              Aprobar solicitud
-            </button>
+            <button type="button" id="rev-cancel" class="btn btn-secondary">Cancelar</button>
+            <button type="submit" id="rev-approve" class="btn btn-primary">Aprobar solicitud</button>
           </div>
 
           <p class="help-text" style="margin-top:.6rem;">
@@ -441,9 +372,8 @@
     function renameCreatedHeader(){
       const host = document.getElementById('cmp-tab-rev');
       if (!host) return;
-
-      // En TAB-06 la 6ª columna es "Plazo Max". Aquí la usamos como "Creada".
       const ths = host.querySelectorAll('thead th');
+      // En TAB-06 la col 6 era "Plazo Max"; aquí visualmente es "Creada"
       if (ths && ths.length >= 6) ths[5].textContent = 'Creada';
     }
 
@@ -461,11 +391,11 @@
 
       function formatStatus(st) {
         const map = {
-          pendiente: 'pendiente',
-          aprobada: 'aprobada',
-          rechazada: 'rechazada',
-          completada: 'completada',
-          cancelada: 'cancelada'
+          pendiente: 'Pendiente',
+          aprobada: 'Aprobada',
+          rechazada: 'Rechazada',
+          completada: 'Completada',
+          cancelada: 'Cancelada'
         };
         return map[st] || st;
       }
@@ -549,9 +479,7 @@
       const { data: users, error: usersError } = await supa
         .from('users')
         .select('id, handle_name, discord_username');
-      if (!usersError && users) {
-        users.forEach(u => { usersById[u.id] = u; });
-      }
+      if (!usersError && users) users.forEach(u => { usersById[u.id] = u; });
 
       const warehousesById = {};
       const { data: warehouses, error: whError } = await supa
@@ -559,7 +487,6 @@
         .select('id, name')
         .order('name', { ascending: true });
       if (whError) console.error('Error cargando almacenes:', whError);
-
       (warehouses || []).forEach(w => { warehousesById[w.id] = w; });
 
       /* Rellenar select del modal */
@@ -613,7 +540,6 @@
 
       initCalendar();
 
-      // Stock por almacén para el ítem
       async function loadStockForItem(itemId) {
         if (!itemId) {
           revStockList.textContent = 'Ítem no reconocido.';
@@ -673,7 +599,6 @@
           const tdLast = document.createElement('td');
           const tdAvgW = document.createElement('td');
           const tdAvgS = document.createElement('td');
-
           tdLast.textContent = '-';
           tdAvgW.textContent = '-';
           tdAvgS.textContent = '-';
@@ -732,7 +657,6 @@
         if (e.target === modalBackdrop) closeModal();
       });
 
-      /* ───── 5) Carga de solicitudes pendientes ───── */
       async function loadPendingRequests() {
         const { data, error } = await supa
           .from('requests')
@@ -758,6 +682,15 @@
 
         pendingRequests = data || [];
         renderTable();
+      }
+
+      function tipoTagClass(tipo) {
+        if (tipo === 'venta') return 'tag tag--venta';
+        return 'tag tag--compra';
+      }
+
+      function statusTagClass(st) {
+        return `tag tag--${st}`;
       }
 
       function renderTable() {
@@ -795,7 +728,7 @@
           tdId.textContent = `#${r.id}`;
 
           const tdTipo = document.createElement('td');
-          tdTipo.innerHTML = `<span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span>`;
+          tdTipo.innerHTML = `<span class="${tipoTagClass(r.request_type)}">${renderTipo(r.request_type)}</span>`;
 
           const tdItem = document.createElement('td');
           tdItem.textContent = itemName;
@@ -812,10 +745,7 @@
             : '-';
 
           const tdStatus = document.createElement('td');
-          const statusSpan = document.createElement('span');
-          statusSpan.className = 'badge-status ' + (r.status || 'pendiente');
-          statusSpan.textContent = formatStatus(r.status || 'pendiente');
-          tdStatus.appendChild(statusSpan);
+          tdStatus.innerHTML = `<span class="${statusTagClass(r.status || 'pendiente')}">${formatStatus(r.status || 'pendiente')}</span>`;
 
           const tdDetalle = document.createElement('td');
           const btnDetalle = document.createElement('button');
@@ -878,7 +808,6 @@
               return;
             }
 
-            // Notificación al solicitante: solicitud rechazada
             if (r.requester_discord_id) {
               await supa.from('notifications').insert({
                 user_id: r.requester_discord_id,
@@ -913,7 +842,6 @@
 
       searchInput.addEventListener('input', renderTable);
 
-      /* ───── 6) Envío del formulario de aprobación ───── */
       revForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (readOnly) {
@@ -952,7 +880,6 @@
           return;
         }
 
-        // Notificación al solicitante: solicitud aprobada
         if (currentRequest.requester_discord_id) {
           await supa.from('notifications').insert({
             user_id: currentRequest.requester_discord_id,
@@ -969,7 +896,6 @@
         await loadPendingRequests();
       });
 
-      /* ───── 7) Carga inicial ───── */
       await loadPendingRequests();
     });
   </script>
