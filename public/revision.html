@@ -5,17 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Departamento del Tesoro — Revisión</title>
 
-  <!-- Estilos globales + design system -->
   <link rel="stylesheet" href="./style.css"/>
   <link rel="stylesheet" href="./style_prueba.css"/>
 
-  <!-- Supabase + módulos -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="./config.js" defer></script>
   <script src="./modules/db.js" defer></script>
   <script src="./modules/layout.js" defer></script>
 
-  <!-- Flatpickr (como estaba funcionando antes) -->
+  <!-- flatpickr (lo dejamos como estaba estable) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
@@ -35,7 +33,6 @@
       flex-wrap:wrap;
     }
 
-    /* Toolbar estilo del proyecto */
     .rev-toolbar{
       display:flex;
       justify-content:space-between;
@@ -60,7 +57,6 @@
       font-family:inherit;
     }
 
-    /* Modal */
     .rev-modal-backdrop{
       position:fixed;
       inset:0;
@@ -85,8 +81,7 @@
       margin-bottom:.25rem;
     }
     .rev-form input,
-    .rev-form select,
-    .rev-form textarea{
+    .rev-form select{
       width:100%;
       padding:0.4rem 0.55rem;
       border-radius:0.55rem;
@@ -95,10 +90,6 @@
       color:#e5e7eb;
       font-size:.9rem;
       font-family:inherit;
-    }
-    .rev-form textarea{
-      min-height:100px;
-      resize:vertical;
     }
 
     .rev-grid-2{
@@ -126,7 +117,6 @@
       margin-top:.2rem;
     }
 
-    /* Stock box */
     .rev-stock-list{
       border-radius:0.65rem;
       border:1px solid rgba(148,163,184,0.6);
@@ -179,9 +169,7 @@
           Revisa y decide solicitudes pendientes.
         </p>
       </div>
-      <button type="button"
-              class="btn btn-secondary"
-              onclick="window.location.href='./app_ui.html'">
+      <button type="button" class="btn btn-secondary" onclick="window.location.href='./app_ui.html'">
         ← Volver al panel
       </button>
     </div>
@@ -201,7 +189,6 @@
       </div>
 
       <div style="max-height:520px;overflow:auto;padding:0 1rem 1rem 1rem;">
-        <!-- TABLA casteada -->
         <div id="cmp-tab-rev"></div>
       </div>
     </div>
@@ -281,7 +268,6 @@
     import { getOrgStatus } from './modules/profile.js';
     import { loadComponentById } from './modules/ui_components.js';
 
-    // Garantiza que el tbody exista ANTES de pintar filas
     function ensureTbodyId(containerId, wantedId){
       const host = document.getElementById(containerId);
       if (!host) return;
@@ -328,10 +314,7 @@
 
       // 1) Sesión
       const { data: { session } } = await supa.auth.getSession();
-      if (!session) {
-        window.location.href = './index.html';
-        return;
-      }
+      if (!session) { window.location.href = './index.html'; return; }
 
       // 2) org_status
       const orgStatus = await getOrgStatus();
@@ -342,30 +325,21 @@
       }
 
       // 3) Header
-      if (typeof window.loadHeader === 'function') {
-        await window.loadHeader('app');
-      }
+      if (typeof window.loadHeader === 'function') await window.loadHeader('app');
       if (typeof window.initHeaderUserMenu === 'function') {
         window.initHeaderUserMenu(
           session,
-          async () => {
-            await supa.auth.signOut();
-            window.location.href = "./index.html";
-          },
-          () => {
-            window.location.href = './perfil.html';
-          }
+          async () => { await supa.auth.signOut(); window.location.href="./index.html"; },
+          () => { window.location.href='./perfil.html'; }
         );
       }
 
-      // 4) Permisos del módulo "revision"
-      const { data: meRow, error: meError } = await supa
+      // 4) Permisos del módulo
+      const { data: meRow } = await supa
         .from('users')
         .select('tesoro_internal_role')
         .eq('id', session.user.id)
         .maybeSingle();
-
-      if (meError) console.error('Error leyendo rol interno:', meError);
 
       let myRole = meRow?.tesoro_internal_role || null;
       if (typeof myRole === 'string') myRole = myRole.trim();
@@ -374,60 +348,47 @@
       if (myRole) {
         const asNumber = Number(myRole);
         if (!Number.isNaN(asNumber) && myRole !== '') {
-          const { data, error } = await supa
-            .from('roles_app')
-            .select('*')
-            .eq('id', asNumber)
-            .maybeSingle();
+          const { data, error } = await supa.from('roles_app').select('*').eq('id', asNumber).maybeSingle();
           if (!error) roleRow = data;
         }
-
         if (!roleRow) {
-          const { data, error } = await supa
-            .from('roles_app')
-            .select('*')
-            .ilike('role_name', myRole)
-            .maybeSingle();
+          const { data, error } = await supa.from('roles_app').select('*').ilike('role_name', myRole).maybeSingle();
           if (!error) roleRow = data;
         }
       }
 
-      let revLevel = 0;
-      if (roleRow && Object.prototype.hasOwnProperty.call(roleRow, 'revision')) {
-        revLevel = roleRow.revision ?? 0;
-      }
-
-      if (!revLevel || revLevel === 0) {
+      let revLevel = roleRow?.revision ?? 0;
+      if (!revLevel) {
         alert('No tienes acceso al módulo de Revisión.');
         window.location.href = './app_ui.html';
         return;
       }
-
       const readOnly = (revLevel === 1);
 
-      // 5) CASTEAR TABLA ANTES de usar tbody
-      await loadComponentById('./components/tab-06.html', 'cmp-tab-rev');
+      /* ✅ TABLA CORRECTA PARA PENDIENTES:
+         TAB-04 (o TAB-01 si prefieres) */
+      await loadComponentById('./components/tab-04.html', 'cmp-tab-rev');
+      // Si quieres TAB-01 en vez de TAB-04, cambia SOLO ESTA LÍNEA por:
+      // await loadComponentById('./components/tab-01.html', 'cmp-tab-rev');
+
       ensureTbodyId('cmp-tab-rev', 'rev-tbody');
 
       const tbody = await waitForEl('#rev-tbody');
       if (!tbody) {
-        alert('Error: no se pudo inicializar la tabla de revisión (tbody no encontrado).');
+        alert('Error: no se pudo inicializar la tabla (tbody no encontrado).');
         return;
       }
 
-      // 6) Aux: users + warehouses
+      // Aux: users + warehouses
       const usersById = {};
-      const { data: users } = await supa
-        .from('users')
-        .select('id, handle_name, discord_username');
+      const { data: users } = await supa.from('users').select('id, handle_name, discord_username');
       (users || []).forEach(u => { usersById[u.id] = u; });
 
       const warehousesById = {};
-      const { data: warehouses, error: whError } = await supa
+      const { data: warehouses } = await supa
         .from('warehouses')
         .select('id, name')
         .order('name', { ascending: true });
-      if (whError) console.error('Error cargando almacenes:', whError);
       (warehouses || []).forEach(w => { warehousesById[w.id] = w; });
 
       const warehouseSelect = document.getElementById('rev-warehouse-select');
@@ -438,7 +399,7 @@
         warehouseSelect.appendChild(opt);
       });
 
-      // 7) Modal + calendario
+      // Modal + calendario
       const modalBackdrop = document.getElementById('rev-modal-backdrop');
       const revForm       = document.getElementById('rev-form');
       const revCancelBtn  = document.getElementById('rev-cancel');
@@ -471,18 +432,12 @@
             selectedDueDate = selectedDates[0] || null;
           }
         });
-
         selectedDueDate = def;
       }
-
       initCalendar();
 
       async function loadStockForItem(itemId){
-        if (!itemId){
-          revStockList.textContent = 'Ítem no reconocido.';
-          return;
-        }
-
+        if (!itemId){ revStockList.textContent = 'Ítem no reconocido.'; return; }
         revStockList.textContent = 'Cargando stock...';
 
         const { data, error } = await supa
@@ -521,13 +476,11 @@
         revStockList.appendChild(table);
       }
 
-      function closeModal(){
-        modalBackdrop.style.display = 'none';
-      }
+      function closeModal(){ modalBackdrop.style.display = 'none'; }
       revCancelBtn.addEventListener('click', (e)=>{ e.preventDefault(); closeModal(); });
       modalBackdrop.addEventListener('click', (e)=>{ if (e.target === modalBackdrop) closeModal(); });
 
-      // 8) Listado
+      // Listado
       const searchInput = document.getElementById('rev-search');
       let pendingRequests = [];
       let currentRequest = null;
@@ -595,7 +548,7 @@
         if (!pendingRequests.length){
           const tr = document.createElement('tr');
           const td = document.createElement('td');
-          td.colSpan = 9;
+          td.colSpan = 8; // TAB-04/TAB-01 suelen ser 8 cols
           td.textContent = 'No hay solicitudes pendientes de revisión.';
           tr.appendChild(td);
           tbody.appendChild(tr);
@@ -617,30 +570,19 @@
           }
 
           const tr = document.createElement('tr');
+
+          // ⚠️ Columnas pensadas para TAB-04/TAB-01:
+          // ID | Tipo | Ítem | Cant | Solicitante | Estado | Creada | Acciones
           tr.innerHTML = `
             <td>#${r.id}</td>
             <td><span class="${tipoTagClass(r.request_type)}">${renderTipo(r.request_type)}</span></td>
             <td>${itemName}</td>
             <td>${r.quantity}</td>
             <td>${requesterName}</td>
-            <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
             <td><span class="${statusTagClass(r.status || 'pendiente')}">${formatStatus(r.status || 'pendiente')}</span></td>
+            <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
           `;
 
-          // Detalle
-          const tdDetalle = document.createElement('td');
-          const btnDetalle = document.createElement('button');
-          btnDetalle.type = 'button';
-          btnDetalle.className = 'btn btn-secondary btn-sm';
-          btnDetalle.textContent = 'Ver';
-          btnDetalle.addEventListener('click', (ev)=>{
-            ev.stopPropagation();
-            window.open(`./detalle_solicitud.html?id=${encodeURIComponent(r.id)}`, '_blank', 'width=780,height=820');
-          });
-          tdDetalle.appendChild(btnDetalle);
-          tr.appendChild(tdDetalle);
-
-          // Acciones
           const tdAcc = document.createElement('td');
           const canAct = !readOnly;
 
@@ -670,14 +612,11 @@
 
             const { error } = await supa
               .from('requests')
-              .update({
-                status: 'rechazada',
-                approver_discord_id: session.user.id
-              })
+              .update({ status: 'rechazada', approver_discord_id: session.user.id })
               .eq('id', r.id);
 
             if (error){
-              console.error('Error rechazando solicitud:', error);
+              console.error('Error rechazando:', error);
               alert('No se ha podido rechazar la solicitud.');
               return;
             }
@@ -699,15 +638,15 @@
 
           tdAcc.appendChild(okBtn);
           tdAcc.appendChild(koBtn);
-          tr.appendChild(tdAcc);
 
+          tr.appendChild(tdAcc);
           tbody.appendChild(tr);
         });
       }
 
       searchInput.addEventListener('input', renderTable);
 
-      // 9) Aprobar (submit)
+      // Aprobar (submit)
       revForm.addEventListener('submit', async (e)=>{
         e.preventDefault();
         if (readOnly){ alert('Tienes permisos de solo lectura.'); return; }
