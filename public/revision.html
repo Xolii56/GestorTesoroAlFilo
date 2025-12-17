@@ -13,40 +13,23 @@
   <script src="./modules/db.js" defer></script>
   <script src="./modules/layout.js" defer></script>
 
-  <!-- flatpickr (lo dejamos como estaba estable) -->
+  <!-- (Mantengo flatpickr porque ya lo tenías funcionando estable aquí) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
   <style>
-    main.rev-main{
-      padding:1.5rem;
-      max-width:1100px;
-      margin:0 auto;
-    }
+    main.rev-main{ padding:1.5rem; max-width:1100px; margin:0 auto; }
 
     .rev-header-row{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-end;
-      margin-bottom:1rem;
-      gap:.75rem;
-      flex-wrap:wrap;
+      display:flex; justify-content:space-between; align-items:flex-end;
+      margin-bottom:1rem; gap:.75rem; flex-wrap:wrap;
     }
 
     .rev-toolbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:.6rem;
-      flex-wrap:wrap;
-      margin-bottom:.6rem;
+      display:flex; justify-content:space-between; align-items:center;
+      gap:.6rem; flex-wrap:wrap; margin-bottom:.6rem;
     }
-    .rev-toolbar-group{
-      display:flex;
-      gap:.4rem;
-      flex-wrap:wrap;
-      align-items:center;
-    }
+    .rev-toolbar-group{ display:flex; gap:.4rem; flex-wrap:wrap; align-items:center; }
     .rev-toolbar input[type="search"]{
       padding:0.35rem 0.55rem;
       border-radius:999px;
@@ -58,30 +41,18 @@
     }
 
     .rev-modal-backdrop{
-      position:fixed;
-      inset:0;
+      position:fixed; inset:0;
       background:rgba(15,23,42,0.80);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:50;
-      padding:1rem;
+      display:flex; align-items:center; justify-content:center;
+      z-index:50; padding:1rem;
     }
-    .rev-modal{
-      width:min(920px, 100%);
-      max-height: calc(100vh - 2rem);
-      overflow:auto;
-    }
+    .rev-modal{ width:min(920px, 100%); max-height: calc(100vh - 2rem); overflow:auto; }
 
     .rev-form .field{ margin-bottom:.85rem; }
     .rev-form label{
-      display:block;
-      font-size:.8rem;
-      opacity:.85;
-      margin-bottom:.25rem;
+      display:block; font-size:.8rem; opacity:.85; margin-bottom:.25rem;
     }
-    .rev-form input,
-    .rev-form select{
+    .rev-form input, .rev-form select{
       width:100%;
       padding:0.4rem 0.55rem;
       border-radius:0.55rem;
@@ -97,25 +68,16 @@
       grid-template-columns:repeat(2,minmax(0,1fr));
       gap:.75rem 1rem;
     }
-    @media (max-width: 820px){
-      .rev-grid-2{ grid-template-columns:1fr; }
-    }
+    @media (max-width: 820px){ .rev-grid-2{ grid-template-columns:1fr; } }
 
     .rev-bottom-grid{
       display:grid;
       grid-template-columns:minmax(0,1.2fr) minmax(0,1.4fr);
-      gap:.9rem;
-      margin-top:.2rem;
+      gap:.9rem; margin-top:.2rem;
     }
-    @media (max-width: 820px){
-      .rev-bottom-grid{ grid-template-columns:1fr; }
-    }
+    @media (max-width: 820px){ .rev-bottom-grid{ grid-template-columns:1fr; } }
 
-    #rev-calendar-container{
-      display:flex;
-      justify-content:center;
-      margin-top:.2rem;
-    }
+    #rev-calendar-container{ display:flex; justify-content:center; margin-top:.2rem; }
 
     .rev-stock-list{
       border-radius:0.65rem;
@@ -126,13 +88,8 @@
       overflow:auto;
       font-size:.85rem;
     }
-    .rev-stock-table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:.85rem;
-    }
-    .rev-stock-table th,
-    .rev-stock-table td{
+    .rev-stock-table{ width:100%; border-collapse:collapse; font-size:.85rem; }
+    .rev-stock-table th, .rev-stock-table td{
       padding:0.25rem 0.3rem;
       border-bottom:1px solid rgba(148,163,184,0.2);
     }
@@ -142,18 +99,13 @@
       opacity:.85;
       font-size:.75rem;
     }
-    .rev-stock-table th:nth-child(2),
-    .rev-stock-table td:nth-child(2){
-      text-align:right;
-      white-space:nowrap;
+    .rev-stock-table th:nth-child(2), .rev-stock-table td:nth-child(2){
+      text-align:right; white-space:nowrap;
     }
 
     .rev-modal-actions{
-      display:flex;
-      justify-content:flex-end;
-      gap:.5rem;
-      margin-top:.75rem;
-      flex-wrap:wrap;
+      display:flex; justify-content:flex-end; gap:.5rem;
+      margin-top:.75rem; flex-wrap:wrap;
     }
   </style>
 </head>
@@ -194,7 +146,7 @@
     </div>
   </main>
 
-  <!-- MODAL APROBAR SOLICITUD -->
+  <!-- MODAL APROBAR -->
   <div id="rev-modal-backdrop" class="rev-modal-backdrop" style="display:none;">
     <div class="rev-modal">
       <div class="card">
@@ -306,7 +258,6 @@
         };
         return map[st] || st;
       }
-
       function renderTipo(tipo) {
         if (!tipo) return '-';
         return tipo === 'compra' ? 'Compra' : 'Venta';
@@ -334,7 +285,7 @@
         );
       }
 
-      // 4) Permisos del módulo
+      // 4) Permisos
       const { data: meRow } = await supa
         .from('users')
         .select('tesoro_internal_role')
@@ -357,7 +308,7 @@
         }
       }
 
-      let revLevel = roleRow?.revision ?? 0;
+      const revLevel = roleRow?.revision ?? 0;
       if (!revLevel) {
         alert('No tienes acceso al módulo de Revisión.');
         window.location.href = './app_ui.html';
@@ -365,12 +316,8 @@
       }
       const readOnly = (revLevel === 1);
 
-      /* ✅ TABLA CORRECTA PARA PENDIENTES:
-         TAB-04 (o TAB-01 si prefieres) */
+      // 5) Castear TAB-04 (la que acabas de actualizar)
       await loadComponentById('./components/tab-04.html', 'cmp-tab-rev');
-      // Si quieres TAB-01 en vez de TAB-04, cambia SOLO ESTA LÍNEA por:
-      // await loadComponentById('./components/tab-01.html', 'cmp-tab-rev');
-
       ensureTbodyId('cmp-tab-rev', 'rev-tbody');
 
       const tbody = await waitForEl('#rev-tbody');
@@ -542,13 +489,12 @@
 
       function renderTable(){
         tbody.innerHTML = '';
-
         const term = (searchInput.value || '').toLowerCase();
 
         if (!pendingRequests.length){
           const tr = document.createElement('tr');
           const td = document.createElement('td');
-          td.colSpan = 8; // TAB-04/TAB-01 suelen ser 8 cols
+          td.colSpan = 9; // TAB-04 tiene 9 columnas
           td.textContent = 'No hay solicitudes pendientes de revisión.';
           tr.appendChild(td);
           tbody.appendChild(tr);
@@ -569,20 +515,40 @@
             if (!haystack.includes(term)) return;
           }
 
+          const st = r.status || 'pendiente';
+
           const tr = document.createElement('tr');
 
-          // ⚠️ Columnas pensadas para TAB-04/TAB-01:
-          // ID | Tipo | Ítem | Cant | Solicitante | Estado | Creada | Acciones
+          // TAB-04 ORDER:
+          // 1 ID | 2 Tipo | 3 Ítem | 4 Cant | 5 Solicitante | 6 Estado | 7 Creada | 8 Detalle | 9 Acciones
           tr.innerHTML = `
             <td>#${r.id}</td>
             <td><span class="${tipoTagClass(r.request_type)}">${renderTipo(r.request_type)}</span></td>
             <td>${itemName}</td>
             <td>${r.quantity}</td>
             <td>${requesterName}</td>
-            <td><span class="${statusTagClass(r.status || 'pendiente')}">${formatStatus(r.status || 'pendiente')}</span></td>
+            <td><span class="${statusTagClass(st)}">${formatStatus(st)}</span></td>
             <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
           `;
 
+          // Col 8: Detalle
+          const tdDetalle = document.createElement('td');
+          const btnDetalle = document.createElement('button');
+          btnDetalle.type = 'button';
+          btnDetalle.className = 'btn btn-secondary btn-sm';
+          btnDetalle.textContent = 'Ver';
+          btnDetalle.addEventListener('click', (ev)=>{
+            ev.stopPropagation();
+            window.open(
+              `./detalle_solicitud.html?id=${encodeURIComponent(r.id)}`,
+              '_blank',
+              'width=780,height=820'
+            );
+          });
+          tdDetalle.appendChild(btnDetalle);
+          tr.appendChild(tdDetalle);
+
+          // Col 9: Acciones (OK/KO)
           const tdAcc = document.createElement('td');
           const canAct = !readOnly;
 
@@ -638,8 +604,8 @@
 
           tdAcc.appendChild(okBtn);
           tdAcc.appendChild(koBtn);
-
           tr.appendChild(tdAcc);
+
           tbody.appendChild(tr);
         });
       }
