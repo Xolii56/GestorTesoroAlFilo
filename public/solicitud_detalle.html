@@ -4,441 +4,207 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Detalle de solicitud</title>
-  <link rel="stylesheet" href="./style.css"/>
 
-  <!-- Supabase + módulos -->
+  <link rel="stylesheet" href="./style.css"/>
+  <link rel="stylesheet" href="./style_prueba.css"/>
+
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="./config.js" defer></script>
   <script src="./modules/db.js" defer></script>
   <script src="./modules/layout.js" defer></script>
 
   <style>
-    body {
-      background:#020617;
-      color:#e5e7eb;
-    }
-
-    main.req-detail-main {
-      padding:1.2rem;
-      max-width:620px;
+    main.det-main{
+      padding:1.25rem;
+      max-width:920px;
       margin:0 auto;
     }
-
-    .req-header-row {
+    .det-header-row{
       display:flex;
       justify-content:space-between;
-      align-items:center;
+      align-items:flex-end;
       gap:.75rem;
       flex-wrap:wrap;
       margin-bottom:1rem;
     }
-
-    .btn {
-      padding:0.35rem 0.85rem;
-      border-radius:0.4rem;
-      border:none;
-      cursor:pointer;
-      font-size:.85rem;
-    }
-    .btn-secondary {
-      background:#020617;
-      color:#e5e7eb;
-      border:1px solid rgba(148,163,184,0.8);
-    }
-
-    .detail-form .field {
-      margin-bottom:.75rem;
-    }
-
-    .detail-form label {
-      display:block;
-      font-size:.78rem;
-      opacity:.8;
-      margin-bottom:.2rem;
-    }
-
-    .detail-form input,
-    .detail-form textarea {
-      width:100%;
-      padding:0.4rem 0.5rem;
-      border-radius:0.4rem;
-      border:1px solid rgba(148,163,184,0.8);
-      background:#020617;
-      color:#e5e7eb;
-      font-size:.9rem;
-    }
-
-    .detail-form textarea {
-      min-height:90px;
-      resize:vertical;
-      white-space:pre-wrap;
-    }
-
-    .detail-form input[readonly],
-    .detail-form textarea[readonly] {
-      opacity:.9;
-    }
-
-    .help-text {
-      font-size:.75rem;
-      opacity:.7;
-      margin-top:.15rem;
-    }
-
-    /* chip de estado igual que en las tablas */
-    .badge-status {
-      display:inline-flex;
-      align-items:center;
-      padding:0.1rem 0.55rem;
-      border-radius:999px;
-      font-size:.75rem;
-      border:1px solid rgba(148,163,184,0.7);
-    }
-    .badge-status.pendiente   { border-color:rgba(250,204,21,0.9); }
-    .badge-status.aprobada    { border-color:rgba(34,197,94,0.9); }
-    .badge-status.rechazada   { border-color:rgba(248,113,113,0.9); }
-    .badge-status.completada  { border-color:rgba(56,189,248,0.9); }
-    .badge-status.cancelada   { border-color:rgba(248,113,113,0.9); }
-
-    .tipo-chip {
-      display:inline-block;
-      padding:0.08rem 0.45rem;
-      border-radius:999px;
-      font-size:.75rem;
-      border:1px solid rgba(148,163,184,0.9);
-      opacity:.85;
-      margin-left:.25rem;
-    }
-    .tipo-chip.compra { border-color:rgba(34,197,94,0.9); }
-    .tipo-chip.venta  { border-color:rgba(248,113,113,0.9); }
   </style>
 </head>
 
 <body>
-<main class="req-detail-main">
-  <div class="req-header-row">
-    <div>
-      <h2 style="margin:0;">Detalle de solicitud</h2>
-      <p id="req-id-label" class="help-text" style="margin-top:.25rem;"></p>
-    </div>
-    <button type="button" class="btn btn-secondary" onclick="window.close()">
-      Cerrar
-    </button>
-  </div>
+  <div id="site-header"></div>
 
-  <div class="card detail-form">
-    <div id="req-loading" class="help-text">Cargando solicitud...</div>
-    <div id="req-error" class="help-text" style="color:#fecaca;display:none;"></div>
-
-    <div id="req-content" style="display:none;">
-      <div class="field">
-        <label>Tipo de solicitud</label>
-        <input id="d_type" type="text" readonly/>
-      </div>
-
-      <div class="field">
-        <label>Estado de la solicitud</label>
-        <div id="d_status_badge"></div>
-      </div>
-
-      <div class="field">
-        <label>Log de actualización de estado</label>
-        <div id="d_status_log" class="help-text"></div>
-      </div>
-
-      <div class="field">
-        <label>Solicitante</label>
-        <input id="d_requester" type="text" readonly/>
-      </div>
-
-      <div class="field">
-        <label>Material</label>
-        <input id="d_item" type="text" readonly/>
-      </div>
-
-      <div class="field">
-        <label>Cantidad</label>
-        <input id="d_quantity" type="number" readonly/>
-      </div>
-
-      <div class="field">
-        <label>Preferencia de entrega</label>
-        <input id="d_pref_warehouse" type="text" readonly/>
-      </div>
-
-      <div class="field">
-        <label>Lugar de transacción</label>
-        <input id="d_warehouse" type="text" readonly/>
-      </div>
-
-      <div class="field">
-        <label>Fecha límite</label>
-        <input id="d_due_date" type="text" readonly/>
-      </div>
-
-      <div class="field">
-        <label>Firmas</label>
-        <textarea id="d_signatures" readonly></textarea>
-        <p class="help-text">
-          Las firmas se generan automáticamente cuando Tesoro o el solicitante aceptan o rechazan la entrega.
+  <main class="det-main">
+    <div class="det-header-row">
+      <div>
+        <h2>Detalle de solicitud</h2>
+        <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
+          Información completa de la solicitud.
         </p>
       </div>
+      <button class="btn btn-secondary" type="button" onclick="window.close()">
+        Cerrar
+      </button>
     </div>
-  </div>
-</main>
 
-<script type="module">
-  import { getOrgStatus } from './modules/profile.js';
+    <!-- DET-01 casteado -->
+    <div id="cmp-det-01"></div>
+  </main>
 
-  function renderTipo(tipo) {
-    if (!tipo) return '-';
-    return tipo === 'compra' ? 'Compra' : 'Venta';
-  }
+  <script type="module">
+    import { loadComponentById } from './modules/ui_components.js';
+    await loadComponentById('./components/det-01.html', 'cmp-det-01');
+  </script>
 
-  function formatStatus(st) {
-    const map = {
-      pendiente: 'pendiente',
-      aprobada: 'aprobada',
-      rechazada: 'rechazada',
-      completada: 'completada',
-      cancelada: 'cancelada'
-    };
-    return map[st] || st;
-  }
+  <script type="module">
+    import { getOrgStatus } from './modules/profile.js';
 
-  function formatDateTime(iso) {
-    if (!iso) return null;
-    try {
-      return new Date(iso).toLocaleString();
-    } catch {
-      return iso;
-    }
-  }
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { supa } = window;
 
-  function humanSignLine(rol, signResult, userName, at) {
-    const state = signResult || 'pendiente';
-
-    if (state === 'ok') {
-      return `${rol}: Firmada en positivo — ${userName || '—'} — ${formatDateTime(at) || ''}`;
-    }
-    if (state === 'ko') {
-      return `${rol}: Rechazada — ${userName || '—'} — ${formatDateTime(at) || ''}`;
-    }
-    return `${rol}: Pendiente de firma.`;
-  }
-
-  document.addEventListener('DOMContentLoaded', async () => {
-    const { supa } = window;
-
-    const params = new URLSearchParams(window.location.search);
-    const reqId = params.get('id');
-
-    const idLabel    = document.getElementById('req-id-label');
-    const loadingEl  = document.getElementById('req-loading');
-    const errorEl    = document.getElementById('req-error');
-    const contentEl  = document.getElementById('req-content');
-
-    const dType        = document.getElementById('d_type');
-    const dStatusBadge = document.getElementById('d_status_badge');
-    const dStatusLog   = document.getElementById('d_status_log');
-    const dReq         = document.getElementById('d_requester');
-    const dItem        = document.getElementById('d_item');
-    const dQty         = document.getElementById('d_quantity');
-    const dPrefWh      = document.getElementById('d_pref_warehouse');
-    const dWh          = document.getElementById('d_warehouse');
-    const dDue         = document.getElementById('d_due_date');
-    const dSigns       = document.getElementById('d_signatures');
-
-    if (reqId) {
-      idLabel.textContent = `ID de solicitud: #${reqId}`;
-    } else {
-      idLabel.textContent = 'ID de solicitud desconocido';
-    }
-
-    // 1) Sesión + org_status
-    const { data: { session } } = await supa.auth.getSession();
-    if (!session) {
-      window.location.href = './index.html';
-      return;
-    }
-
-    const orgStatus = await getOrgStatus();
-    if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
-      await supa.auth.signOut();
-      window.location.href = './index.html';
-      return;
-    }
-
-    // Header opcional
-    if (typeof window.loadHeader === 'function') {
-      await window.loadHeader('app');
-    }
-    if (typeof window.initHeaderUserMenu === 'function') {
-      window.initHeaderUserMenu(
-        session,
-        async () => {
-          await supa.auth.signOut();
-          window.location.href = "./index.html";
-        },
-        () => window.location.href = './perfil.html'
-      );
-    }
-
-    if (!reqId) {
-      loadingEl.style.display = 'none';
-      errorEl.style.display = 'block';
-      errorEl.textContent = 'No se ha proporcionado un ID de solicitud válido en la URL.';
-      return;
-    }
-
-    // 2) Datos auxiliares: usuarios y almacenes
-    const { data: users, error: usersError } = await supa
-      .from('users')
-      .select('id, handle_name, discord_username');
-    if (usersError) console.error('Error leyendo usuarios:', usersError);
-
-    const usersById = {};
-    (users || []).forEach(u => { usersById[u.id] = u; });
-
-    const { data: warehouses, error: whError } = await supa
-      .from('warehouses')
-      .select('id, name');
-    if (whError) console.error('Error leyendo almacenes:', whError);
-
-    const warehousesById = {};
-    (warehouses || []).forEach(w => { warehousesById[w.id] = w; });
-
-    function resolveUserName(id) {
-      if (!id) return '';
-      const u = usersById[id];
-      if (!u) return id;
-      return u.handle_name || u.discord_username || id;
-    }
-
-    // 3) Cargar solicitud
-    const { data: req, error: reqError } = await supa
-      .from('requests')
-      .select(`
-        id,
-        request_type,
-        item_id,
-        quantity,
-        status,
-        created_at,
-        warehouse_id,
-        preferred_warehouse_id,
-        due_date,
-        approved_at,
-        completed_at,
-        requester_discord_id,
-        approver_discord_id,
-        warehouse_sign_result,
-        warehouse_sign_user,
-        warehouse_sign_at,
-        requester_sign_result,
-        requester_sign_user,
-        requester_sign_at,
-        commodities_master(name, symbol)
-      `)
-      .eq('id', reqId)
-      .maybeSingle();
-
-    loadingEl.style.display = 'none';
-
-    if (reqError || !req) {
-      console.error('Error cargando solicitud:', reqError);
-      errorEl.style.display = 'block';
-      errorEl.textContent = 'No se ha podido cargar la solicitud.';
-      return;
-    }
-
-    contentEl.style.display = 'block';
-
-    // 4) Rellenar campos
-    const cm = req.commodities_master;
-    const itemName = cm
-      ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
-      : (req.item_id || '');
-
-    const requesterName = resolveUserName(req.requester_discord_id);
-    const approverName  = resolveUserName(req.approver_discord_id);
-
-    dType.value = renderTipo(req.request_type);
-    dItem.value = itemName;
-    dQty.value  = req.quantity ?? 0;
-    dReq.value  = requesterName || '';
-
-    const prefWh = req.preferred_warehouse_id ? warehousesById[req.preferred_warehouse_id] : null;
-    dPrefWh.value = prefWh ? prefWh.name : 'Sin preferencia';
-
-    const wh = req.warehouse_id ? warehousesById[req.warehouse_id] : null;
-    dWh.value = wh ? wh.name : 'No asignado';
-
-    dDue.value = req.due_date
-      ? new Date(req.due_date).toLocaleDateString()
-      : 'Sin definir';
-
-    // Estado + chip
-    const st = req.status || 'pendiente';
-    dStatusBadge.innerHTML = '';
-    const badge = document.createElement('span');
-    badge.className = 'badge-status ' + st;
-    badge.textContent = formatStatus(st);
-    dStatusBadge.appendChild(badge);
-
-    // Log de estados
-    const logLines = [];
-
-    const creado = formatDateTime(req.created_at);
-    if (creado) {
-      logLines.push(`Creada: ${creado}${requesterName ? ' — por ' + requesterName : ''}`);
-    }
-
-    if (req.approved_at) {
-      const label = (st === 'rechazada') ? 'Rechazada' : 'Aprobada';
-      logLines.push(`${label}: ${formatDateTime(req.approved_at)}${approverName ? ' — por ' + approverName : ''}`);
-    }
-
-    if (st === 'completada' && req.completed_at) {
-      logLines.push(`Completada: ${formatDateTime(req.completed_at)}`);
-    }
-
-    if (st === 'cancelada') {
-      let cancelAt = null;
-      let cancelUserName = null;
-
-      if (req.warehouse_sign_result === 'ko') {
-        cancelAt = req.warehouse_sign_at;
-        cancelUserName = resolveUserName(req.warehouse_sign_user);
-      } else if (req.requester_sign_result === 'ko') {
-        cancelAt = req.requester_sign_at;
-        cancelUserName = resolveUserName(req.requester_sign_user);
+      const params = new URLSearchParams(window.location.search);
+      const reqId = params.get('id');
+      if (!reqId) {
+        alert('Falta el parámetro id.');
+        return;
       }
 
-      let line = 'Cancelada';
-      const dt = formatDateTime(cancelAt);
-      if (dt) line += `: ${dt}`;
-      if (cancelUserName) line += ` — por ${cancelUserName}`;
-      logLines.push(line);
-    }
+      const { data: { session } } = await supa.auth.getSession();
+      if (!session) {
+        window.location.href = './index.html';
+        return;
+      }
 
-    dStatusLog.innerHTML = logLines.map(l => `<div>${l}</div>`).join('');
+      const orgStatus = await getOrgStatus();
+      if (!orgStatus) {
+        await supa.auth.signOut();
+        window.location.href = './index.html';
+        return;
+      }
 
-    // Firmas
-    const whSignLine = humanSignLine(
-      'Tesoro',
-      req.warehouse_sign_result,
-      resolveUserName(req.warehouse_sign_user),
-      req.warehouse_sign_at
-    );
-    const rqSignLine = humanSignLine(
-      'Solicitante',
-      req.requester_sign_result,
-      resolveUserName(req.requester_sign_user),
-      req.requester_sign_at
-    );
-    dSigns.value = `${whSignLine}\n${rqSignLine}`;
-  });
-</script>
+      if (typeof window.loadHeader === 'function') {
+        await window.loadHeader('app');
+      }
+      if (typeof window.initHeaderUserMenu === 'function') {
+        window.initHeaderUserMenu(
+          session,
+          async () => { await supa.auth.signOut(); window.location.href="./index.html"; },
+          () => { window.location.href='./perfil.html'; }
+        );
+      }
+
+      // Cargar solicitud
+      const { data: req, error } = await supa
+        .from('requests')
+        .select(`
+          id,
+          request_type,
+          item_id,
+          quantity,
+          status,
+          created_at,
+          due_date,
+          approved_at,
+          completed_at,
+          requester_discord_id,
+          warehouse_id,
+          preferred_warehouse_id,
+          warehouse_sign_result,
+          warehouse_sign_at,
+          requester_sign_result,
+          requester_sign_at,
+          commodities_master(name, symbol),
+          warehouses:warehouse_id (name),
+          pref:preferred_warehouse_id (name)
+        `)
+        .eq('id', reqId)
+        .maybeSingle();
+
+      if (error || !req) {
+        console.error(error);
+        alert('No se ha podido cargar la solicitud.');
+        return;
+      }
+
+      // Helpers
+      const formatTipo = (t) => (t === 'compra' ? 'Compra' : (t === 'venta' ? 'Venta' : (t || '-')));
+      const formatStatus = (st) => {
+        const map = {
+          pendiente: 'Pendiente',
+          aprobada: 'Aprobada',
+          rechazada: 'Rechazada',
+          cancelada: 'Cancelada',
+          completada: 'Completada'
+        };
+        return map[st] || st || '-';
+      };
+      const itemName = req.commodities_master
+        ? (req.commodities_master.symbol ? `${req.commodities_master.name} (${req.commodities_master.symbol})` : req.commodities_master.name)
+        : (req.item_id || '-');
+
+      // Cargar usuario solicitante
+      let requesterName = req.requester_discord_id || '-';
+      if (req.requester_discord_id) {
+        const { data: u } = await supa
+          .from('users')
+          .select('handle_name, discord_username')
+          .eq('id', req.requester_discord_id)
+          .maybeSingle();
+        requesterName = u?.handle_name || u?.discord_username || requesterName;
+      }
+
+      // Rellenar DET-01 (robusto por data-attrs / fallback)
+      const root = document.getElementById('cmp-det-01');
+
+      const setText = (selectorList, value) => {
+        for (const sel of selectorList) {
+          const el = root.querySelector(sel);
+          if (el) { el.textContent = value; return true; }
+        }
+        return false;
+      };
+
+      // Tags (si DET-01 tiene slots/áreas)
+      const setHTML = (selectorList, html) => {
+        for (const sel of selectorList) {
+          const el = root.querySelector(sel);
+          if (el) { el.innerHTML = html; return true; }
+        }
+        return false;
+      };
+
+      // Campos típicos
+      setText(['[data-det-id]', '#det-id', '[data-field="id"]'], `#${req.id}`);
+      setHTML(['[data-det-tipo]', '#det-tipo', '[data-field="tipo"]'], `<span class="tag ${req.request_type === 'venta' ? 'tag--venta' : 'tag--compra'}">${formatTipo(req.request_type)}</span>`);
+      setText(['[data-det-item]', '#det-item', '[data-field="item"]'], itemName);
+      setText(['[data-det-qty]', '#det-qty', '[data-field="quantity"]'], String(req.quantity ?? '-'));
+      setHTML(['[data-det-status]', '#det-status', '[data-field="status"]'], `<span class="tag tag--${req.status || 'pendiente'}">${formatStatus(req.status)}</span>`);
+
+      setText(['[data-det-requester]', '#det-requester', '[data-field="requester"]'], requesterName);
+
+      setText(['[data-det-created]', '#det-created', '[data-field="created_at"]'],
+        req.created_at ? new Date(req.created_at).toLocaleString() : '-'
+      );
+
+      setText(['[data-det-due]', '#det-due', '[data-field="due_date"]'],
+        req.due_date ? new Date(req.due_date).toLocaleDateString() : '-'
+      );
+
+      setText(['[data-det-warehouse]', '#det-warehouse', '[data-field="warehouse"]'],
+        req.warehouses?.name || (req.warehouse_id ? `ID ${req.warehouse_id}` : '-')
+      );
+
+      setText(['[data-det-preferred]', '#det-preferred', '[data-field="preferred_warehouse"]'],
+        req.pref?.name || (req.preferred_warehouse_id ? `ID ${req.preferred_warehouse_id}` : 'Cualquier almacén')
+      );
+
+      // Firmas (si existen)
+      setText(['[data-det-wh-sign]', '#det-wh-sign', '[data-field="warehouse_sign"]'],
+        req.warehouse_sign_result ? String(req.warehouse_sign_result) : '-'
+      );
+      setText(['[data-det-req-sign]', '#det-req-sign', '[data-field="requester_sign"]'],
+        req.requester_sign_result ? String(req.requester_sign_result) : '-'
+      );
+    });
+  </script>
 </body>
 </html>
