@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Detalle de solicitud</title>
+  <title>Solicitud — Detalle</title>
 
   <link rel="stylesheet" href="./style.css"/>
   <link rel="stylesheet" href="./style_prueba.css"/>
@@ -16,9 +16,10 @@
   <style>
     main.det-main{
       padding:1.25rem;
-      max-width:920px;
+      max-width:980px;
       margin:0 auto;
     }
+
     .det-header-row{
       display:flex;
       justify-content:space-between;
@@ -26,6 +27,66 @@
       gap:.75rem;
       flex-wrap:wrap;
       margin-bottom:1rem;
+    }
+
+    .det-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:.85rem 1rem;
+    }
+    @media (max-width: 820px){
+      .det-grid{ grid-template-columns:1fr; }
+    }
+
+    .det-field label{
+      display:block;
+      font-size:.8rem;
+      opacity:.8;
+      margin-bottom:.25rem;
+    }
+    .det-value{
+      padding:0.55rem 0.65rem;
+      border-radius:0.65rem;
+      border:1px solid rgba(148,163,184,0.55);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:.95rem;
+      min-height:40px;
+      display:flex;
+      align-items:center;
+      gap:.5rem;
+      flex-wrap:wrap;
+    }
+
+    .det-meta-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:.75rem;
+      flex-wrap:wrap;
+      margin-top:.25rem;
+    }
+
+    .det-actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:.5rem;
+      flex-wrap:wrap;
+      margin-top:1rem;
+    }
+
+    .det-note{
+      opacity:.75;
+      font-size:.9rem;
+      margin-top:.75rem;
+    }
+
+    /* Si aún no tienes tags casteadas aquí, usamos las clases existentes de style_prueba */
+    .det-tags{
+      display:flex;
+      gap:.35rem;
+      flex-wrap:wrap;
+      align-items:center;
     }
   </style>
 </head>
@@ -37,23 +98,96 @@
     <div class="det-header-row">
       <div>
         <h2>Detalle de solicitud</h2>
-        <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
+        <p style="opacity:.8;margin-top:.25rem;font-size:.9rem;">
           Información completa de la solicitud.
         </p>
       </div>
-      <button class="btn btn-secondary" type="button" onclick="window.close()">
-        Cerrar
-      </button>
+
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+        <button type="button" class="btn btn-secondary" onclick="window.close()">
+          Cerrar
+        </button>
+      </div>
     </div>
 
-    <!-- DET-01 casteado -->
-    <div id="cmp-det-01"></div>
-  </main>
+    <div class="card">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;">
+        <h3 style="margin:0;">Solicitud <span id="det-id"></span></h3>
+        <div class="det-tags">
+          <span id="det-tipo-tag"></span>
+          <span id="det-estado-tag"></span>
+        </div>
+      </div>
 
-  <script type="module">
-    import { loadComponentById } from './modules/ui_components.js';
-    await loadComponentById('./components/det-01.html', 'cmp-det-01');
-  </script>
+      <div style="padding:1rem 1.2rem;">
+        <div class="det-grid">
+          <div class="det-field">
+            <label>Solicitante</label>
+            <div class="det-value" id="det-solicitante">-</div>
+          </div>
+
+          <div class="det-field">
+            <label>Tipo</label>
+            <div class="det-value" id="det-tipo">-</div>
+          </div>
+
+          <div class="det-field">
+            <label>Ítem</label>
+            <div class="det-value" id="det-item">-</div>
+          </div>
+
+          <div class="det-field">
+            <label>Cantidad</label>
+            <div class="det-value" id="det-cantidad">-</div>
+          </div>
+
+          <div class="det-field">
+            <label>Preferencia de entrega</label>
+            <div class="det-value" id="det-preferido">-</div>
+          </div>
+
+          <div class="det-field">
+            <label>Almacén asignado</label>
+            <div class="det-value" id="det-almacen">-</div>
+          </div>
+
+          <div class="det-field">
+            <label>Fecha de creación</label>
+            <div class="det-value" id="det-creada">-</div>
+          </div>
+
+          <div class="det-field">
+            <label>Plazo máximo</label>
+            <div class="det-value" id="det-plazo">-</div>
+          </div>
+
+          <div class="det-field">
+            <label>Firma almacén</label>
+            <div class="det-value" id="det-firma-almacen">-</div>
+          </div>
+
+          <div class="det-field">
+            <label>Firma solicitante</label>
+            <div class="det-value" id="det-firma-solicitante">-</div>
+          </div>
+
+          <div class="det-field" style="grid-column:1/-1;">
+            <label>Cierre</label>
+            <div class="det-value" id="det-cierre">-</div>
+          </div>
+        </div>
+
+        <div class="det-meta-row">
+          <div class="det-note" id="det-error" style="display:none;"></div>
+          <div class="det-actions">
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='./app_ui.html'">
+              Ir al panel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
 
   <script type="module">
     import { getOrgStatus } from './modules/profile.js';
@@ -62,38 +196,75 @@
       const { supa } = window;
 
       const params = new URLSearchParams(window.location.search);
-      const reqId = params.get('id');
-      if (!reqId) {
-        alert('Falta el parámetro id.');
-        return;
+      const rawId = params.get('id'); // <- IMPORTANTÍSIMO: sol_commodities abre ?id=
+      const detError = document.getElementById('det-error');
+
+      function showError(msg){
+        detError.style.display = 'block';
+        detError.textContent = msg;
       }
 
+      function formatStatus(st) {
+        const map = {
+          pendiente: 'Pendiente',
+          aprobada: 'Aprobada',
+          rechazada: 'Rechazada',
+          completada: 'Completada',
+          cancelada: 'Cancelada'
+        };
+        return map[st] || st || '-';
+      }
+
+      function renderTipo(tipo){
+        if (!tipo) return '-';
+        return tipo === 'compra' ? 'Compra' : 'Venta';
+      }
+
+      function tipoTagClass(tipo){
+        return (tipo === 'venta') ? 'tag tag--venta' : 'tag tag--compra';
+      }
+
+      function statusTagClass(st){
+        return `tag tag--${st}`;
+      }
+
+      // 1) Sesión
       const { data: { session } } = await supa.auth.getSession();
       if (!session) {
         window.location.href = './index.html';
         return;
       }
 
+      // 2) org_status mínimo
       const orgStatus = await getOrgStatus();
-      if (!orgStatus) {
+      if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
         await supa.auth.signOut();
         window.location.href = './index.html';
         return;
       }
 
+      // 3) Header
       if (typeof window.loadHeader === 'function') {
         await window.loadHeader('app');
       }
       if (typeof window.initHeaderUserMenu === 'function') {
         window.initHeaderUserMenu(
           session,
-          async () => { await supa.auth.signOut(); window.location.href="./index.html"; },
-          () => { window.location.href='./perfil.html'; }
+          async () => { await supa.auth.signOut(); window.location.href = "./index.html"; },
+          () => { window.location.href = './perfil.html'; }
         );
       }
 
-      // Cargar solicitud
-      const { data: req, error } = await supa
+      if (!rawId) {
+        showError('No se ha proporcionado un ID de solicitud en la URL (?id=...).');
+        return;
+      }
+
+      // Normalizamos id: si fuese "#123" (por algún motivo), lo limpiamos
+      const cleanedId = String(rawId).replace(/^#/, '').trim();
+
+      // 4) Cargar solicitud
+      const { data: req, error: reqError } = await supa
         .from('requests')
         .select(`
           id,
@@ -105,105 +276,89 @@
           due_date,
           approved_at,
           completed_at,
-          requester_discord_id,
           warehouse_id,
           preferred_warehouse_id,
+          requester_discord_id,
           warehouse_sign_result,
           warehouse_sign_at,
           requester_sign_result,
           requester_sign_at,
           commodities_master(name, symbol),
-          warehouses:warehouse_id (name),
-          pref:preferred_warehouse_id (name)
+          warehouses:warehouse_id(id, name),
+          preferred_wh:preferred_warehouse_id(id, name)
         `)
-        .eq('id', reqId)
+        .eq('id', cleanedId)
         .maybeSingle();
 
-      if (error || !req) {
-        console.error(error);
-        alert('No se ha podido cargar la solicitud.');
+      if (reqError) {
+        console.error('Detalle solicitud -> error select:', reqError);
+        showError('No se pudo cargar la solicitud (error de base de datos).');
         return;
       }
 
-      // Helpers
-      const formatTipo = (t) => (t === 'compra' ? 'Compra' : (t === 'venta' ? 'Venta' : (t || '-')));
-      const formatStatus = (st) => {
-        const map = {
-          pendiente: 'Pendiente',
-          aprobada: 'Aprobada',
-          rechazada: 'Rechazada',
-          cancelada: 'Cancelada',
-          completada: 'Completada'
-        };
-        return map[st] || st || '-';
-      };
-      const itemName = req.commodities_master
-        ? (req.commodities_master.symbol ? `${req.commodities_master.name} (${req.commodities_master.symbol})` : req.commodities_master.name)
-        : (req.item_id || '-');
+      if (!req) {
+        showError('No se pudo cargar la solicitud (no existe o no tienes permisos de lectura).');
+        return;
+      }
 
-      // Cargar usuario solicitante
+      // 5) Cargar nombre solicitante
       let requesterName = req.requester_discord_id || '-';
       if (req.requester_discord_id) {
-        const { data: u } = await supa
+        const { data: uRow } = await supa
           .from('users')
           .select('handle_name, discord_username')
           .eq('id', req.requester_discord_id)
           .maybeSingle();
-        requesterName = u?.handle_name || u?.discord_username || requesterName;
+
+        requesterName =
+          uRow?.handle_name ||
+          uRow?.discord_username ||
+          req.requester_discord_id;
       }
 
-      // Rellenar DET-01 (robusto por data-attrs / fallback)
-      const root = document.getElementById('cmp-det-01');
+      // 6) Pintar
+      document.getElementById('det-id').textContent = `#${req.id}`;
 
-      const setText = (selectorList, value) => {
-        for (const sel of selectorList) {
-          const el = root.querySelector(sel);
-          if (el) { el.textContent = value; return true; }
-        }
-        return false;
-      };
+      const tipo = req.request_type || null;
+      const st = req.status || 'pendiente';
 
-      // Tags (si DET-01 tiene slots/áreas)
-      const setHTML = (selectorList, html) => {
-        for (const sel of selectorList) {
-          const el = root.querySelector(sel);
-          if (el) { el.innerHTML = html; return true; }
-        }
-        return false;
-      };
+      const tipoTagHost = document.getElementById('det-tipo-tag');
+      tipoTagHost.innerHTML = `<span class="${tipoTagClass(tipo)}">${renderTipo(tipo)}</span>`;
 
-      // Campos típicos
-      setText(['[data-det-id]', '#det-id', '[data-field="id"]'], `#${req.id}`);
-      setHTML(['[data-det-tipo]', '#det-tipo', '[data-field="tipo"]'], `<span class="tag ${req.request_type === 'venta' ? 'tag--venta' : 'tag--compra'}">${formatTipo(req.request_type)}</span>`);
-      setText(['[data-det-item]', '#det-item', '[data-field="item"]'], itemName);
-      setText(['[data-det-qty]', '#det-qty', '[data-field="quantity"]'], String(req.quantity ?? '-'));
-      setHTML(['[data-det-status]', '#det-status', '[data-field="status"]'], `<span class="tag tag--${req.status || 'pendiente'}">${formatStatus(req.status)}</span>`);
+      const stTagHost = document.getElementById('det-estado-tag');
+      stTagHost.innerHTML = `<span class="${statusTagClass(st)}">${formatStatus(st)}</span>`;
 
-      setText(['[data-det-requester]', '#det-requester', '[data-field="requester"]'], requesterName);
+      document.getElementById('det-solicitante').textContent = requesterName;
+      document.getElementById('det-tipo').textContent = renderTipo(tipo);
 
-      setText(['[data-det-created]', '#det-created', '[data-field="created_at"]'],
-        req.created_at ? new Date(req.created_at).toLocaleString() : '-'
-      );
+      const cm = req.commodities_master;
+      const itemName = cm
+        ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
+        : (req.item_id || '-');
 
-      setText(['[data-det-due]', '#det-due', '[data-field="due_date"]'],
-        req.due_date ? new Date(req.due_date).toLocaleDateString() : '-'
-      );
+      document.getElementById('det-item').textContent = itemName;
+      document.getElementById('det-cantidad').textContent = String(req.quantity ?? '-');
 
-      setText(['[data-det-warehouse]', '#det-warehouse', '[data-field="warehouse"]'],
-        req.warehouses?.name || (req.warehouse_id ? `ID ${req.warehouse_id}` : '-')
-      );
+      const prefName = req.preferred_wh?.name || (req.preferred_warehouse_id ? `ID ${req.preferred_warehouse_id}` : 'Cualquier almacén');
+      document.getElementById('det-preferido').textContent = prefName;
 
-      setText(['[data-det-preferred]', '#det-preferred', '[data-field="preferred_warehouse"]'],
-        req.pref?.name || (req.preferred_warehouse_id ? `ID ${req.preferred_warehouse_id}` : 'Cualquier almacén')
-      );
+      const whName = req.warehouses?.name || (req.warehouse_id ? `ID ${req.warehouse_id}` : '—');
+      document.getElementById('det-almacen').textContent = whName;
 
-      // Firmas (si existen)
-      setText(['[data-det-wh-sign]', '#det-wh-sign', '[data-field="warehouse_sign"]'],
-        req.warehouse_sign_result ? String(req.warehouse_sign_result) : '-'
-      );
-      setText(['[data-det-req-sign]', '#det-req-sign', '[data-field="requester_sign"]'],
-        req.requester_sign_result ? String(req.requester_sign_result) : '-'
-      );
+      document.getElementById('det-creada').textContent = req.created_at ? new Date(req.created_at).toLocaleString() : '-';
+      document.getElementById('det-plazo').textContent = req.due_date ? String(req.due_date) : '—';
+
+      const ws = req.warehouse_sign_result || 'pendiente';
+      const rs = req.requester_sign_result || 'pendiente';
+
+      document.getElementById('det-firma-almacen').textContent =
+        `${ws}${req.warehouse_sign_at ? ' · ' + new Date(req.warehouse_sign_at).toLocaleString() : ''}`;
+
+      document.getElementById('det-firma-solicitante').textContent =
+        `${rs}${req.requester_sign_at ? ' · ' + new Date(req.requester_sign_at).toLocaleString() : ''}`;
+
+      const cierre = req.completed_at || req.approved_at || null;
+      document.getElementById('det-cierre').textContent = cierre ? new Date(cierre).toLocaleString() : '—';
     });
   </script>
 </body>
