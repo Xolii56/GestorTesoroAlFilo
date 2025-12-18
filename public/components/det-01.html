@@ -1,61 +1,113 @@
-<!-- DET-01 -->
+<!-- DET-01 — Detalle (layout estándar) -->
 <div class="card">
-  <div class="card-header">
-    <h3>Detalle de solicitud</h3>
+  <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;">
+    <div style="display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;">
+      <h3 style="margin:0;">Detalle</h3>
+      <span class="muted" style="opacity:.8;" data-slot="det-id">#—</span>
+    </div>
+
+    <div style="display:flex;gap:.35rem;flex-wrap:wrap;align-items:center;">
+      <span data-slot="det-tipo-tag"></span>
+      <span data-slot="det-estado-tag"></span>
+    </div>
   </div>
 
-  <div class="detail-grid">
-    <div class="detail-label">ID solicitud</div>
-    <div class="detail-value">#123</div>
-
-    <div class="detail-label">Tipo de solicitud</div>
-    <div class="detail-value"><span class="tag tag--compra">Compra</span></div>
-
-    <div class="detail-label">Estado de solicitud</div>
-    <div class="detail-value"><span class="tag tag--pendiente">Pendiente</span></div>
-
-    <div class="detail-label">Solicitante</div>
-    <div class="detail-value">HandleUno</div>
-
-    <div class="detail-label">Material</div>
-    <div class="detail-value">Quantanium Refined</div>
-
-    <div class="detail-label">Cantidad</div>
-    <div class="detail-value">200 SCU</div>
-
-    <div class="detail-label">Preferencia de entrega</div>
-    <div class="detail-value">Almacén principal · Orison</div>
-
-    <div class="detail-label">Lugar de entrega</div>
-    <div class="detail-value">Orison · Stratus Platform</div>
-
-    <div class="detail-label">Fecha límite de entrega</div>
-    <div class="detail-value">20/12/2953</div>
-
-    <div class="detail-label">Firmas</div>
-    <div class="detail-value detail-row-full">
-      <div class="signature-grid">
-        <div class="signature-card">
-          <div class="detail-label signature-title">Solicitante</div>
-          <div class="signature-box signature-box--pending">Entrega</div>
+  <div style="padding:1rem 1.2rem;">
+    <div class="grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1rem;">
+      <div>
+        <div style="font-size:.8rem;opacity:.8;margin-bottom:.25rem;">Solicitante</div>
+        <div class="input-like" data-slot="det-solicitante"
+             style="padding:.55rem .65rem;border-radius:.65rem;border:1px solid rgba(148,163,184,.55);background:#020617;min-height:40px;display:flex;align-items:center;">
+          —
         </div>
+      </div>
 
-        <div class="signature-card">
-          <div class="detail-label signature-title">Tesoro</div>
-          <div class="signature-box signature-box--pending">Entrega</div>
+      <div>
+        <div style="font-size:.8rem;opacity:.8;margin-bottom:.25rem;">Tipo</div>
+        <div class="input-like" data-slot="det-tipo"
+             style="padding:.55rem .65rem;border-radius:.65rem;border:1px solid rgba(148,163,184,.55);background:#020617;min-height:40px;display:flex;align-items:center;">
+          —
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:.8rem;opacity:.8;margin-bottom:.25rem;">Ítem</div>
+        <div class="input-like" data-slot="det-item"
+             style="padding:.55rem .65rem;border-radius:.65rem;border:1px solid rgba(148,163,184,.55);background:#020617;min-height:40px;display:flex;align-items:center;">
+          —
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:.8rem;opacity:.8;margin-bottom:.25rem;">Cantidad</div>
+        <div class="input-like" data-slot="det-cantidad"
+             style="padding:.55rem .65rem;border-radius:.65rem;border:1px solid rgba(148,163,184,.55);background:#020617;min-height:40px;display:flex;align-items:center;">
+          —
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:.8rem;opacity:.8;margin-bottom:.25rem;">Preferencia de entrega</div>
+        <div class="input-like" data-slot="det-preferido"
+             style="padding:.55rem .65rem;border-radius:.65rem;border:1px solid rgba(148,163,184,.55);background:#020617;min-height:40px;display:flex;align-items:center;">
+          —
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:.8rem;opacity:.8;margin-bottom:.25rem;">Almacén asignado</div>
+        <div class="input-like" data-slot="det-almacen"
+             style="padding:.55rem .65rem;border-radius:.65rem;border:1px solid rgba(148,163,184,.55);background:#020617;min-height:40px;display:flex;align-items:center;">
+          —
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:.8rem;opacity:.8;margin-bottom:.25rem;">Creada</div>
+        <div class="input-like" data-slot="det-creada"
+             style="padding:.55rem .65rem;border-radius:.65rem;border:1px solid rgba(148,163,184,.55);background:#020617;min-height:40px;display:flex;align-items:center;">
+          —
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:.8rem;opacity:.8;margin-bottom:.25rem;">Plazo máx.</div>
+        <div class="input-like" data-slot="det-plazo"
+             style="padding:.55rem .65rem;border-radius:.65rem;border:1px solid rgba(148,163,184,.55);background:#020617;min-height:40px;display:flex;align-items:center;">
+          —
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:.8rem;opacity:.8;margin-bottom:.25rem;">Firma almacén</div>
+        <div class="input-like" data-slot="det-firma-almacen"
+             style="padding:.55rem .65rem;border-radius:.65rem;border:1px solid rgba(148,163,184,.55);background:#020617;min-height:40px;display:flex;align-items:center;">
+          —
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:.8rem;opacity:.8;margin-bottom:.25rem;">Firma solicitante</div>
+        <div class="input-like" data-slot="det-firma-solicitante"
+             style="padding:.55rem .65rem;border-radius:.65rem;border:1px solid rgba(148,163,184,.55);background:#020617;min-height:40px;display:flex;align-items:center;">
+          —
+        </div>
+      </div>
+
+      <div style="grid-column:1/-1;">
+        <div style="font-size:.8rem;opacity:.8;margin-bottom:.25rem;">Cierre</div>
+        <div class="input-like" data-slot="det-cierre"
+             style="padding:.55rem .65rem;border-radius:.65rem;border:1px solid rgba(148,163,184,.55);background:#020617;min-height:40px;display:flex;align-items:center;">
+          —
         </div>
       </div>
     </div>
 
-    <div class="detail-label">Logs</div>
-    <div class="detail-value detail-row-full">
-      <div class="logs-box text-muted">
-        12/12/2953 21:37 · Solicitud creada<br>
-        13/12/2953 09:12 · Solicitud aprobada<br>
-        13/12/2953 10:05 · Firma solicitante (entrega) · Pendiente<br>
-        13/12/2953 10:06 · Firma tesoro (entrega) · Pendiente
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;margin-top:1rem;">
+      <div class="help-text" data-slot="det-error" style="display:none;opacity:.9;"></div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end;">
+        <button type="button" class="btn btn-secondary" data-slot="det-close">Cerrar</button>
       </div>
     </div>
   </div>
-
 </div>
