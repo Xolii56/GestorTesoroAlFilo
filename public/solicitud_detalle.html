@@ -14,18 +14,10 @@
   <script src="./modules/layout.js" defer></script>
 
   <style>
-    main.det-main{
-      padding:1.25rem;
-      max-width:980px;
-      margin:0 auto;
-    }
+    main.det-main{ padding:1.25rem; max-width:980px; margin:0 auto; }
     .det-header-row{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-end;
-      gap:.75rem;
-      flex-wrap:wrap;
-      margin-bottom:1rem;
+      display:flex; justify-content:space-between; align-items:flex-end;
+      gap:.75rem; flex-wrap:wrap; margin-bottom:1rem;
     }
   </style>
 </head>
@@ -37,14 +29,11 @@
     <div class="det-header-row">
       <div>
         <h2>Detalle de solicitud</h2>
-        <p style="opacity:.8;margin-top:.25rem;font-size:.9rem;">
-          Información completa de la solicitud.
-        </p>
+        <p style="opacity:.8;margin-top:.25rem;font-size:.9rem;">Información completa de la solicitud.</p>
       </div>
       <button type="button" class="btn btn-secondary" onclick="window.close()">Cerrar</button>
     </div>
 
-    <!-- DET-01 casteado aquí -->
     <div id="cmp-det-01"></div>
   </main>
 
@@ -53,19 +42,6 @@
     import { loadComponentById } from './modules/ui_components.js';
 
     const $ = (sel, root=document) => root.querySelector(sel);
-    const slot = (name, root=document) => root.querySelector(`[data-slot="${name}"]`);
-
-    function setText(el, txt){
-      if (!el) return;
-      el.textContent = (txt === undefined || txt === null || txt === '') ? '—' : String(txt);
-    }
-
-    function showError(root, msg){
-      const err = slot('det-error', root);
-      if (!err) return;
-      err.style.display = 'block';
-      err.textContent = msg;
-    }
 
     function formatStatus(st) {
       const map = {
@@ -77,41 +53,85 @@
       };
       return map[st] || st || '—';
     }
-
     function renderTipo(tipo){
       if (!tipo) return '—';
       return tipo === 'compra' ? 'Compra' : 'Venta';
     }
-
     function tipoTagClass(tipo){
       return (tipo === 'venta') ? 'tag tag--venta' : 'tag tag--compra';
     }
-
     function statusTagClass(st){
       return `tag tag--${st}`;
     }
-
     function toLocale(dt){
       if (!dt) return '—';
       try { return new Date(dt).toLocaleString(); } catch { return String(dt); }
     }
 
+    function findValueByLabel(root, labelText){
+      const labels = Array.from(root.querySelectorAll('.detail-grid .detail-label'));
+      const lab = labels.find(l => (l.textContent || '').trim() === labelText);
+      if (!lab) return null;
+      // la estructura es label + value como hermanos consecutivos
+      const val = lab.nextElementSibling;
+      if (!val || !val.classList.contains('detail-value')) return null;
+      return val;
+    }
+
+    function setValueText(root, label, value){
+      const v = findValueByLabel(root, label);
+      if (!v) return false;
+      v.textContent = (value === undefined || value === null || value === '') ? '—' : String(value);
+      return true;
+    }
+
+    function setValueTag(root, label, cssClass, text){
+      const v = findValueByLabel(root, label);
+      if (!v) return false;
+      v.innerHTML = `<span class="${cssClass}">${text}</span>`;
+      return true;
+    }
+
+    function setLogs(root, html){
+      const v = findValueByLabel(root, 'Logs');
+      if (!v) return false;
+      const box = v.querySelector('.logs-box');
+      if (!box) return false;
+      box.innerHTML = html || '';
+      return true;
+    }
+
+    function setSignature(root, whoTitle, result){
+      const cards = Array.from(root.querySelectorAll('.signature-card'));
+      const card = cards.find(c => (c.querySelector('.signature-title')?.textContent || '').trim() === whoTitle);
+      if (!card) return false;
+
+      const box = card.querySelector('.signature-box');
+      if (!box) return false;
+
+      const r = (result || 'pendiente').toLowerCase();
+      box.classList.remove('signature-box--pending', 'signature-box--ok', 'signature-box--ko');
+
+      if (r === 'ok') box.classList.add('signature-box--ok');
+      else if (r === 'ko') box.classList.add('signature-box--ko');
+      else box.classList.add('signature-box--pending');
+
+      box.textContent = 'Entrega';
+      return true;
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
       const { supa } = window;
 
-      // 0) Castear DET-01
+      // 0) Casteo DET-01 (NO SE MODIFICA)
       await loadComponentById('./components/det-01.html', 'cmp-det-01');
       const detRoot = document.getElementById('cmp-det-01');
-
-      // Botón cerrar dentro del componente
-      const closeBtn = slot('det-close', detRoot);
-      if (closeBtn) closeBtn.addEventListener('click', () => window.close());
 
       // 1) Sesión
       const { data: { session } } = await supa.auth.getSession();
       if (!session) { window.location.href = './index.html'; return; }
 
-      // 2) org_status mínimo
+      // 2) org_status
       const orgStatus = await getOrgStatus();
       if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
         await supa.auth.signOut();
@@ -129,18 +149,16 @@
         );
       }
 
-      // 4) ID desde URL (sol_commodities abre ?id=...)
+      // 4) ID de la URL (el botón Ver debe abrir ?id=...)
       const params = new URLSearchParams(window.location.search);
       const rawId = params.get('id');
-
       if (!rawId) {
-        showError(detRoot, 'No se ha proporcionado un ID de solicitud en la URL (?id=...).');
+        alert('No se ha proporcionado un ID de solicitud (?id=...).');
         return;
       }
-
       const cleanedId = String(rawId).replace(/^#/, '').trim();
 
-      // 5) Cargar solicitud (robusto: id numérico o texto)
+      // 5) Cargar solicitud (acepta id numérico o uuid/texto)
       const isNumeric = /^[0-9]+$/.test(cleanedId);
       const idValue = isNumeric ? Number(cleanedId) : cleanedId;
 
@@ -171,17 +189,16 @@
         .maybeSingle();
 
       if (reqError) {
-        console.error('Detalle solicitud -> error select:', reqError);
-        showError(detRoot, 'No se pudo cargar la solicitud (error de base de datos).');
+        console.error('solicitud_detalle -> error select:', reqError);
+        alert('No se pudo cargar la solicitud (error de base de datos / policies).');
         return;
       }
-
       if (!req) {
-        showError(detRoot, 'No se pudo cargar la solicitud (no existe o no tienes permisos de lectura).');
+        alert('No se pudo cargar la solicitud (no existe o no tienes permisos).');
         return;
       }
 
-      // 6) Nombre solicitante
+      // 6) Solicitante
       let requesterName = req.requester_discord_id || '—';
       if (req.requester_discord_id) {
         const { data: uRow } = await supa
@@ -189,61 +206,48 @@
           .select('handle_name, discord_username')
           .eq('id', req.requester_discord_id)
           .maybeSingle();
-
         requesterName = uRow?.handle_name || uRow?.discord_username || req.requester_discord_id;
       }
 
-      // 7) Pintar en DET-01
-      setText(slot('det-id', detRoot), `#${req.id}`);
-
-      const tipo = req.request_type || null;
-      const st = req.status || 'pendiente';
-
-      const tipoTagHost = slot('det-tipo-tag', detRoot);
-      if (tipoTagHost) tipoTagHost.innerHTML = `<span class="${tipoTagClass(tipo)}">${renderTipo(tipo)}</span>`;
-
-      const stTagHost = slot('det-estado-tag', detRoot);
-      if (stTagHost) stTagHost.innerHTML = `<span class="${statusTagClass(st)}">${formatStatus(st)}</span>`;
-
-      setText(slot('det-solicitante', detRoot), requesterName);
-      setText(slot('det-tipo', detRoot), renderTipo(tipo));
-
+      // 7) Ítem
       const cm = req.commodities_master;
       const itemName = cm
         ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
         : (req.item_id || '—');
 
-      setText(slot('det-item', detRoot), itemName);
-      setText(slot('det-cantidad', detRoot), req.quantity);
+      // 8) Pintar DET-01 por labels (sin tocar el componente)
+      setValueText(detRoot, 'ID solicitud', `#${req.id}`);
+      setValueTag(detRoot, 'Tipo de solicitud', tipoTagClass(req.request_type), renderTipo(req.request_type));
+      setValueTag(detRoot, 'Estado de solicitud', statusTagClass(req.status || 'pendiente'), formatStatus(req.status || 'pendiente'));
+      setValueText(detRoot, 'Solicitante', requesterName);
+      setValueText(detRoot, 'Material', itemName);
+      setValueText(detRoot, 'Cantidad', req.quantity ?? '—');
 
       const prefName =
         req.preferred_wh?.name ||
         (req.preferred_warehouse_id ? `ID ${req.preferred_warehouse_id}` : 'Cualquier almacén');
-
-      setText(slot('det-preferido', detRoot), prefName);
+      setValueText(detRoot, 'Preferencia de entrega', prefName);
 
       const whName =
         req.warehouses?.name ||
         (req.warehouse_id ? `ID ${req.warehouse_id}` : '—');
+      setValueText(detRoot, 'Lugar de entrega', whName);
 
-      setText(slot('det-almacen', detRoot), whName);
+      setValueText(detRoot, 'Fecha límite de entrega', req.due_date || '—');
 
-      setText(slot('det-creada', detRoot), toLocale(req.created_at));
-      setText(slot('det-plazo', detRoot), req.due_date || '—');
+      // Firmas
+      setSignature(detRoot, 'Solicitante', req.requester_sign_result || 'pendiente');
+      setSignature(detRoot, 'Tesoro', req.warehouse_sign_result || 'pendiente');
 
-      const ws = req.warehouse_sign_result || 'pendiente';
-      const rs = req.requester_sign_result || 'pendiente';
+      // Logs (mínimo útil)
+      const logs = [];
+      if (req.created_at) logs.push(`${toLocale(req.created_at)} · Solicitud creada`);
+      if (req.approved_at) logs.push(`${toLocale(req.approved_at)} · Solicitud aprobada`);
+      if (req.requester_sign_at) logs.push(`${toLocale(req.requester_sign_at)} · Firma solicitante · ${req.requester_sign_result || 'pendiente'}`);
+      if (req.warehouse_sign_at) logs.push(`${toLocale(req.warehouse_sign_at)} · Firma tesoro · ${req.warehouse_sign_result || 'pendiente'}`);
+      if (req.completed_at) logs.push(`${toLocale(req.completed_at)} · Solicitud completada`);
 
-      setText(slot('det-firma-almacen', detRoot),
-        `${ws}${req.warehouse_sign_at ? ' · ' + toLocale(req.warehouse_sign_at) : ''}`
-      );
-
-      setText(slot('det-firma-solicitante', detRoot),
-        `${rs}${req.requester_sign_at ? ' · ' + toLocale(req.requester_sign_at) : ''}`
-      );
-
-      const cierre = req.completed_at || req.approved_at || null;
-      setText(slot('det-cierre', detRoot), cierre ? toLocale(cierre) : '—');
+      setLogs(detRoot, logs.join('<br>'));
     });
   </script>
 </body>
