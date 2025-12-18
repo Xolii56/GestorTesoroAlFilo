@@ -540,7 +540,7 @@
           btnDetalle.addEventListener('click', (ev)=>{
             ev.stopPropagation();
             window.open(
-              `./detalle_solicitud.html?id=${encodeURIComponent(r.id)}`,
+              `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
               '_blank',
               'width=780,height=820'
             );
@@ -593,7 +593,7 @@
                 type: 'request_rejected',
                 title: `Solicitud #${r.id} rechazada`,
                 body: 'Tesoro ha rechazado tu solicitud en la fase de revisión.',
-                link_url: `./detalle_solicitud.html?id=${encodeURIComponent(r.id)}`,
+                link_url: `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
                 related_request_id: r.id,
                 level: 'danger'
               });
@@ -647,7 +647,7 @@
             type: 'request_approved',
             title: `Solicitud #${currentRequest.id} aprobada`,
             body: `Tesoro ha aprobado tu solicitud. Plazo máx.: ${dueDate}.`,
-            link_url: `./detalle_solicitud.html?id=${encodeURIComponent(currentRequest.id)}`,
+            link_url: `./solicitud_detalle.html?id=${encodeURIComponent(currentRequest.id)}`,
             related_request_id: currentRequest.id,
             level: 'info'
           });
