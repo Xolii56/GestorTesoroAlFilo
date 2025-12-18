@@ -41,8 +41,6 @@
     import { getOrgStatus } from './modules/profile.js';
     import { loadComponentById } from './modules/ui_components.js';
 
-    const $ = (sel, root=document) => root.querySelector(sel);
-
     function formatStatus(st) {
       const map = {
         pendiente: 'Pendiente',
@@ -72,7 +70,6 @@
       const labels = Array.from(root.querySelectorAll('.detail-grid .detail-label'));
       const lab = labels.find(l => (l.textContent || '').trim() === labelText);
       if (!lab) return null;
-      // la estructura es label + value como hermanos consecutivos
       const val = lab.nextElementSibling;
       if (!val || !val.classList.contains('detail-value')) return null;
       return val;
@@ -116,16 +113,35 @@
       else if (r === 'ko') box.classList.add('signature-box--ko');
       else box.classList.add('signature-box--pending');
 
-      box.textContent = 'Entrega';
+      box.textContent = 'ENTREGA';
       return true;
+    }
+
+    function wipeDemo(detRoot){
+      // Importante: DET-01 trae valores demo. Los neutralizamos.
+      setValueText(detRoot, 'ID solicitud', '—');
+      setValueTag(detRoot, 'Tipo de solicitud', 'tag', '—');
+      setValueTag(detRoot, 'Estado de solicitud', 'tag', '—');
+      setValueText(detRoot, 'Solicitante', '—');
+      setValueText(detRoot, 'Material', '—');
+      setValueText(detRoot, 'Cantidad', '—');
+      setValueText(detRoot, 'Preferencia de entrega', '—');
+      setValueText(detRoot, 'Lugar de entrega', '—');
+      setValueText(detRoot, 'Fecha límite de entrega', '—');
+
+      setSignature(detRoot, 'Solicitante', 'pendiente');
+      setSignature(detRoot, 'Tesoro', 'pendiente');
+
+      setLogs(detRoot, '<span class="text-muted">Cargando datos…</span>');
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
       const { supa } = window;
 
-      // 0) Casteo DET-01 (NO SE MODIFICA)
+      // 0) Castear DET-01 (NO SE MODIFICA)
       await loadComponentById('./components/det-01.html', 'cmp-det-01');
       const detRoot = document.getElementById('cmp-det-01');
+      wipeDemo(detRoot);
 
       // 1) Sesión
       const { data: { session } } = await supa.auth.getSession();
@@ -149,19 +165,20 @@
         );
       }
 
-      // 4) ID de la URL (el botón Ver debe abrir ?id=...)
+      // 4) ID URL
       const params = new URLSearchParams(window.location.search);
       const rawId = params.get('id');
       if (!rawId) {
         alert('No se ha proporcionado un ID de solicitud (?id=...).');
+        setLogs(detRoot, '<span class="text-muted">Falta el parámetro ?id=...</span>');
         return;
       }
-      const cleanedId = String(rawId).replace(/^#/, '').trim();
 
-      // 5) Cargar solicitud (acepta id numérico o uuid/texto)
+      const cleanedId = String(rawId).replace(/^#/, '').trim();
       const isNumeric = /^[0-9]+$/.test(cleanedId);
       const idValue = isNumeric ? Number(cleanedId) : cleanedId;
 
+      // 5) Query MINIMAL a requests (SIN JOINS) → esto evita petar por policies ajenas
       const { data: req, error: reqError } = await supa
         .from('requests')
         .select(`
@@ -180,66 +197,81 @@
           warehouse_sign_result,
           warehouse_sign_at,
           requester_sign_result,
-          requester_sign_at,
-          commodities_master(name, symbol),
-          warehouses:warehouse_id(id, name),
-          preferred_wh:preferred_warehouse_id(id, name)
+          requester_sign_at
         `)
         .eq('id', idValue)
         .maybeSingle();
 
-      if (reqError) {
-        console.error('solicitud_detalle -> error select:', reqError);
+      if (reqError || !req) {
+        console.error('requests select error:', reqError);
         alert('No se pudo cargar la solicitud (error de base de datos / policies).');
-        return;
-      }
-      if (!req) {
-        alert('No se pudo cargar la solicitud (no existe o no tienes permisos).');
+        setLogs(detRoot, `<span class="text-muted">Error cargando solicitud. Mira consola para detalles.</span>`);
         return;
       }
 
-      // 6) Solicitante
+      // 6) Con lo mínimo ya pintamos datos reales
+      setValueText(detRoot, 'ID solicitud', `#${req.id}`);
+      setValueTag(detRoot, 'Tipo de solicitud', tipoTagClass(req.request_type), renderTipo(req.request_type));
+      setValueTag(detRoot, 'Estado de solicitud', statusTagClass(req.status || 'pendiente'), formatStatus(req.status || 'pendiente'));
+      setValueText(detRoot, 'Cantidad', req.quantity ?? '—');
+      setValueText(detRoot, 'Fecha límite de entrega', req.due_date || '—');
+
+      setSignature(detRoot, 'Solicitante', req.requester_sign_result || 'pendiente');
+      setSignature(detRoot, 'Tesoro', req.warehouse_sign_result || 'pendiente');
+
+      // 7) Cargar extra en queries separadas (si fallan por policies NO rompemos la página)
+      // 7.1 Solicitante
       let requesterName = req.requester_discord_id || '—';
       if (req.requester_discord_id) {
-        const { data: uRow } = await supa
+        const { data: uRow, error: uErr } = await supa
           .from('users')
           .select('handle_name, discord_username')
           .eq('id', req.requester_discord_id)
           .maybeSingle();
-        requesterName = uRow?.handle_name || uRow?.discord_username || req.requester_discord_id;
+
+        if (!uErr && uRow) requesterName = uRow.handle_name || uRow.discord_username || req.requester_discord_id;
       }
-
-      // 7) Ítem
-      const cm = req.commodities_master;
-      const itemName = cm
-        ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name)
-        : (req.item_id || '—');
-
-      // 8) Pintar DET-01 por labels (sin tocar el componente)
-      setValueText(detRoot, 'ID solicitud', `#${req.id}`);
-      setValueTag(detRoot, 'Tipo de solicitud', tipoTagClass(req.request_type), renderTipo(req.request_type));
-      setValueTag(detRoot, 'Estado de solicitud', statusTagClass(req.status || 'pendiente'), formatStatus(req.status || 'pendiente'));
       setValueText(detRoot, 'Solicitante', requesterName);
+
+      // 7.2 Material (commodities_master)
+      let itemName = req.item_id || '—';
+      if (req.item_id) {
+        const { data: cmRow, error: cmErr } = await supa
+          .from('commodities_master')
+          .select('name, symbol')
+          .eq('id', req.item_id)
+          .maybeSingle();
+
+        if (!cmErr && cmRow) itemName = cmRow.symbol ? `${cmRow.name} (${cmRow.symbol})` : cmRow.name;
+      }
       setValueText(detRoot, 'Material', itemName);
-      setValueText(detRoot, 'Cantidad', req.quantity ?? '—');
 
-      const prefName =
-        req.preferred_wh?.name ||
-        (req.preferred_warehouse_id ? `ID ${req.preferred_warehouse_id}` : 'Cualquier almacén');
-      setValueText(detRoot, 'Preferencia de entrega', prefName);
+      // 7.3 Preferencia / Lugar (warehouses)
+      let preferredName = 'Cualquier almacén';
+      if (req.preferred_warehouse_id) {
+        const { data: pw, error: pwErr } = await supa
+          .from('warehouses')
+          .select('name')
+          .eq('id', req.preferred_warehouse_id)
+          .maybeSingle();
+        if (!pwErr && pw?.name) preferredName = pw.name;
+        else preferredName = `ID ${req.preferred_warehouse_id}`;
+      }
+      setValueText(detRoot, 'Preferencia de entrega', preferredName);
 
-      const whName =
-        req.warehouses?.name ||
-        (req.warehouse_id ? `ID ${req.warehouse_id}` : '—');
+      let whName = '—';
+      if (req.warehouse_id) {
+        const { data: w, error: wErr } = await supa
+          .from('warehouses')
+          .select('name')
+          .eq('id', req.warehouse_id)
+          .maybeSingle();
+        if (!wErr && w?.name) whName = w.name;
+        else whName = `ID ${req.warehouse_id}`;
+      }
       setValueText(detRoot, 'Lugar de entrega', whName);
 
-      setValueText(detRoot, 'Fecha límite de entrega', req.due_date || '—');
-
-      // Firmas
-      setSignature(detRoot, 'Solicitante', req.requester_sign_result || 'pendiente');
-      setSignature(detRoot, 'Tesoro', req.warehouse_sign_result || 'pendiente');
-
-      // Logs (mínimo útil)
+      // 8) Logs reales mínimos
       const logs = [];
       if (req.created_at) logs.push(`${toLocale(req.created_at)} · Solicitud creada`);
       if (req.approved_at) logs.push(`${toLocale(req.approved_at)} · Solicitud aprobada`);
@@ -247,7 +279,7 @@
       if (req.warehouse_sign_at) logs.push(`${toLocale(req.warehouse_sign_at)} · Firma tesoro · ${req.warehouse_sign_result || 'pendiente'}`);
       if (req.completed_at) logs.push(`${toLocale(req.completed_at)} · Solicitud completada`);
 
-      setLogs(detRoot, logs.join('<br>'));
+      setLogs(detRoot, logs.length ? logs.join('<br>') : '<span class="text-muted">Sin eventos adicionales.</span>');
     });
   </script>
 </body>
