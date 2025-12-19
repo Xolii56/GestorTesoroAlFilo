@@ -1,10 +1,13 @@
-<!doctype html> 
+<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Departamento del Tesoro — Almacenes</title>
+
+  <!-- Estilos globales + design system -->
   <link rel="stylesheet" href="./style.css"/>
+  <link rel="stylesheet" href="./style_prueba.css"/>
 
   <!-- Supabase + módulos -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -13,258 +16,160 @@
   <script src="./modules/layout.js" defer></script>
 
   <style>
-    main.alm-main {
-      padding: 1.5rem;
-      max-width: 1680px; /* más ancho para evitar scroll horizontal en tablas */
-      margin: 0 auto;
+    main.alm-main{
+      padding:1.5rem;
+      max-width:1680px;
+      margin:0 auto;
     }
 
-    .card-inline {
-      padding: 1rem 1.2rem;
-      border-radius: 0.75rem;
-    }
-
-    .alm-header-row {
+    .alm-header-row{
       display:flex;
       justify-content:space-between;
-      align-items:center;
+      align-items:flex-end;
+      gap:.75rem;
+      flex-wrap:wrap;
       margin-bottom:1rem;
-      gap:.75rem;
-      flex-wrap:wrap;
     }
 
-    /* Bloque 1: lista de almacenes */
-    .alm-tabs-row {
+    /* ───────────── Bloque 1: Tabs almacenes ───────────── */
+    .alm-tabs-row{
       display:flex;
       justify-content:space-between;
       align-items:center;
       gap:.75rem;
       flex-wrap:wrap;
     }
-
-    .alm-tabs-list {
+    .alm-tabs-list{
       display:flex;
       gap:.4rem;
       flex-wrap:wrap;
-    }
-
-    .alm-tab-btn {
-      padding:0.32rem 0.8rem;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,0.7);
-      background:#020617;
-      color:#e5e7eb;
-      font-size:.85rem;
-      cursor:pointer;
-    }
-
-    .alm-tab-btn.active {
-      background:#38bdf8;
-      color:#0f172a;
-      border-color:#38bdf8;
-      font-weight:600;
-    }
-
-    .alm-add-btn {
-      width:32px;
-      height:32px;
-      border-radius:999px;
-      border:none;
-      cursor:pointer;
-      background:#22c55e;
-      color:#020617;
-      font-size:1.2rem;
-      display:flex;
       align-items:center;
-      justify-content:center;
-      flex-shrink:0;
     }
 
-    .alm-add-btn:disabled {
-      opacity:.6;
-      cursor:not-allowed;
-    }
-
-    .btn {
-      padding:0.35rem 0.85rem;
-      border-radius:0.4rem;
-      border:none;
-      cursor:pointer;
-      font-size:.85rem;
-    }
-    .btn-secondary {
-      background:#020617;
-      color:#e5e7eb;
-      border:1px solid rgba(148,163,184,0.8);
-    }
-    .btn-primary {
-      background:#22c55e;
-      color:#020617;
-      font-weight:600;
-    }
-    .btn-disabled {
-      opacity:.6;
-      cursor:not-allowed;
-    }
-
-    /* Botones icono (✔ / ✕) */
-    .btn-icon {
-      width:28px;
-      height:28px;
+    /* Pills de tabs (look nuevo) */
+    .alm-tab-btn{
+      padding:.32rem .85rem;
       border-radius:999px;
-      border:1px solid rgba(148,163,184,0.7);
-      background:#020617;
+      border:1px solid rgba(148,163,184,0.55);
+      background:rgba(2,6,23,0.65);
       color:#e5e7eb;
-      font-size:.8rem;
+      font-size:.85rem;
+      cursor:pointer;
+      transition:background-color .15s ease,border-color .15s ease,color .15s ease,transform .05s ease;
+    }
+    .alm-tab-btn:hover{ transform:translateY(-1px); }
+    .alm-tab-btn.active{
+      background:rgba(56,189,248,0.18);
+      border-color:rgba(56,189,248,0.8);
+      color:#e5e7eb;
+      font-weight:600;
+      box-shadow: inset 0 0 0 1px rgba(56,189,248,0.22);
+    }
+
+    /* Botón + (nuevo almacén) */
+    .alm-add-btn{
+      width:34px;
+      height:34px;
+      border-radius:999px;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      padding:0;
+      border:1px solid rgba(148,163,184,0.35);
+      background:rgba(34,197,94,0.18);
+      color:#86efac;
       cursor:pointer;
+      font-size:1.25rem;
+      line-height:1;
+      transition:background-color .15s ease,border-color .15s ease,transform .05s ease;
     }
-    .btn-icon.ok {
-      background:#22c55e;
-      color:#022c22;
-      border-color:#22c55e;
-    }
-    .btn-icon.ko {
-      background:#ef4444;
-      color:#fef2f2;
-      border-color:#ef4444;
-    }
-    .btn-icon:disabled {
-      opacity:.5;
-      cursor:not-allowed;
-    }
+    .alm-add-btn:hover{ transform:translateY(-1px); }
+    .alm-add-btn:disabled{ opacity:.5; cursor:not-allowed; transform:none; }
 
-    .help-text {
-      font-size:.75rem;
+    .help-text{
+      font-size:.8rem;
       opacity:.75;
-      margin-top:.15rem;
+      margin-top:.25rem;
     }
 
-    /* Bloque 2: cuerpo con dos columnas */
-    #warehouse-panel {
-      margin-top:1.2rem;
-    }
+    /* ───────────── Bloque 2: Panel detalle ───────────── */
+    #warehouse-panel{ margin-top:1.2rem; }
 
-    .alm-detail-header {
+    .alm-detail-header{
       display:flex;
       justify-content:space-between;
       align-items:center;
       gap:.75rem;
       flex-wrap:wrap;
-      margin-bottom:.6rem;
+      margin-bottom:.75rem;
     }
-
-    .alm-detail-meta {
-      font-size:.8rem;
-      opacity:.8;
-      margin-top:.15rem;
-    }
-
-    .alm-detail-body {
-      display:grid;
-      /* inventario algo más estrecho, solicitudes más ancho */
-      grid-template-columns:minmax(0,1.3fr) minmax(0,1.7fr);
-      gap:1rem;
-    }
-
-    @media (max-width: 900px) {
-      .alm-detail-body {
-        grid-template-columns:minmax(0,1fr);
-      }
-    }
-
-    .alm-section-title {
+    .alm-detail-meta{
       font-size:.85rem;
       opacity:.8;
-      margin-bottom:.35rem;
-      text-transform:uppercase;
-      letter-spacing:.06em;
+      margin-top:.2rem;
     }
 
-    /* Tabla inventario */
-    .alm-table {
-      width:100%;
-      border-collapse:collapse;
-      font-size:.9rem;
+    .alm-detail-body{
+      display:grid;
+      grid-template-columns:minmax(0,1.25fr) minmax(0,1.75fr);
+      gap:1rem;
     }
-    .alm-table thead {
+    @media (max-width: 900px){
+      .alm-detail-body{ grid-template-columns:1fr; }
+    }
+
+    .alm-section-title{
       font-size:.8rem;
-      text-transform:uppercase;
-      letter-spacing:.04em;
       opacity:.8;
-    }
-    .alm-table th,
-    .alm-table td {
-      padding:0.35rem 0.45rem;
-      border-bottom:1px solid rgba(148,163,184,0.3);
+      margin-bottom:.45rem;
+      text-transform:uppercase;
+      letter-spacing:.08em;
     }
 
-    .estado-pill {
-      display:inline-flex;
-      align-items:center;
-      padding:0.1rem 0.55rem;
-      border-radius:999px;
-      font-size:.75rem;
-      border:1px solid rgba(148,163,184,0.8);
-    }
-    .estado-pill.critico {
-      border-color:#ef4444;
-      color:#fecaca;
-    }
-    .estado-pill.seguro {
-      border-color:#22c55e;
-      color:#bbf7d0;
-    }
-    .estado-pill.excedente {
-      border-color:#eab308;
-      color:#fef9c3;
+    /* Tablas: se apalancan en .table del style_prueba */
+    .alm-table-wrap,
+    .alm-req-wrap{
+      max-height:420px;
+      overflow:auto;
+      border-radius:.9rem;
     }
 
-    /* NUEVO: columna "Pendiente" en inventario */
-    .alm-pend-cell {
+    /* Inventario: columna Pendiente */
+    .alm-pend-cell{
       text-align:right;
       white-space:nowrap;
       font-variant-numeric:tabular-nums;
     }
-    .alm-pend-pos {
-      color:#16a34a; /* verde: entra stock (ventas al almacén) */
-      font-weight:600;
+    .alm-pend-pos{ color:#86efac; font-weight:700; }
+    .alm-pend-neg{ color:#fca5a5; font-weight:700; }
+
+    /* Estado inventario (pill) */
+    .estado-pill{
+      display:inline-flex;
+      align-items:center;
+      padding:.12rem .6rem;
+      border-radius:999px;
+      font-size:.75rem;
+      border:1px solid rgba(148,163,184,0.45);
+      background:rgba(2,6,23,0.55);
+      white-space:nowrap;
     }
-    .alm-pend-neg {
-      color:#b91c1c; /* rojo oscuro: sale stock (compras al almacén) */
-      font-weight:600;
+    .estado-pill.critico{
+      border-color:rgba(239,68,68,0.75);
+      color:#fecaca;
+      background:rgba(239,68,68,0.12);
+    }
+    .estado-pill.seguro{
+      border-color:rgba(34,197,94,0.75);
+      color:#bbf7d0;
+      background:rgba(34,197,94,0.12);
+    }
+    .estado-pill.excedente{
+      border-color:rgba(234,179,8,0.75);
+      color:#fef9c3;
+      background:rgba(234,179,8,0.12);
     }
 
-    /* Tabla solicitudes */
-    .alm-req-table {
-      width:100%;
-      border-collapse:collapse;
-      font-size:.9rem;
-    }
-    .alm-req-table thead {
-      font-size:.8rem;
-      text-transform:uppercase;
-      letter-spacing:.04em;
-      opacity:.8;
-    }
-    .alm-req-table th,
-    .alm-req-table td {
-      padding:0.35rem 0.45rem;
-      border-bottom:1px solid rgba(148,163,184,0.3);
-    }
-
-    .alm-req-table tbody tr {
-      transition:background .12s ease-out;
-    }
-    .alm-req-table tbody tr:hover {
-      background:rgba(15,23,42,0.9);
-    }
-
-    /* ⬇️ Centramos columnas: Tipo(2), Solicitante(5),
-       Plazo máx.(6), Estado(7), Detalle(8), Acciones(9) */
+    /* Centrado columnas en tabla solicitudes (manteniendo tu estructura) */
     .alm-req-table th:nth-child(2),
     .alm-req-table td:nth-child(2),
     .alm-req-table th:nth-child(5),
@@ -276,84 +181,127 @@
     .alm-req-table th:nth-child(8),
     .alm-req-table td:nth-child(8),
     .alm-req-table th:nth-child(9),
-    .alm-req-table td:nth-child(9) {
+    .alm-req-table td:nth-child(9){
       text-align:center;
     }
 
-    .badge-status {
+    /* Tags de tipo (usa tus tags globales si existen) */
+    .tipo-chip{
       display:inline-flex;
       align-items:center;
-      padding:0.1rem 0.55rem;
+      padding:.12rem .55rem;
       border-radius:999px;
       font-size:.75rem;
-      border:1px solid rgba(148,163,184,0.7);
+      border:1px solid rgba(148,163,184,0.45);
+      background:rgba(2,6,23,0.55);
+      white-space:nowrap;
     }
-    .badge-status.pendiente   { border-color:rgba(250,204,21,0.9); }
-    .badge-status.aprobada    { border-color:rgba(34,197,94,0.9); }
-    .badge-status.rechazada   { border-color:rgba(248,113,113,0.9); }
-    .badge-status.completada  { border-color:rgba(56,189,248,0.9); }
-    .badge-status.cancelada   { border-color:rgba(248,113,113,0.9); }
+    .tipo-chip.compra{
+      border-color:rgba(56,189,248,0.75);
+      color:#bae6fd;
+      background:rgba(56,189,248,0.12);
+    }
+    .tipo-chip.venta{
+      border-color:rgba(239,68,68,0.75);
+      color:#fecaca;
+      background:rgba(239,68,68,0.12);
+    }
 
-    /* Chips de tipo (compra / venta, igual que en otros módulos) */
-    .tipo-chip {
-      display:inline-block;
-      padding:0.08rem 0.45rem;
+    /* Estado solicitud (badge) */
+    .badge-status{
+      display:inline-flex;
+      align-items:center;
+      padding:.12rem .55rem;
       border-radius:999px;
-      font-size:.7rem;
-      border:1px solid rgba(148,163,184,0.9);
-      margin-left:.25rem;
-      opacity:.85;
+      font-size:.75rem;
+      border:1px solid rgba(148,163,184,0.45);
+      background:rgba(2,6,23,0.55);
+      white-space:nowrap;
+      text-transform:capitalize;
     }
-    .tipo-chip.compra { border-color: rgba(34,197,94,0.9); }
-    .tipo-chip.venta  { border-color: rgba(248,113,113,0.9); }
+    .badge-status.pendiente  { border-color:rgba(234,179,8,0.75); color:#fde68a; background:rgba(234,179,8,0.12); }
+    .badge-status.aprobada   { border-color:rgba(34,197,94,0.75); color:#bbf7d0; background:rgba(34,197,94,0.12); }
+    .badge-status.rechazada  { border-color:rgba(239,68,68,0.75); color:#fecaca; background:rgba(239,68,68,0.12); }
+    .badge-status.completada { border-color:rgba(56,189,248,0.75); color:#bae6fd; background:rgba(56,189,248,0.12); }
+    .badge-status.cancelada  { border-color:rgba(239,68,68,0.75); color:#fecaca; background:rgba(239,68,68,0.12); }
 
-    /* Modal genérico (almacén) */
-    .alm-modal-backdrop {
+    /* Acciones ✔ / ✕ (si ya los tienes en style_prueba, esto no molesta) */
+    .btn-icon{
+      width:30px;
+      height:30px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.35);
+      background:rgba(2,6,23,0.65);
+      color:#e5e7eb;
+      font-size:.85rem;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:0;
+      cursor:pointer;
+      transition:transform .05s ease, background-color .15s ease, border-color .15s ease, color .15s ease;
+    }
+    .btn-icon:hover{ transform:translateY(-1px); }
+    .btn-icon.ok{
+      background:rgba(34,197,94,0.18);
+      border-color:rgba(34,197,94,0.65);
+      color:#86efac;
+    }
+    .btn-icon.ko{
+      background:rgba(239,68,68,0.18);
+      border-color:rgba(239,68,68,0.65);
+      color:#fecaca;
+    }
+    .btn-icon:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
+
+    /* ───────────── Modal (nuevo look) ───────────── */
+    .alm-modal-backdrop{
       position:fixed;
       inset:0;
-      background:rgba(15,23,42,0.8);
+      background:rgba(2,6,23,0.78);
       display:flex;
       align-items:center;
       justify-content:center;
       z-index:50;
+      padding:1rem;
     }
-    .alm-modal {
-      background:#020617;
-      border-radius:0.75rem;
-      padding:1rem 1.2rem;
-      max-width:420px;
+    .alm-modal{
       width:100%;
-      box-shadow:0 18px 40px rgba(0,0,0,0.75);
+      max-width:520px;
+      border-radius:1rem;
+      border:1px solid rgba(148,163,184,0.25);
+      background:rgba(2,6,23,0.96);
+      box-shadow:0 22px 60px rgba(0,0,0,0.75);
+      overflow:hidden;
     }
-    .alm-form .field {
-      margin-bottom:.7rem;
+    .alm-modal-inner{
+      padding:1.1rem 1.2rem;
     }
-    .alm-form label {
+    .alm-form .field{ margin-bottom:.8rem; }
+    .alm-form label{
       display:block;
       font-size:.8rem;
       opacity:.8;
-      margin-bottom:.2rem;
+      margin-bottom:.25rem;
     }
     .alm-form input,
-    .alm-form textarea {
+    .alm-form textarea{
       width:100%;
-      padding:0.4rem 0.5rem;
-      border-radius:0.4rem;
-      border:1px solid rgba(148,163,184,0.8);
-      background:#020617;
+      padding:.5rem .65rem;
+      border-radius:.75rem;
+      border:1px solid rgba(148,163,184,0.35);
+      background:rgba(2,6,23,0.65);
       color:#e5e7eb;
       font-size:.9rem;
+      font-family:inherit;
     }
-    .alm-form textarea {
-      min-height:60px;
-      resize:vertical;
-    }
-    .alm-modal-actions {
+    .alm-form textarea{ min-height:84px; resize:vertical; }
+    .alm-modal-actions{
       display:flex;
       justify-content:flex-end;
       gap:.5rem;
-      margin-top:.5rem;
       flex-wrap:wrap;
+      margin-top:.75rem;
     }
   </style>
 </head>
@@ -369,29 +317,27 @@
           Selecciona un almacén para ver su inventario y las solicitudes asignadas.
         </p>
       </div>
-      <button type="button"
-              class="btn btn-secondary"
-              onclick="window.location.href='./app_ui.html'">
+      <button type="button" class="btn btn-secondary" onclick="window.location.href='./app_ui.html'">
         ← Volver al panel
       </button>
     </div>
 
     <!-- BLOQUE 1: lista de almacenes -->
-    <div class="card card-inline">
+    <div class="card">
       <div class="alm-tabs-row">
         <div>
           <div style="font-size:.8rem;opacity:.8;margin-bottom:.25rem;">Almacenes disponibles</div>
           <div id="alm-tabs-container" class="alm-tabs-list"></div>
         </div>
-        <button type="button" id="alm-add-btn" class="alm-add-btn">+</button>
+        <button type="button" id="alm-add-btn" class="alm-add-btn" aria-label="Crear almacén">+</button>
       </div>
-      <p id="alm-no-warehouses" class="help-text" style="margin-top:.5rem;display:none;">
+      <p id="alm-no-warehouses" class="help-text" style="margin-top:.55rem;display:none;">
         No hay almacenes creados todavía.
       </p>
     </div>
 
-    <!-- BLOQUE 2: detalle almacén (oculto si no hay selección) -->
-    <div id="warehouse-panel" class="card card-inline" style="margin-top:1.2rem;display:none;">
+    <!-- BLOQUE 2: detalle almacén -->
+    <div id="warehouse-panel" class="card" style="margin-top:1.2rem;display:none;">
       <div class="alm-detail-header">
         <div>
           <h3 id="alm-detail-title" style="margin:0;">Almacén</h3>
@@ -406,8 +352,8 @@
         <!-- Columna izquierda: inventario -->
         <div>
           <div class="alm-section-title">Inventario</div>
-          <div style="max-height:420px;overflow:auto;">
-            <table class="alm-table">
+          <div class="alm-table-wrap table-container">
+            <table class="table">
               <thead>
                 <tr>
                   <th>COMMODITY</th>
@@ -418,9 +364,7 @@
                   <th>ESTADO</th>
                 </tr>
               </thead>
-              <tbody id="alm-stock-tbody">
-                <!-- filas JS -->
-              </tbody>
+              <tbody id="alm-stock-tbody"></tbody>
             </table>
           </div>
         </div>
@@ -428,8 +372,8 @@
         <!-- Columna derecha: solicitudes -->
         <div>
           <div class="alm-section-title">Solicitudes asignadas</div>
-          <div style="max-height:420px;overflow:auto;">
-            <table class="alm-req-table">
+          <div class="alm-req-wrap table-container">
+            <table class="table alm-req-table">
               <thead>
                 <tr>
                   <th>ID</th>
@@ -443,12 +387,11 @@
                   <th>Acciones</th>
                 </tr>
               </thead>
-              <tbody id="alm-req-tbody">
-                <!-- filas JS -->
-              </tbody>
+              <tbody id="alm-req-tbody"></tbody>
             </table>
           </div>
-          <p class="help-text" style="margin-top:.4rem;">
+
+          <p class="help-text" style="margin-top:.5rem;">
             Pulsa en "Ver" para abrir el detalle estándar de la solicitud. Usa ✔ / ✕ para firmar o cancelar la entrega.
           </p>
         </div>
@@ -458,39 +401,39 @@
 
   <!-- MODAL EDICIÓN / CREACIÓN DE ALMACÉN -->
   <div id="alm-modal-backdrop" class="alm-modal-backdrop" style="display:none;">
-    <div class="alm-modal">
-      <h3 id="alm-modal-title" style="margin-top:0;margin-bottom:.6rem;">Nuevo almacén</h3>
-      <form id="alm-form" class="alm-form">
-        <div class="field">
-          <label>Nombre del almacén</label>
-          <input id="w_name" type="text" required/>
-        </div>
-        <div class="field">
-          <label>Sistema</label>
-          <input id="w_system" type="text" placeholder="Ej: Stanton, Pyro..."/>
-        </div>
-        <div class="field">
-          <label>Ubicación</label>
-          <input id="w_location" type="text" placeholder="Ej: Orison, Lorville, ARK L1..."/>
-        </div>
-        <div class="field">
-          <label>Encargado</label>
-          <input id="w_manager" type="text" placeholder="Handle del encargado"/>
-        </div>
-        <div class="field">
-          <label>Notas</label>
-          <textarea id="w_notes" placeholder="Notas internas del almacén..."></textarea>
-        </div>
+    <div class="alm-modal" role="dialog" aria-modal="true" aria-labelledby="alm-modal-title">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;">
+        <h3 id="alm-modal-title" style="margin:0;">Nuevo almacén</h3>
+      </div>
+      <div class="alm-modal-inner">
+        <form id="alm-form" class="alm-form">
+          <div class="field">
+            <label>Nombre del almacén</label>
+            <input id="w_name" type="text" required/>
+          </div>
+          <div class="field">
+            <label>Sistema</label>
+            <input id="w_system" type="text" placeholder="Ej: Stanton, Pyro..."/>
+          </div>
+          <div class="field">
+            <label>Ubicación</label>
+            <input id="w_location" type="text" placeholder="Ej: Orison, Lorville, ARK L1..."/>
+          </div>
+          <div class="field">
+            <label>Encargado</label>
+            <input id="w_manager" type="text" placeholder="Handle del encargado"/>
+          </div>
+          <div class="field">
+            <label>Notas</label>
+            <textarea id="w_notes" placeholder="Notas internas del almacén..."></textarea>
+          </div>
 
-        <div class="alm-modal-actions">
-          <button type="button" id="alm-modal-cancel" class="btn btn-secondary">
-            Cancelar
-          </button>
-          <button type="submit" id="alm-modal-save" class="btn btn-primary">
-            Guardar
-          </button>
-        </div>
-      </form>
+          <div class="alm-modal-actions">
+            <button type="button" id="alm-modal-cancel" class="btn btn-secondary">Cancelar</button>
+            <button type="submit" id="alm-modal-save" class="btn btn-primary">Guardar</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -613,7 +556,6 @@
 
       if (readOnly) {
         addBtn.disabled = true;
-        addBtn.classList.add('btn-disabled');
         editBtn.classList.add('btn-disabled');
       }
 
@@ -720,7 +662,6 @@
       async function loadInventory(warehouseId) {
         stockTbody.innerHTML = '<tr><td colspan="6">Cargando inventario...</td></tr>';
 
-        // 1) Stock actual del almacén
         const { data, error } = await supa
           .from('warehouse_items')
           .select(`
@@ -744,7 +685,6 @@
           return;
         }
 
-        // 2) Movimientos de stock pendientes (solicitudes aprobadas no completadas/canceladas)
         const { data: pendingReqs, error: pendingError } = await supa
           .from('requests')
           .select('item_id, quantity, request_type')
@@ -755,7 +695,6 @@
           console.error('Error cargando solicitudes pendientes para inventario:', pendingError);
         }
 
-        // Mapa commodity_id -> cantidad pendiente (compra = -, venta = +)
         const pendingMap = {};
         (pendingReqs || []).forEach(req => {
           const key = req.item_id;
@@ -763,13 +702,10 @@
           const qty = Number(req.quantity || 0);
           if (!qty) return;
 
-          // COMPRA: el usuario compra al almacén -> el almacén pierde stock -> negativo
-          // VENTA : el usuario vende al almacén -> el almacén gana stock -> positivo
           const delta = req.request_type === 'venta' ? qty : -qty;
           pendingMap[key] = (pendingMap[key] || 0) + delta;
         });
 
-        // 3) Pintar filas
         stockTbody.innerHTML = '';
         rows.forEach(row => {
           const cm = row.commodities_master || {};
@@ -787,7 +723,6 @@
           const tdQty = document.createElement('td');
           tdQty.textContent = row.quantity ?? 0;
 
-          // NUEVA COLUMNA: PENDIENTE
           const tdPend = document.createElement('td');
           tdPend.className = 'alm-pend-cell';
           const pendVal = pendingMap[row.commodity_id] || 0;
@@ -811,7 +746,7 @@
           pill.textContent =
             estado === 'critico'   ? 'Crítico' :
             estado === 'excedente' ? 'Excedente' :
-                                      'Seguro';
+                                     'Seguro';
           tdEstado.appendChild(pill);
 
           tr.appendChild(tdComm);
@@ -851,9 +786,6 @@
         if (error) {
           console.error('Error cargando solicitudes de almacén:', error);
           reqTbody.innerHTML = '<tr><td colspan="9">No se han podido cargar las solicitudes de este almacén.</td></tr>';
-       
-
-
           return;
         }
 
@@ -908,8 +840,7 @@
           const tdDetalle = document.createElement('td');
           const btnDetalle = document.createElement('button');
           btnDetalle.type = 'button';
-          btnDetalle.className = 'btn btn-secondary';
-          btnDetalle.style.padding = '0.2rem 0.6rem';
+          btnDetalle.className = 'btn btn-secondary btn-sm';
           btnDetalle.textContent = 'Ver';
           btnDetalle.addEventListener('click', (ev) => {
             ev.stopPropagation();
@@ -929,7 +860,6 @@
           okBtn.className = 'btn-icon ok';
           okBtn.innerHTML = '✔';
           okBtn.disabled = !canAct;
-          if (!canAct) okBtn.classList.add('btn-disabled');
           okBtn.addEventListener('click', async (ev) => {
             ev.stopPropagation();
             if (!canAct) return;
@@ -942,7 +872,6 @@
           koBtn.style.marginLeft = '0.25rem';
           koBtn.innerHTML = '✕';
           koBtn.disabled = !canAct;
-          if (!canAct) koBtn.classList.add('btn-disabled');
           koBtn.addEventListener('click', async (ev) => {
             ev.stopPropagation();
             if (!canAct) return;
@@ -1034,7 +963,6 @@
         };
 
         if (!editingWarehouseId) {
-          // Crear almacén
           const { data: inserted, error: insError } = await supa
             .from('warehouses')
             .insert(payload)
@@ -1049,7 +977,6 @@
 
           const newWarehouseId = inserted.id;
 
-          // Plantilla de commodities
           const { data: comms, error: commError } = await supa
             .from('commodities_master')
             .select('id');
@@ -1071,7 +998,6 @@
           currentWarehouseId = newWarehouseId;
           await selectWarehouse(newWarehouseId);
         } else {
-          // Editar existente
           const { error } = await supa
             .from('warehouses')
             .update(payload)
@@ -1094,12 +1020,10 @@
       });
 
       /* ───────────── 9) Lógica de entrega (Tesoro) ───────────── */
-
       async function maybeFinalizeRequest(reqRow, actorId) {
         const wSign = reqRow.warehouse_sign_result || 'pendiente';
         const rSign = reqRow.requester_sign_result || 'pendiente';
 
-        // Solo se completa si el estado es aprobada y ambas firmas son OK
         if (reqRow.status !== 'aprobada') return;
         if (!(wSign === 'ok' && rSign === 'ok')) return;
 
@@ -1129,13 +1053,7 @@
         const currentQty = Number(wiRow.quantity || 0);
         const qty = Number(reqRow.quantity || 0);
 
-        // MISMA LÓGICA QUE EN PENDIENTE:
-        // COMPRA → el almacén vende → pierde stock → delta negativo
-        // VENTA  → el almacén compra → gana stock → delta positivo
-        const delta = reqRow.request_type === 'venta'
-          ? qty   // venta → entra material
-          : -qty; // compra → sale material
-
+        const delta = reqRow.request_type === 'venta' ? qty : -qty;
         const newQty = currentQty + delta;
 
         const { error: updStockError } = await supa
@@ -1164,7 +1082,6 @@
           return;
         }
 
-        // 🔔 Notificación al solicitante: solicitud completada
         if (reqRow.requester_discord_id) {
           await supa.from('notifications').insert({
             user_id: reqRow.requester_discord_id,
@@ -1205,9 +1122,7 @@
           warehouse_sign_at: new Date().toISOString(),
           warehouse_sign_user: session.user.id
         };
-        if (!isPositive) {
-          payload.status = 'cancelada';
-        }
+        if (!isPositive) payload.status = 'cancelada';
 
         const { data: updated, error } = await supa
           .from('requests')
@@ -1235,7 +1150,6 @@
         if (!isPositive) {
           alert('Entrega cancelada por Tesoro. La solicitud ha pasado a estado "cancelada".');
 
-          // 🔔 Notificación al solicitante: entrega cancelada
           if (updated.requester_discord_id) {
             await supa.from('notifications').insert({
               user_id: updated.requester_discord_id,
@@ -1248,12 +1162,10 @@
             });
           }
         } else {
-          // Ambas firmas OK?
           const bothSigned =
             updated.warehouse_sign_result === 'ok' &&
             updated.requester_sign_result === 'ok';
 
-          // 🔔 Notificación al solicitante: Tesoro ha firmado la entrega (si aún falta su firma)
           if (!bothSigned && updated.requester_discord_id) {
             await supa.from('notifications').insert({
               user_id: updated.requester_discord_id,
@@ -1266,7 +1178,6 @@
             });
           }
 
-          // Intentar completar si ya están ambas firmas
           await maybeFinalizeRequest(updated, session.user.id);
         }
 
