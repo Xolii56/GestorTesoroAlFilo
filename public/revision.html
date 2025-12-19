@@ -86,35 +86,6 @@
       text-align:center;
     }
 
-    /* Chips (fallback si no hay TAGs casteados en esa vista) */
-    .tipo-chip{
-      display:inline-flex;
-      align-items:center;
-      padding:0.1rem 0.55rem;
-      border-radius:999px;
-      font-size:.75rem;
-      border:1px solid rgba(148,163,184,0.8);
-      opacity:.95;
-      white-space:nowrap;
-    }
-    .tipo-chip.compra{ border-color:rgba(34,197,94,0.9); }
-    .tipo-chip.venta { border-color:rgba(248,113,113,0.9); }
-
-    .badge-status{
-      display:inline-flex;
-      align-items:center;
-      padding:0.1rem 0.55rem;
-      border-radius:999px;
-      font-size:.75rem;
-      border:1px solid rgba(148,163,184,0.7);
-      white-space:nowrap;
-    }
-    .badge-status.pendiente   { border-color:rgba(250,204,21,0.9); }
-    .badge-status.aprobada    { border-color:rgba(34,197,94,0.9); }
-    .badge-status.rechazada   { border-color:rgba(248,113,113,0.9); }
-    .badge-status.completada  { border-color:rgba(56,189,248,0.9); }
-    .badge-status.cancelada   { border-color:rgba(248,113,113,0.9); }
-
     /* Acciones: botones redondos */
     .btn-icon{
       width:28px;height:28px;border-radius:999px;
@@ -212,7 +183,7 @@
       white-space:nowrap;
     }
 
-    /* Host del datepicker: que no “explote” dentro del modal */
+    /* Host del datepicker */
     .rev-date-host .date-picker{ width:100%; }
   </style>
 </head>
@@ -320,18 +291,15 @@
             <div class="field">
               <label>Fecha límite de entrega</label>
               <div id="rev-date-host" class="rev-date-host"></div>
-              <!-- (opcional) espejo ISO para debug -->
               <input id="rev-due-iso" type="hidden" value="" />
             </div>
           </div>
 
-          <!-- DERECHA: tabla de precios (NO stock por almacén) -->
+          <!-- DERECHA: precios -->
           <div>
             <div class="rev-price-wrap">
               <h4 class="rev-price-title">Precios</h4>
-              <div id="rev-stock-list">
-                <!-- JS: tabla de precios -->
-              </div>
+              <div id="rev-stock-list"></div>
               <p class="help-text" style="margin-top:.5rem;">
                 * Valores orientativos si hay datos de mercado disponibles.
               </p>
@@ -357,11 +325,11 @@
 
       function formatStatus(st) {
         const map = {
-          pendiente: 'pendiente',
-          aprobada: 'aprobada',
-          rechazada: 'rechazada',
-          completada: 'completada',
-          cancelada: 'cancelada'
+          pendiente: 'Pendiente',
+          aprobada: 'Aprobada',
+          rechazada: 'Rechazada',
+          completada: 'Completada',
+          cancelada: 'Cancelada'
         };
         return map[st] || st;
       }
@@ -370,6 +338,10 @@
         if (!tipo) return '-';
         return tipo === 'compra' ? 'Compra' : 'Venta';
       }
+
+      /* ✅ TAGs del sistema (los tuyos) */
+      function statusTagClass(st){ return `tag tag--${st}`; }
+      function tipoTagClass(tipo){ return (tipo === 'venta') ? 'tag tag--venta' : 'tag tag--compra'; }
 
       /* ───── 1) Sesión + org_status ───── */
       const { data: { session } } = await supa.auth.getSession();
@@ -391,7 +363,7 @@
         );
       }
 
-      /* ───── 2) Permisos módulo revisión ───── */
+      /* ───── 2) Permisos ───── */
       const { data: meRow, error: meError } = await supa
         .from('users')
         .select('tesoro_internal_role')
@@ -423,7 +395,7 @@
       }
       const readOnly = (revLevel === 1);
 
-      /* ───── 3) Datos auxiliares: usuarios + almacenes ───── */
+      /* ───── 3) Usuarios + almacenes ───── */
       const usersById = {};
       const { data: users, error: usersError } = await supa
         .from('users')
@@ -438,7 +410,7 @@
       if (whError) console.error('Error cargando almacenes:', whError);
       (warehouses || []).forEach(w => { warehousesById[w.id] = w; });
 
-      /* ───── 4) DOM tabla + modal ───── */
+      /* ───── 4) DOM ───── */
       const tbody         = document.getElementById('rev-tbody');
       const searchInput   = document.getElementById('rev-search');
 
@@ -451,12 +423,11 @@
       const revItem       = document.getElementById('rev-item');
       const revQty        = document.getElementById('rev-qty');
       const revPreferred  = document.getElementById('rev-preferred');
-      const revStockList  = document.getElementById('rev-stock-list'); // reutilizado como "Precios"
+      const revStockList  = document.getElementById('rev-stock-list');
 
       const warehouseSelect = document.getElementById('rev-warehouse-select');
       const dueIsoHidden    = document.getElementById('rev-due-iso');
 
-      // Rellenar select almacenes
       (warehouses || []).forEach(w => {
         const opt = document.createElement('option');
         opt.value = w.id;
@@ -465,8 +436,6 @@
       });
 
       /* ───────────── DAT-01 (casteado) + init ───────────── */
-
-      // Casteamos DAT-01 dentro del modal
       await loadComponentById('./components/dat-01.html', 'rev-date-host');
 
       function initDat01(pickerRoot, opts = {}) {
@@ -497,15 +466,11 @@
 
         function buildCalendar(target, year, month, selectedISO) {
           target.innerHTML = '';
-
           const first = new Date(year, month, 1);
           const last  = new Date(year, month + 1, 0);
-
-          // Lunes=0..Domingo=6
           const firstWeekday = (first.getDay() + 6) % 7;
           const daysInMonth = last.getDate();
 
-          // prev month fill
           const prevLast = new Date(year, month, 0).getDate();
           for (let i = 0; i < firstWeekday; i++) {
             const day = prevLast - (firstWeekday - 1 - i);
@@ -533,11 +498,9 @@
               el.classList.add('muted');
               el.disabled = true;
             }
-
             target.appendChild(el);
           }
 
-          // next month fill
           const total = firstWeekday + daysInMonth;
           const remain = (7 - (total % 7)) % 7;
           for (let i = 1; i <= remain; i++) {
@@ -636,18 +599,13 @@
 
         window.addEventListener('resize', () => { if (pickerRoot.classList.contains('open')) decidePopoverDirection(); });
         window.addEventListener('scroll', () => { if (pickerRoot.classList.contains('open')) decidePopoverDirection(); }, { passive:true });
-
         document.addEventListener('click', (e) => { if (!pickerRoot.contains(e.target)) close(); });
 
         render();
 
-        return {
-          setISO,
-          getISO: () => selectedISO
-        };
+        return { setISO, getISO: () => selectedISO };
       }
 
-      // Estado fecha
       let selectedDueDate = null;
       const datRoot = document.querySelector('#rev-date-host .date-picker');
       const datApi = initDat01(datRoot, {
@@ -665,19 +623,14 @@
         datApi?.setISO(iso);
       }
 
-      /* ───────────── Precios (tabla derecha del modal) ───────────── */
-
+      /* ───────────── Precios ───────────── */
       function fmtNum(n) {
         if (n === null || n === undefined || Number.isNaN(Number(n))) return '-';
         return Number(n).toFixed(2);
       }
 
       function renderPriceTable(model) {
-        const {
-          avgWarehouseSystem,
-          avgSystemAllWarehouses,
-          lastTxPrice
-        } = model;
+        const { avgWarehouseSystem, avgSystemAllWarehouses, lastTxPrice } = model;
 
         const table = document.createElement('table');
         table.className = 'rev-price-table';
@@ -697,24 +650,13 @@
             </tr>
           </tbody>
         `;
-
         revStockList.innerHTML = '';
         revStockList.appendChild(table);
       }
 
-      async function tryGetPriceDataFromTable(tableName, itemId, system, warehouseId) {
-        // Intento genérico:
-        // - Si existe tabla con columnas habituales: commodity_id/item_id, system, warehouse_id, price_per_scu, created_at
-        // - Calculamos promedios en JS.
+      async function tryGetPriceDataFromTable(tableName, itemId, system) {
         let q = supa.from(tableName).select('*').limit(500);
-
-        // posibles nombres de columnas
-        // commodity_id o item_id
-        // system o system_name
-        // warehouse_id
-        // price_per_scu o price
         q = q.or(`commodity_id.eq.${itemId},item_id.eq.${itemId}`);
-
         if (system) q = q.or(`system.eq.${system},system_name.eq.${system}`);
 
         const { data, error } = await q;
@@ -740,34 +682,20 @@
       }
 
       async function loadPricingForItem(itemId, warehouseId) {
-        // Requisito: usar el sistema del almacén seleccionado
-        if (!itemId) {
-          revStockList.textContent = 'Ítem no reconocido.';
-          return;
-        }
-        if (!warehouseId) {
-          revStockList.textContent = 'Selecciona un almacén para ver precios.';
-          return;
-        }
+        if (!itemId) { revStockList.textContent = 'Ítem no reconocido.'; return; }
+        if (!warehouseId) { revStockList.textContent = 'Selecciona un almacén para ver precios.'; return; }
 
         revStockList.textContent = 'Cargando precios...';
 
         const wh = warehousesById[warehouseId] || null;
         const system = (wh?.system || '').trim() || null;
 
-        // 1) Intentar leer snapshots de precios de alguna tabla (si existe).
-        //    Orden de preferencia (puedes ajustarla según tu esquema real):
-        const candidates = [
-          'warehouse_prices',
-          'commodity_prices',
-          'commodities_prices',
-          'uex_prices'
-        ];
+        const candidates = ['warehouse_prices','commodity_prices','commodities_prices','uex_prices'];
 
         let rowsPack = null;
         for (const t of candidates) {
-          const pack = await tryGetPriceDataFromTable(t, itemId, system, warehouseId);
-          if (pack) { rowsPack = pack; break; } // pack puede ser {rows:[]}
+          const pack = await tryGetPriceDataFromTable(t, itemId, system);
+          if (pack) { rowsPack = pack; break; }
         }
 
         let avgWarehouseSystem = null;
@@ -775,18 +703,12 @@
 
         if (rowsPack && rowsPack.rows && rowsPack.rows.length) {
           const rows = rowsPack.rows;
-
           const inSystem = system ? rows.filter(r => (r.system || '').toLowerCase() === system.toLowerCase()) : rows;
 
-          // “precio medio / SCU en el sistema del almacén”
-          // (si el dataset no distingue warehouse, al menos promediamos sistema)
           if (inSystem.length) {
-            const sum = inSystem.reduce((a,r) => a + r.price, 0);
-            avgWarehouseSystem = sum / inSystem.length;
+            avgWarehouseSystem = inSystem.reduce((a,r) => a + r.price, 0) / inSystem.length;
           }
 
-          // “precio medio / SCU del conjunto de almacenes en ese sistema”
-          // si hay warehouse_id, promediamos por warehouse (media de medias)
           const byWh = {};
           inSystem.forEach(r => {
             const k = r.warehouse_id || 'unknown';
@@ -801,8 +723,6 @@
           }
         }
 
-        // 2) Última transacción / SCU
-        //    Intentamos una tabla transaccional si existe; si no, dejamos '-'.
         let lastTxPrice = null;
         const txCandidates = ['commodity_transactions','treasury_transactions','market_transactions'];
         for (const t of txCandidates) {
@@ -845,9 +765,7 @@
         warehouseSelect.value = '';
         revStockList.textContent = 'Selecciona un almacén para ver precios.';
 
-        // Default: +7 días (como hacías con flatpickr)
         setDefaultDueDatePlusDays(7);
-
         modalBackdrop.style.display = 'flex';
       }
 
@@ -859,14 +777,13 @@
       revCancelBtn.addEventListener('click', (e) => { e.preventDefault(); closeModal(); });
       modalBackdrop.addEventListener('click', (e) => { if (e.target === modalBackdrop) closeModal(); });
 
-      // Cuando el usuario elige almacén en el pop-up → recalculamos precios
       warehouseSelect.addEventListener('change', async () => {
         if (!currentRequest) return;
         const warehouseId = warehouseSelect.value || '';
         await loadPricingForItem(currentRequest.item_id, warehouseId);
       });
 
-      /* ───── 5) Carga de solicitudes pendientes ───── */
+      /* ───── 5) Carga solicitudes pendientes ───── */
       async function loadPendingRequests() {
         const { data, error } = await supa
           .from('requests')
@@ -924,31 +841,15 @@
 
           const tr = document.createElement('tr');
 
-          const tdId = document.createElement('td');
-          tdId.textContent = `#${r.id}`;
-
-          const tdTipo = document.createElement('td');
-          const tipoKey = (r.request_type === 'venta') ? 'venta' : 'compra';
-          tdTipo.innerHTML = `<span class="tipo-chip ${tipoKey}">${renderTipo(r.request_type)}</span>`;
-
-          const tdItem = document.createElement('td');
-          tdItem.textContent = itemName;
-
-          const tdQty = document.createElement('td');
-          tdQty.textContent = r.quantity;
-
-          const tdReq = document.createElement('td');
-          tdReq.textContent = requesterName;
-
-          const tdCreated = document.createElement('td');
-          tdCreated.textContent = r.created_at ? new Date(r.created_at).toLocaleString() : '-';
-
-          const tdStatus = document.createElement('td');
-          const st = r.status || 'pendiente';
-          const span = document.createElement('span');
-          span.className = 'badge-status ' + st;
-          span.textContent = formatStatus(st);
-          tdStatus.appendChild(span);
+          tr.innerHTML = `
+            <td>#${r.id}</td>
+            <td><span class="${tipoTagClass(r.request_type)}">${renderTipo(r.request_type)}</span></td>
+            <td>${itemName}</td>
+            <td>${r.quantity}</td>
+            <td>${requesterName}</td>
+            <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
+            <td><span class="${statusTagClass(r.status || 'pendiente')}">${formatStatus(r.status || 'pendiente')}</span></td>
+          `;
 
           const tdDetalle = document.createElement('td');
           const btnDetalle = document.createElement('button');
@@ -960,6 +861,7 @@
             window.open(`./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`, '_blank', 'width=720,height=760');
           });
           tdDetalle.appendChild(btnDetalle);
+          tr.appendChild(tdDetalle);
 
           const tdAcc = document.createElement('td');
           const canAct = !readOnly;
@@ -987,10 +889,7 @@
             ev.stopPropagation();
             if (!canAct) return;
 
-            const okConfirm = confirm(
-              '¿Seguro que quieres rechazar esta solicitud?\n' +
-              'Esta acción no se puede deshacer.'
-            );
+            const okConfirm = confirm('¿Seguro que quieres rechazar esta solicitud?\nEsta acción no se puede deshacer.');
             if (!okConfirm) return;
 
             const { error } = await supa
@@ -1024,15 +923,6 @@
 
           tdAcc.appendChild(okBtn);
           tdAcc.appendChild(koBtn);
-
-          tr.appendChild(tdId);
-          tr.appendChild(tdTipo);
-          tr.appendChild(tdItem);
-          tr.appendChild(tdQty);
-          tr.appendChild(tdReq);
-          tr.appendChild(tdCreated);
-          tr.appendChild(tdStatus);
-          tr.appendChild(tdDetalle);
           tr.appendChild(tdAcc);
 
           tbody.appendChild(tr);
@@ -1050,7 +940,7 @@
 
       searchInput.addEventListener('input', renderTable);
 
-      /* ───── 6) Envío del formulario de aprobación ───── */
+      /* ───── 6) Aprobar ───── */
       revForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (readOnly) { alert('Tienes permisos de solo lectura en este módulo.'); return; }
@@ -1058,7 +948,6 @@
 
         const warehouseId = warehouseSelect.value;
         if (!warehouseId) { alert('Debes seleccionar un almacén.'); return; }
-
         if (!selectedDueDate) { alert('Debes seleccionar una fecha límite de entrega.'); return; }
 
         const dueDate = selectedDueDate.toISOString().split('T')[0];
@@ -1096,7 +985,6 @@
         await loadPendingRequests();
       });
 
-      /* ───── 7) Carga inicial ───── */
       await loadPendingRequests();
     });
   </script>
