@@ -137,34 +137,7 @@
     .alm-pend-pos{ color:#86efac; font-weight:700; }
     .alm-pend-neg{ color:#fca5a5; font-weight:700; }
 
-    /* Estado inventario (pill) */
-    .estado-pill{
-      display:inline-flex;
-      align-items:center;
-      padding:.12rem .6rem;
-      border-radius:999px;
-      font-size:.75rem;
-      border:1px solid rgba(148,163,184,0.45);
-      background:rgba(2,6,23,0.55);
-      white-space:nowrap;
-    }
-    .estado-pill.critico{
-      border-color:rgba(239,68,68,0.75);
-      color:#fecaca;
-      background:rgba(239,68,68,0.12);
-    }
-    .estado-pill.seguro{
-      border-color:rgba(34,197,94,0.75);
-      color:#bbf7d0;
-      background:rgba(34,197,94,0.12);
-    }
-    .estado-pill.excedente{
-      border-color:rgba(234,179,8,0.75);
-      color:#fef9c3;
-      background:rgba(234,179,8,0.12);
-    }
-
-    /* Centrado columnas en tabla solicitudes (como ya tenías) */
+    /* Centrado columnas en tabla solicitudes */
     .alm-req-table th:nth-child(2),
     .alm-req-table td:nth-child(2),
     .alm-req-table th:nth-child(5),
@@ -407,13 +380,6 @@
         return map[st] || st;
       }
 
-      function humanSignText(v) {
-        const val = v || 'pendiente';
-        if (val === 'ok') return 'Firmada en positivo';
-        if (val === 'ko') return 'Rechazada';
-        return 'Pendiente';
-      }
-
       /* ───────────── 1) Sesión + org_status ───────────── */
       const { data: { session } } = await supa.auth.getSession();
       if (!session) {
@@ -612,6 +578,12 @@
         return 'seguro';
       }
 
+      function estadoLabel(key){
+        if (key === 'critico') return 'Crítico';
+        if (key === 'excedente') return 'Excedente';
+        return 'Seguro';
+      }
+
       async function loadInventory(warehouseId) {
         stockTbody.innerHTML = '<tr><td colspan="6">Cargando inventario...</td></tr>';
 
@@ -654,7 +626,6 @@
           if (!key) return;
           const qty = Number(req.quantity || 0);
           if (!qty) return;
-
           const delta = req.request_type === 'venta' ? qty : -qty;
           pendingMap[key] = (pendingMap[key] || 0) + delta;
         });
@@ -692,15 +663,13 @@
           if (minVal || maxVal) rangeText = `${minVal || 0}-${maxVal || 0}`;
           tdRange.textContent = rangeText;
 
+          /* ✅ ESTADO con TUS TAGs */
           const tdEstado = document.createElement('td');
-          const pill = document.createElement('span');
-          const estado = calcEstado(row.quantity, minVal, maxVal);
-          pill.className = 'estado-pill ' + estado;
-          pill.textContent =
-            estado === 'critico'   ? 'Crítico' :
-            estado === 'excedente' ? 'Excedente' :
-                                     'Seguro';
-          tdEstado.appendChild(pill);
+          const estadoKey = calcEstado(row.quantity, minVal, maxVal); // critico / excedente / seguro
+          const tag = document.createElement('span');
+          tag.className = `tag tag--${estadoKey}`;
+          tag.textContent = estadoLabel(estadoKey);
+          tdEstado.appendChild(tag);
 
           tr.appendChild(tdComm);
           tr.appendChild(tdSym);
@@ -743,7 +712,6 @@
         }
 
         const rows = data || [];
-
         if (!rows.length) {
           reqTbody.innerHTML = '<tr><td colspan="9">No hay solicitudes pendientes de firma en este almacén.</td></tr>';
           return;
@@ -764,7 +732,6 @@
           const tdId = document.createElement('td');
           tdId.textContent = `#${r.id}`;
 
-          // ✅ TAG TIPO (tuyo)
           const tdTipo = document.createElement('td');
           const tipoKey = (r.request_type === 'venta') ? 'venta' : 'compra';
           const spanTipo = document.createElement('span');
@@ -784,7 +751,6 @@
           const tdDue = document.createElement('td');
           tdDue.textContent = r.due_date || '-';
 
-          // ✅ TAG ESTADO (tuyo)
           const tdStatus = document.createElement('td');
           const st = formatStatus(r.status || 'pendiente');
           const spanSt = document.createElement('span');
@@ -879,35 +845,17 @@
         modalBackdrop.style.display = 'flex';
       }
 
-      function closeModal() {
-        modalBackdrop.style.display = 'none';
-      }
+      function closeModal() { modalBackdrop.style.display = 'none'; }
 
-      addBtn.addEventListener('click', () => {
-        if (readOnly) return;
-        openModalForCreate();
-      });
+      addBtn.addEventListener('click', () => { if (!readOnly) openModalForCreate(); });
+      editBtn.addEventListener('click', () => { if (!readOnly) openModalForEdit(); });
 
-      editBtn.addEventListener('click', () => {
-        if (readOnly) return;
-        openModalForEdit();
-      });
-
-      modalCancel.addEventListener('click', (e) => {
-        e.preventDefault();
-        closeModal();
-      });
-
-      modalBackdrop.addEventListener('click', (e) => {
-        if (e.target === modalBackdrop) closeModal();
-      });
+      modalCancel.addEventListener('click', (e) => { e.preventDefault(); closeModal(); });
+      modalBackdrop.addEventListener('click', (e) => { if (e.target === modalBackdrop) closeModal(); });
 
       modalForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (readOnly) {
-          alert('Permisos de solo lectura.');
-          return;
-        }
+        if (readOnly) { alert('Permisos de solo lectura.'); return; }
 
         const payload = {
           name: wName.value.trim() || 'Almacén',
@@ -1003,7 +951,6 @@
 
         const currentQty = Number(wiRow.quantity || 0);
         const qty = Number(reqRow.quantity || 0);
-
         const delta = reqRow.request_type === 'venta' ? qty : -qty;
         const newQty = currentQty + delta;
 
