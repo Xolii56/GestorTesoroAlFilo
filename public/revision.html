@@ -632,16 +632,16 @@
         table.innerHTML = `
           <tbody>
             <tr>
-              <td class="rev-price-k">Precio medio / SCU (sistema del almacén)</td>
-              <td class="rev-price-v">${avgWarehouseSystem === null ? '-' : fmtNum(avgWarehouseSystem)} aUEC</td>
+              <td class="rev-price-k">Precio medio del sistema</td>
+              <td class="rev-price-v">${avgWarehouseSystem === null ? '-' : fmtNum(avgWarehouseSystem)} aUEC/SCU</td>
             </tr>
             <tr>
-              <td class="rev-price-k">Precio medio / SCU (almacenes del sistema)</td>
-              <td class="rev-price-v">${avgSystemAllWarehouses === null ? '-' : fmtNum(avgSystemAllWarehouses)} aUEC</td>
+              <td class="rev-price-k">Precio medio almacenes del sistema</td>
+              <td class="rev-price-v">${avgSystemAllWarehouses === null ? '-' : fmtNum(avgSystemAllWarehouses)} aUEC/SCU</td>
             </tr>
             <tr>
-              <td class="rev-price-k">Última transacción / SCU</td>
-              <td class="rev-price-v">${lastTxPrice === null ? '-' : fmtNum(lastTxPrice)} aUEC</td>
+              <td class="rev-price-k">Última transacción</td>
+              <td class="rev-price-v">${lastTxPrice === null ? '-' : fmtNum(lastTxPrice)} aUEC/SCU</td>
             </tr>
           </tbody>
         `;
