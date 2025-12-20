@@ -55,7 +55,7 @@
       font-family:inherit;
     }
 
-    /* Tabla principal */
+    /* Tabla */
     .rev-table{
       width:100%;
       border-collapse:collapse;
@@ -151,8 +151,16 @@
       flex-wrap:wrap;
     }
 
-    /* Wrap derecha */
-    .rev-side-wrap{
+    /* Host del datepicker */
+    .rev-date-host .date-picker{ width:100%; }
+
+    /* ✅ DERECHA: 2 TABLAS SEPARADAS + ALERTA SEPARADA */
+    .rev-side-stack{
+      display:flex;
+      flex-direction:column;
+      gap:.65rem;
+    }
+    .rev-side-box{
       border:1px solid rgba(148,163,184,0.28);
       border-radius:0.8rem;
       padding:.75rem .85rem;
@@ -165,13 +173,6 @@
       letter-spacing:.06em;
       margin:0 0 .5rem 0;
     }
-    .rev-side-sep{
-      height:1px;
-      background:rgba(148,163,184,0.22);
-      margin:.7rem 0;
-    }
-
-    /* Tablas del lado derecho (mismo tamaño visual, PERO dos tablas distintas) */
     .rev-mini-table{
       width:100%;
       border-collapse:collapse;
@@ -189,9 +190,7 @@
       font-variant-numeric:tabular-nums;
       white-space:nowrap;
     }
-
-    /* Host del datepicker */
-    .rev-date-host .date-picker{ width:100%; }
+    .rev-alert-block{ margin-top:.1rem; }
   </style>
 </head>
 
@@ -238,7 +237,9 @@
                 <th>Acciones</th>
               </tr>
             </thead>
-            <tbody id="rev-tbody"></tbody>
+            <tbody id="rev-tbody">
+              <!-- JS -->
+            </tbody>
           </table>
         </div>
       </div>
@@ -296,30 +297,32 @@
             </div>
           </div>
 
-          <!-- DERECHA: 2 TABLAS + ALERTA -->
-          <div>
-            <div class="rev-side-wrap">
-              <!-- TABLA 1: PRECIOS -->
+          <!-- ✅ DERECHA: 2 TABLAS + ALERTA (BLOQUES SEPARADOS) -->
+          <div class="rev-side-stack">
+
+            <!-- TABLA 1: PRECIOS -->
+            <div class="rev-side-box">
               <h4 class="rev-side-title">Precios</h4>
               <table class="rev-mini-table" aria-label="Precios">
                 <tbody id="rev-price-tbody">
-                  <tr><td class="rev-mini-k">Cargando...</td><td class="rev-mini-v">-</td></tr>
+                  <tr><td class="rev-mini-k">Selecciona un almacén</td><td class="rev-mini-v">-</td></tr>
                 </tbody>
               </table>
+            </div>
 
-              <div class="rev-side-sep"></div>
-
-              <!-- TABLA 2: STOCK POR ALMACÉN -->
+            <!-- TABLA 2: STOCK POR ALMACÉN -->
+            <div class="rev-side-box">
               <h4 class="rev-side-title">Stock por almacén</h4>
               <table class="rev-mini-table" aria-label="Stock por almacén">
                 <tbody id="rev-stock-tbody">
                   <tr><td class="rev-mini-k">—</td><td class="rev-mini-v">—</td></tr>
                 </tbody>
               </table>
-
-              <!-- ALERTA ALR-02 DEBAJO (NO DENTRO DE NINGUNA TABLA) -->
-              <div id="rev-alr-host" style="display:none; margin-top:.65rem;"></div>
             </div>
+
+            <!-- ALERTA (ALR-02) SEPARADA -->
+            <div id="rev-alr-host" class="rev-alert-block" style="display:none;"></div>
+
           </div>
         </div>
 
@@ -355,7 +358,7 @@
         return tipo === 'compra' ? 'Compra' : 'Venta';
       }
 
-      /* ✅ TAGs del sistema */
+      /* ✅ TAGs del sistema (los tuyos) */
       function statusTagClass(st){ return `tag tag--${st}`; }
       function tipoTagClass(tipo){ return (tipo === 'venta') ? 'tag tag--venta' : 'tag tag--compra'; }
 
@@ -413,8 +416,10 @@
 
       /* ───── 3) Usuarios + almacenes ───── */
       const usersById = {};
-      const { data: users } = await supa.from('users').select('id, handle_name, discord_username');
-      (users || []).forEach(u => { usersById[u.id] = u; });
+      const { data: users, error: usersError } = await supa
+        .from('users')
+        .select('id, handle_name, discord_username');
+      if (!usersError && users) users.forEach(u => { usersById[u.id] = u; });
 
       const warehousesById = {};
       const { data: warehouses, error: whError } = await supa
@@ -438,12 +443,13 @@
       const revQty        = document.getElementById('rev-qty');
       const revPreferred  = document.getElementById('rev-preferred');
 
+      const priceTbody    = document.getElementById('rev-price-tbody');
+      const stockTbody    = document.getElementById('rev-stock-tbody');
+
       const warehouseSelect = document.getElementById('rev-warehouse-select');
       const dueIsoHidden    = document.getElementById('rev-due-iso');
 
-      const priceTbody = document.getElementById('rev-price-tbody');
-      const stockTbody = document.getElementById('rev-stock-tbody');
-      const alrHost    = document.getElementById('rev-alr-host');
+      const alrHost = document.getElementById('rev-alr-host');
 
       (warehouses || []).forEach(w => {
         const opt = document.createElement('option');
@@ -640,59 +646,15 @@
         datApi?.setISO(iso);
       }
 
-      /* ───────────── ALR-02 (casteada de verdad) ───────────── */
-      await loadComponentById('./components/alr-02.html', 'rev-alr-host');
-      alrHost.style.display = 'none';
-
-      const ALR_MSG = 'El stock disponible en el almacen seleccionado es menor a la cantidad demandada de ese material';
-
-      function forceSetAlertText(root, message){
-        if (!root) return;
-
-        // 1) intentamos slots típicos
-        const preferred =
-          root.querySelector('[data-slot="message"]') ||
-          root.querySelector('[data-slot="text"]') ||
-          root.querySelector('[data-slot="body"]') ||
-          root.querySelector('.alr__message') ||
-          root.querySelector('.alr__text') ||
-          root.querySelector('.alert__message') ||
-          root.querySelector('.alert__text');
-
-        if (preferred) { preferred.textContent = message; return; }
-
-        // 2) si el componente no tiene slot claro: sobreescribimos el primer bloque de texto "razonable"
-        const candidates = Array.from(root.querySelectorAll('p, div, span'))
-          .filter(el => {
-            const t = (el.textContent || '').trim();
-            return t.length >= 8 && t.length <= 160;
-          });
-
-        if (candidates.length) {
-          candidates[0].textContent = message;
-          return;
-        }
-
-        // 3) último recurso: metemos un <p>
-        const p = document.createElement('p');
-        p.style.margin = '0';
-        p.textContent = message;
-        root.appendChild(p);
-      }
-
-      forceSetAlertText(alrHost, ALR_MSG);
-
-      function showInsufficientStockAlert(show){
-        alrHost.style.display = show ? 'block' : 'none';
-      }
-
-      /* ───────────── TABLA 1: PRECIOS ───────────── */
+      /* ───────────── Precios (tabla 1) ───────────── */
       function fmtNum(n) {
         if (n === null || n === undefined || Number.isNaN(Number(n))) return '-';
         return Number(n).toFixed(2);
       }
 
-      function paintPrices({ avgWarehouseSystem, avgSystemAllWarehouses, lastTxPrice }){
+      function renderPriceRows(model) {
+        const { avgWarehouseSystem, avgSystemAllWarehouses, lastTxPrice } = model;
+
         priceTbody.innerHTML = `
           <tr>
             <td class="rev-mini-k">Precio medio del sistema</td>
@@ -737,8 +699,14 @@
       }
 
       async function loadPricingForItem(itemId, warehouseId) {
-        if (!itemId) { priceTbody.innerHTML = `<tr><td class="rev-mini-k">Ítem no reconocido.</td><td class="rev-mini-v">-</td></tr>`; return; }
-        if (!warehouseId) { priceTbody.innerHTML = `<tr><td class="rev-mini-k">Selecciona un almacén.</td><td class="rev-mini-v">-</td></tr>`; return; }
+        if (!itemId) {
+          priceTbody.innerHTML = `<tr><td class="rev-mini-k">Ítem no reconocido</td><td class="rev-mini-v">-</td></tr>`;
+          return;
+        }
+        if (!warehouseId) {
+          priceTbody.innerHTML = `<tr><td class="rev-mini-k">Selecciona un almacén</td><td class="rev-mini-v">-</td></tr>`;
+          return;
+        }
 
         priceTbody.innerHTML = `<tr><td class="rev-mini-k">Cargando...</td><td class="rev-mini-v">-</td></tr>`;
 
@@ -796,37 +764,19 @@
           }
         }
 
-        paintPrices({ avgWarehouseSystem, avgSystemAllWarehouses, lastTxPrice });
+        renderPriceRows({ avgWarehouseSystem, avgSystemAllWarehouses, lastTxPrice });
       }
 
-      /* ───────────── TABLA 2: STOCK POR ALMACÉN ───────────── */
-      function fmtInt(n){
-        const x = Number(n);
-        return Number.isFinite(x) ? String(Math.trunc(x)) : '-';
-      }
-
-      function paintStockTable(stockRows, selectedWarehouseId){
-        stockTbody.innerHTML = '';
-
-        if (!stockRows || !stockRows.length){
-          stockTbody.innerHTML = `<tr><td class="rev-mini-k">Sin datos.</td><td class="rev-mini-v">-</td></tr>`;
+      /* ───────────── Stock por almacén (tabla 2) ───────────── */
+      async function loadStockByWarehouse(itemId) {
+        if (!itemId) {
+          stockTbody.innerHTML = `<tr><td class="rev-mini-k">Ítem no reconocido</td><td class="rev-mini-v">-</td></tr>`;
           return;
         }
 
-        stockRows.forEach(r => {
-          const tr = document.createElement('tr');
-          if (selectedWarehouseId && r.warehouse_id === selectedWarehouseId){
-            tr.style.fontWeight = '700';
-          }
-          tr.innerHTML = `
-            <td class="rev-mini-k">${r.warehouse_name}</td>
-            <td class="rev-mini-v">${fmtInt(r.stock)} SCU</td>
-          `;
-          stockTbody.appendChild(tr);
-        });
-      }
+        stockTbody.innerHTML = `<tr><td class="rev-mini-k">Cargando...</td><td class="rev-mini-v">-</td></tr>`;
 
-      async function loadStockByWarehousesForItem(itemId){
+        // Traemos stock para ese commodity en TODOS los almacenes
         const { data, error } = await supa
           .from('warehouse_items')
           .select('warehouse_id, quantity')
@@ -834,34 +784,108 @@
 
         if (error) {
           console.error('Error cargando stock por almacén:', error);
-          return [];
+          stockTbody.innerHTML = `<tr><td class="rev-mini-k">Error cargando stock</td><td class="rev-mini-v">-</td></tr>`;
+          return;
         }
 
-        const qtyByWh = {};
-        (data || []).forEach(x => { qtyByWh[x.warehouse_id] = Number(x.quantity || 0); });
-
-        return (warehouses || []).map(w => ({
-          warehouse_id: w.id,
-          warehouse_name: w.name || 'Almacén',
-          stock: qtyByWh[w.id] ?? 0
+        const rows = (data || []).map(r => ({
+          warehouse_id: r.warehouse_id,
+          quantity: Number(r.quantity || 0)
         }));
+
+        // Orden por nombre de almacén
+        rows.sort((a,b) => {
+          const an = (warehousesById[a.warehouse_id]?.name || '').toLowerCase();
+          const bn = (warehousesById[b.warehouse_id]?.name || '').toLowerCase();
+          return an.localeCompare(bn);
+        });
+
+        if (!rows.length) {
+          stockTbody.innerHTML = `<tr><td class="rev-mini-k">Sin stock registrado</td><td class="rev-mini-v">-</td></tr>`;
+          return;
+        }
+
+        stockTbody.innerHTML = '';
+        rows.forEach(r => {
+          const wName = warehousesById[r.warehouse_id]?.name || (r.warehouse_id || '—');
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="rev-mini-k">${wName}</td>
+            <td class="rev-mini-v">${r.quantity} SCU</td>
+          `;
+          stockTbody.appendChild(tr);
+        });
       }
 
-      function isInsufficientStock({ requestType, requestedQty, selectedWarehouseId, stockRows }){
-        if (requestType !== 'compra') return false;
-        if (!selectedWarehouseId) return false;
+      async function getSelectedWarehouseStock(itemId, warehouseId) {
+        if (!itemId || !warehouseId) return null;
+        const { data, error } = await supa
+          .from('warehouse_items')
+          .select('quantity')
+          .eq('commodity_id', itemId)
+          .eq('warehouse_id', warehouseId)
+          .maybeSingle();
+        if (error) return null;
+        if (!data) return 0;
+        return Number(data.quantity || 0);
+      }
 
-        const row = stockRows.find(r => r.warehouse_id === selectedWarehouseId);
-        const available = Number(row?.stock ?? 0);
-        const needed = Number(requestedQty ?? 0);
+      /* ───────────── Alert (ALR-02) ───────────── */
+      let alrLoaded = false;
 
-        return Number.isFinite(needed) && needed > available;
+      function setAlertMessage(host, msg) {
+        if (!host) return;
+
+        const slot =
+          host.querySelector('[data-slot="message"]') ||
+          host.querySelector('.alr-message') ||
+          host.querySelector('.alert-message') ||
+          host.querySelector('p');
+
+        if (slot) slot.textContent = msg;
+      }
+
+      async function showLowStockAlert() {
+        if (!alrLoaded) {
+          await loadComponentById('./components/alr-02.html', 'rev-alr-host');
+          alrLoaded = true;
+        }
+        setAlertMessage(
+          alrHost,
+          'El stock disponible en el almacén seleccionado es menor a la cantidad demandada de ese material'
+        );
+        alrHost.style.display = 'block';
+      }
+
+      function hideLowStockAlert() {
+        alrHost.style.display = 'none';
+      }
+
+      async function refreshAlertState() {
+        if (!currentRequest) { hideLowStockAlert(); return; }
+
+        // Solo compras
+        if ((currentRequest.request_type || 'compra') !== 'compra') {
+          hideLowStockAlert();
+          return;
+        }
+
+        const whId = warehouseSelect.value || '';
+        if (!whId) { hideLowStockAlert(); return; }
+
+        const qtyNeed = Number(currentRequest.quantity || 0);
+        const stock = await getSelectedWarehouseStock(currentRequest.item_id, whId);
+
+        if (stock !== null && stock < qtyNeed) {
+          await showLowStockAlert();
+        } else {
+          hideLowStockAlert();
+        }
       }
 
       /* ───── modal open/close ───── */
       let pendingRequests = [];
       let currentRequest  = null;
-      let cachedStockRows = [];
 
       async function openModalForRequest(r, itemName, requesterName) {
         currentRequest = r;
@@ -878,26 +902,22 @@
         revPreferred.value = preferredName;
 
         warehouseSelect.value = '';
-
-        // Tabla 1: precios
-        priceTbody.innerHTML = `<tr><td class="rev-mini-k">Selecciona un almacén.</td><td class="rev-mini-v">-</td></tr>`;
-
-        // Tabla 2: stock (carga por item)
+        priceTbody.innerHTML = `<tr><td class="rev-mini-k">Selecciona un almacén</td><td class="rev-mini-v">-</td></tr>`;
         stockTbody.innerHTML = `<tr><td class="rev-mini-k">Cargando...</td><td class="rev-mini-v">-</td></tr>`;
-        cachedStockRows = await loadStockByWarehousesForItem(r.item_id);
-        paintStockTable(cachedStockRows, '');
-
-        // Alerta oculta por defecto
-        showInsufficientStockAlert(false);
+        hideLowStockAlert();
 
         setDefaultDueDatePlusDays(7);
+
+        // ✅ cargar tabla 2: stock por almacén al abrir (independiente del almacén seleccionado)
+        await loadStockByWarehouse(currentRequest.item_id);
+
         modalBackdrop.style.display = 'flex';
       }
 
       function closeModal() {
         modalBackdrop.style.display = 'none';
         currentRequest = null;
-        cachedStockRows = [];
+        hideLowStockAlert();
       }
 
       revCancelBtn.addEventListener('click', (e) => { e.preventDefault(); closeModal(); });
@@ -905,23 +925,9 @@
 
       warehouseSelect.addEventListener('change', async () => {
         if (!currentRequest) return;
-
         const warehouseId = warehouseSelect.value || '';
-
-        // Tabla 1 (precios)
         await loadPricingForItem(currentRequest.item_id, warehouseId);
-
-        // Tabla 2 (stock) + highlight almacén seleccionado
-        paintStockTable(cachedStockRows, warehouseId);
-
-        // Alerta ALR-02: solo compra y si no hay stock
-        const insufficient = isInsufficientStock({
-          requestType: currentRequest.request_type,
-          requestedQty: currentRequest.quantity,
-          selectedWarehouseId: warehouseId,
-          stockRows: cachedStockRows
-        });
-        showInsufficientStockAlert(insufficient);
+        await refreshAlertState();
       });
 
       /* ───── 5) Carga solicitudes pendientes ───── */
