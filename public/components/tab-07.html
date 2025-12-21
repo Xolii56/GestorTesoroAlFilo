@@ -1,0 +1,55 @@
+<!-- TAB-07 · Tabla solicitudes generales -->
+<div class="table-container" data-component="tab-07">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Tipo</th>
+        <th>Activo</th>
+        <th>Solicitante</th>
+        <th>Estado</th>
+        <th>Creada</th>
+        <th>Cerrada</th>
+        <th>Detalle</th>
+      </tr>
+    </thead>
+
+    <tbody data-slot="tbody">
+      <!-- Filas dinámicas desde JS -->
+    </tbody>
+  </table>
+
+  <!-- Template de fila -->
+  <template data-template="row">
+    <tr>
+      <td data-slot="id">#—</td>
+
+      <td>
+        <span data-slot="tipo" class="tag">—</span>
+      </td>
+
+      <td>
+        <span data-slot="activo" class="tag">—</span>
+      </td>
+
+      <td data-slot="solicitante">—</td>
+
+      <td>
+        <span data-slot="estado" class="tag">—</span>
+      </td>
+
+      <td data-slot="creada">—</td>
+
+      <td data-slot="cerrada">—</td>
+
+      <td>
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          data-slot="detalle-btn">
+          Ver
+        </button>
+      </td>
+    </tr>
+  </template>
+</div>
