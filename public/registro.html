@@ -41,12 +41,12 @@
     }
     .reg-toolbar-group{
       display:flex;
-      gap:.4rem;
+      gap:.45rem;
       flex-wrap:wrap;
       align-items:center;
     }
 
-    /* Buscador / select con look del sistema (similar a otros módulos) */
+    /* Buscador / selects con look del sistema */
     .reg-toolbar input[type="search"],
     .reg-toolbar select{
       padding:0.35rem 0.55rem;
@@ -59,7 +59,21 @@
       outline:none;
     }
 
-    /* Ajuste por si TAB-07 no trae centrados algunos th/td */
+    /* Hosts datepicker */
+    .reg-date-host{
+      display:flex;
+      align-items:center;
+    }
+    .reg-date-host .date-picker{
+      width: 210px;
+    }
+    @media (max-width: 520px){
+      .reg-date-host .date-picker{
+        width: 100%;
+      }
+    }
+
+    /* Ajuste centrados por si TAB-07 no lo hace */
     .reg-table-center th:nth-child(2),
     .reg-table-center td:nth-child(2),
     .reg-table-center th:nth-child(3),
@@ -112,6 +126,28 @@
             <option value="cancelada">Cancelada</option>
             <option value="completada">Completada</option>
           </select>
+
+          <select id="filtro-tipo">
+            <option value="todas">Todos los tipos</option>
+            <option value="compra">Compra</option>
+            <option value="venta">Venta</option>
+          </select>
+
+          <select id="filtro-activo">
+            <option value="todas">Todos los activos</option>
+            <option value="commodities">Commodities</option>
+            <option value="prestamo">Préstamo</option>
+            <option value="taller">Taller</option>
+            <option value="armeria">Armería</option>
+          </select>
+
+          <!-- Date pickers (DAT-01) -->
+          <div id="date-from-host" class="reg-date-host" title="Desde"></div>
+          <div id="date-to-host" class="reg-date-host" title="Hasta"></div>
+
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-clear-filters">
+            Limpiar filtros
+          </button>
         </div>
       </div>
 
@@ -121,7 +157,7 @@
     </div>
   </main>
 
-  <!-- CAST: TAB-07 -->
+  <!-- CAST: TAB-07 + DAT-01 x2 -->
   <script type="module">
     import { loadComponentById } from './modules/ui_components.js';
 
@@ -142,13 +178,21 @@
     await loadComponentById('./components/tab-07.html', 'cmp-tab-07');
     ensureTbodyId('cmp-tab-07', 'reg-tbody');
 
-    // Si TAB-07 trae la tabla con clase "table", le añadimos un helper para centrados (sin romper estilos)
     const host = document.getElementById('cmp-tab-07');
     const table = host?.querySelector('table');
     if (table) table.classList.add('reg-table-center');
+
+    await loadComponentById('./components/dat-01.html', 'date-from-host');
+    await loadComponentById('./components/dat-01.html', 'date-to-host');
+
+    // Etiquetas visuales distintas en placeholders (si existen)
+    const fromInput = document.querySelector('#date-from-host .date-input');
+    const toInput   = document.querySelector('#date-to-host .date-input');
+    if (fromInput) fromInput.placeholder = 'Desde...';
+    if (toInput)   toInput.placeholder   = 'Hasta...';
   </script>
 
-  <!-- LÓGICA (MISMA IDEA, adaptada a columnas de TAB-07; sin inventar flujos nuevos) -->
+  <!-- LÓGICA -->
   <script type="module">
     import { getOrgStatus } from "./modules/profile.js";
 
@@ -171,14 +215,12 @@
         return tipo === "compra" ? "Compra" : "Venta";
       }
 
-      /* ✅ TAGs del sistema (los tuyos) */
+      /* ✅ TAGs del sistema */
       function statusTagClass(st){ return `tag tag--${st}`; }
       function tipoTagClass(tipo){ return (tipo === "venta") ? "tag tag--venta" : "tag tag--compra"; }
 
-      // Activo: por ahora Registro se nutre de requests (commodities). Dejamos preparado el tag por si ya existe CSS.
+      // Activo (por ahora: requests -> commodities)
       function activoTagClass(activoKey){
-        // Si en style_prueba.css ya tienes modificadores, engancha aquí sin tocar el resto del módulo.
-        // fallback seguro: tag--info (si existe) o tag base.
         if (!activoKey) return "tag tag--info";
         return `tag tag--${activoKey}`;
       }
@@ -217,13 +259,11 @@
       }
 
       /* ───────────── 2) Permisos ───────────── */
-      const { data: meRow, error: meError } = await supa
+      const { data: meRow } = await supa
         .from("users")
         .select("tesoro_internal_role")
         .eq("id", session.user.id)
         .maybeSingle();
-
-      if (meError) console.error("Error leyendo rol interno:", meError);
 
       let myRole = meRow?.tesoro_internal_role || null;
       if (typeof myRole === "string") myRole = myRole.trim();
@@ -264,14 +304,204 @@
         return u?.handle_name || u?.discord_username || idStr || "-";
       }
 
-      /* ───────────── 4) DOM ───────────── */
+      /* ───────────── 4) Datepicker DAT-01 (misma implementación que usas en revisión) ───────────── */
+      function initDat01(pickerRoot, opts = {}) {
+        if (!pickerRoot) return null;
+
+        const input = pickerRoot.querySelector('.date-input');
+        const popover = pickerRoot.querySelector('.date-popover');
+        const monthLabel = pickerRoot.querySelector('.date-month');
+        const grid = pickerRoot.querySelector('.date-grid');
+        const navs = pickerRoot.querySelectorAll('.date-nav');
+        const btnClear = pickerRoot.querySelector('.date-clear');
+        const btnToday = pickerRoot.querySelector('.date-today');
+        const btnPlus = pickerRoot.querySelectorAll('.date-plus');
+
+        const locale = pickerRoot.dataset.locale || 'es-ES';
+        const monthNames = new Intl.DateTimeFormat(locale, { month: 'long' });
+
+        const pad2 = (n) => String(n).padStart(2, '0');
+        const toISO = (d) => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+        const formatDisplay = (iso) => {
+          if (!iso) return '';
+          const [y,m,d] = iso.split('-').map(Number);
+          const dt = new Date(y, m-1, d);
+          return new Intl.DateTimeFormat(locale, { year:'numeric', month:'2-digit', day:'2-digit' }).format(dt);
+        };
+
+        const minToday = !!opts.minToday;
+
+        function buildCalendar(target, year, month, selectedISO) {
+          target.innerHTML = '';
+          const first = new Date(year, month, 1);
+          const last  = new Date(year, month + 1, 0);
+          const firstWeekday = (first.getDay() + 6) % 7;
+          const daysInMonth = last.getDate();
+
+          const prevLast = new Date(year, month, 0).getDate();
+          for (let i = 0; i < firstWeekday; i++) {
+            const day = prevLast - (firstWeekday - 1 - i);
+            const el = document.createElement('button');
+            el.type = 'button';
+            el.className = 'date-day muted';
+            el.textContent = day;
+            target.appendChild(el);
+          }
+
+          const todayISO = toISO(new Date());
+
+          for (let d = 1; d <= daysInMonth; d++) {
+            const iso = `${year}-${pad2(month+1)}-${pad2(d)}`;
+            const el = document.createElement('button');
+            el.type = 'button';
+            el.className = 'date-day';
+            el.dataset.iso = iso;
+            el.textContent = d;
+
+            if (iso === selectedISO) el.classList.add('selected');
+            if (iso === todayISO) el.classList.add('today');
+
+            if (minToday && iso < todayISO) {
+              el.classList.add('muted');
+              el.disabled = true;
+            }
+            target.appendChild(el);
+          }
+
+          const total = firstWeekday + daysInMonth;
+          const remain = (7 - (total % 7)) % 7;
+          for (let i = 1; i <= remain; i++) {
+            const el = document.createElement('button');
+            el.type = 'button';
+            el.className = 'date-day muted';
+            el.textContent = i;
+            target.appendChild(el);
+          }
+        }
+
+        function decidePopoverDirection() {
+          const rect = pickerRoot.getBoundingClientRect();
+          const viewportH = window.innerHeight || document.documentElement.clientHeight;
+
+          const wasHidden = !pickerRoot.classList.contains('open');
+          if (wasHidden) {
+            pickerRoot.classList.add('open');
+            popover.setAttribute('aria-hidden', 'false');
+          }
+
+          const popH = popover.getBoundingClientRect().height;
+
+          if (wasHidden) {
+            pickerRoot.classList.remove('open');
+            popover.setAttribute('aria-hidden', 'true');
+          }
+
+          const spaceBelow = viewportH - rect.bottom;
+          const spaceAbove = rect.top;
+
+          const needsUp = spaceBelow < (popH + 12) && spaceAbove > spaceBelow;
+          pickerRoot.classList.toggle('open-up', needsUp);
+        }
+
+        let view = new Date();
+        view.setDate(1);
+
+        let selectedISO = '';
+
+        function render() {
+          const y = view.getFullYear();
+          const m = view.getMonth();
+          const monthText = monthNames.format(new Date(y, m, 1));
+          monthLabel.textContent = `${monthText.charAt(0).toUpperCase()}${monthText.slice(1)} ${y}`;
+          buildCalendar(grid, y, m, selectedISO);
+        }
+
+        function open() { decidePopoverDirection(); pickerRoot.classList.add('open'); popover.setAttribute('aria-hidden','false'); }
+        function close(){ pickerRoot.classList.remove('open'); popover.setAttribute('aria-hidden','true'); }
+        function toggle(){ pickerRoot.classList.contains('open') ? close() : open(); }
+
+        function setISO(iso) {
+          selectedISO = iso || '';
+          input.value = formatDisplay(selectedISO);
+          if (selectedISO) {
+            const [y,m] = selectedISO.split('-');
+            view = new Date(Number(y), Number(m)-1, 1);
+          }
+          render();
+          close();
+          if (typeof opts.onChange === 'function') opts.onChange(selectedISO);
+        }
+
+        input.addEventListener('click', toggle);
+
+        navs.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const dir = Number(btn.dataset.dir || 0);
+            view.setMonth(view.getMonth() + dir);
+            view.setDate(1);
+            render();
+            if (pickerRoot.classList.contains('open')) decidePopoverDirection();
+          });
+        });
+
+        grid.addEventListener('click', (e) => {
+          const t = e.target;
+          if (!t.classList.contains('date-day')) return;
+          if (t.classList.contains('muted')) return;
+          const iso = t.dataset.iso;
+          if (!iso) return;
+          setISO(iso);
+        });
+
+        btnClear?.addEventListener('click', () => setISO(''));
+        btnToday?.addEventListener('click', () => setISO(toISO(new Date())));
+        btnPlus?.forEach(b => {
+          b.addEventListener('click', () => {
+            const days = Number(b.dataset.days || 0);
+            const now = new Date();
+            now.setDate(now.getDate() + days);
+            setISO(toISO(now));
+          });
+        });
+
+        window.addEventListener('resize', () => { if (pickerRoot.classList.contains('open')) decidePopoverDirection(); });
+        window.addEventListener('scroll', () => { if (pickerRoot.classList.contains('open')) decidePopoverDirection(); }, { passive:true });
+        document.addEventListener('click', (e) => { if (!pickerRoot.contains(e.target)) close(); });
+
+        render();
+
+        return { setISO, getISO: () => selectedISO };
+      }
+
+      /* ───────────── 5) DOM filtros ───────────── */
       const tbody = document.getElementById("reg-tbody");
-      const filtro = document.getElementById("filtro-estado");
-      const buscador = document.getElementById("buscador");
+
+      const filtroEstado = document.getElementById("filtro-estado");
+      const filtroTipo   = document.getElementById("filtro-tipo");
+      const filtroActivo = document.getElementById("filtro-activo");
+      const buscador     = document.getElementById("buscador");
+      const btnClear     = document.getElementById("btn-clear-filters");
+
+      // date pickers
+      const fromRoot = document.querySelector('#date-from-host .date-picker');
+      const toRoot   = document.querySelector('#date-to-host .date-picker');
+
+      let isoFrom = ""; // YYYY-MM-DD
+      let isoTo   = ""; // YYYY-MM-DD
+
+      const dpFrom = initDat01(fromRoot, {
+        minToday: false,
+        onChange: (iso) => { isoFrom = iso || ""; renderTable(); }
+      });
+
+      const dpTo = initDat01(toRoot, {
+        minToday: false,
+        onChange: (iso) => { isoTo = iso || ""; renderTable(); }
+      });
 
       let allRequests = [];
 
-      /* ───────────── 5) Load data (misma fuente actual: requests) ───────────── */
+      /* ───────────── 6) Load data (requests = commodities) ───────────── */
       async function loadRequests() {
         const { data, error } = await supa
           .from("requests")
@@ -305,28 +535,57 @@
 
         if (st === "completada") return r.completed_at || r.requester_sign_at || r.warehouse_sign_at;
         if (st === "cancelada") return r.requester_sign_at || r.warehouse_sign_at;
-        // "rechazada" no tiene campo dedicado en este módulo original; mantenemos la lógica conservadora:
         if (st === "rechazada") return r.approved_at || r.created_at;
 
         return null;
       }
 
+      function isoFromDateTime(dtStr){
+        if (!dtStr) return "";
+        // created_at viene ISO -> YYYY-MM-DD
+        return String(dtStr).slice(0,10);
+      }
+
+      function withinRange(createdISO){
+        if (!createdISO) return true;
+
+        // Inclusivo
+        if (isoFrom && createdISO < isoFrom) return false;
+        if (isoTo && createdISO > isoTo) return false;
+        return true;
+      }
+
       function renderTable() {
         tbody.innerHTML = "";
 
-        const est = filtro.value;
+        const est = filtroEstado.value;
+        const tipo = filtroTipo.value;
+        const activo = filtroActivo.value;
         const term = (buscador.value || "").toLowerCase();
 
         let painted = 0;
 
         allRequests.forEach(r => {
+          // Estado
           if (est !== "todas" && r.status !== est) return;
+
+          // Tipo
+          if (tipo !== "todas" && r.request_type !== tipo) return;
+
+          // Activo (de momento: todo viene de requests => commodities)
+          const activoKey = "commodities";
+          if (activo !== "todas" && activoKey !== activo) return;
 
           const cm = r.commodities_master;
           const itemName = cm ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name) : (r.item_id || "");
 
           const requester = resolveUser(r.requester_discord_id);
 
+          // Fecha (creada)
+          const createdISO = isoFromDateTime(r.created_at);
+          if (!withinRange(createdISO)) return;
+
+          // Search
           if (term) {
             const searchable = `${itemName} ${requester}`.toLowerCase();
             if (!searchable.includes(term)) return;
@@ -334,9 +593,6 @@
 
           const tr = document.createElement("tr");
           const fechaCierre = calcFechaCerrada(r);
-
-          // Activo (por ahora: Commodities)
-          const activoKey = "commodities";
 
           tr.innerHTML = `
             <td>#${r.id}</td>
@@ -372,14 +628,31 @@
           const tr = document.createElement("tr");
           const td = document.createElement("td");
           td.colSpan = 8;
-          td.textContent = term ? "No hay resultados con ese filtro." : "No hay registros para mostrar.";
+          td.textContent = term || est !== "todas" || tipo !== "todas" || activo !== "todas" || isoFrom || isoTo
+            ? "No hay resultados con esos filtros."
+            : "No hay registros para mostrar.";
           tr.appendChild(td);
           tbody.appendChild(tr);
         }
       }
 
-      filtro.addEventListener("change", renderTable);
+      function clearFilters(){
+        buscador.value = "";
+        filtroEstado.value = "todas";
+        filtroTipo.value = "todas";
+        filtroActivo.value = "todas";
+        isoFrom = "";
+        isoTo = "";
+        dpFrom?.setISO("");
+        dpTo?.setISO("");
+        renderTable();
+      }
+
       buscador.addEventListener("input", renderTable);
+      filtroEstado.addEventListener("change", renderTable);
+      filtroTipo.addEventListener("change", renderTable);
+      filtroActivo.addEventListener("change", renderTable);
+      btnClear.addEventListener("click", clearFilters);
 
       await loadRequests();
     });
