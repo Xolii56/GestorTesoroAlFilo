@@ -4,345 +4,385 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Departamento del Tesoro — Registro</title>
-  <link rel="stylesheet" href="./style.css"/>
 
-  <!-- Supabase -->
+  <!-- Estilos globales + design system -->
+  <link rel="stylesheet" href="./style.css"/>
+  <link rel="stylesheet" href="./style_prueba.css"/>
+
+  <!-- Supabase + módulos -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="./config.js" defer></script>
   <script src="./modules/db.js" defer></script>
   <script src="./modules/layout.js" defer></script>
 
   <style>
-    main.reg-main {
-      padding: 1.5rem;
-      max-width: 1300px;
-      margin: 0 auto;
+    main.reg-main{
+      padding:1.5rem;
+      max-width:1100px;
+      margin:0 auto;
     }
 
-    .reg-toolbar {
+    .reg-header-row{
       display:flex;
       justify-content:space-between;
+      align-items:flex-end;
+      margin-bottom:1rem;
       gap:.75rem;
       flex-wrap:wrap;
-      align-items:center;
-      margin-bottom:.8rem;
     }
 
-    .reg-toolbar select,
-    .reg-toolbar input[type="search"] {
+    .reg-toolbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:.6rem;
+      flex-wrap:wrap;
+      margin-bottom:.6rem;
+    }
+    .reg-toolbar-group{
+      display:flex;
+      gap:.4rem;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    /* Buscador / select con look del sistema (similar a otros módulos) */
+    .reg-toolbar input[type="search"],
+    .reg-toolbar select{
       padding:0.35rem 0.55rem;
       border-radius:999px;
       border:1px solid rgba(148,163,184,0.7);
       background:#020617;
       color:#e5e7eb;
-      font-size:.85rem;
-    }
-
-    .reg-table {
-      width:100%;
-      border-collapse:collapse;
-      font-size:.9rem;
-    }
-
-    .reg-table thead {
       font-size:.8rem;
-      text-transform:uppercase;
-      letter-spacing:.04em;
-      opacity:.8;
+      font-family:inherit;
+      outline:none;
     }
 
-    .reg-table th,
-    .reg-table td {
-      padding:0.4rem 0.45rem;
-      border-bottom:1px solid rgba(148,163,184,0.25);
-    }
-
-    .reg-table tbody tr {
-      transition:background .12s ease-out;
-    }
-
-    .reg-table tbody tr:hover {
-      background:rgba(15,23,42,0.85);
-    }
-
-    /* Centrado columnas específicas */
-    .reg-table th:nth-child(2),
-    .reg-table td:nth-child(2), /* Tipo */
-    .reg-table th:nth-child(4),
-    .reg-table td:nth-child(4), /* Cant */
-    .reg-table th:nth-child(5),
-    .reg-table td:nth-child(5), /* Solicitante */
-    .reg-table th:nth-child(6),
-    .reg-table td:nth-child(6), /* Estado */
-    .reg-table th:nth-child(7),
-    .reg-table td:nth-child(7), /* Cerrada */
-    .reg-table th:nth-child(8),
-    .reg-table td:nth-child(8)  /* Detalle */
-    {
+    /* Ajuste por si TAB-07 no trae centrados algunos th/td */
+    .reg-table-center th:nth-child(2),
+    .reg-table-center td:nth-child(2),
+    .reg-table-center th:nth-child(3),
+    .reg-table-center td:nth-child(3),
+    .reg-table-center th:nth-child(5),
+    .reg-table-center td:nth-child(5),
+    .reg-table-center th:nth-child(6),
+    .reg-table-center td:nth-child(6),
+    .reg-table-center th:nth-child(7),
+    .reg-table-center td:nth-child(7),
+    .reg-table-center th:nth-child(8),
+    .reg-table-center td:nth-child(8){
       text-align:center;
     }
-
-    .tipo-chip {
-      display:inline-block;
-      padding:0.08rem 0.45rem;
-      border-radius:999px;
-      font-size:.7rem;
-      border:1px solid rgba(148,163,184,0.9);
-      opacity:.85;
-    }
-    .tipo-chip.compra { border-color: rgba(34,197,94,0.9); }
-    .tipo-chip.venta  { border-color: rgba(248,113,113,0.9); }
-
-    .badge-status {
-      display:inline-flex;
-      align-items:center;
-      padding:0.1rem 0.55rem;
-      border-radius:999px;
-      font-size:.75rem;
-      border:1px solid rgba(148,163,184,0.7);
-    }
-    .badge-status.pendiente   { border-color:rgba(250,204,21,0.9); }
-    .badge-status.aprobada    { border-color:rgba(34,197,94,0.9); }
-    .badge-status.rechazada   { border-color:rgba(248,113,113,0.9); }
-    .badge-status.completada  { border-color:rgba(56,189,248,0.9); }
-    .badge-status.cancelada   { border-color:rgba(248,113,113,0.9); }
   </style>
 </head>
 
 <body>
-<div id="site-header"></div>
+  <div id="site-header"></div>
 
-<main class="reg-main">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.75rem;flex-wrap:wrap;">
-    <div>
-      <h2>Registro de solicitudes</h2>
-      <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
-        Historial completo de todas las solicitudes del Tesoro.
-      </p>
+  <main class="reg-main">
+    <div class="reg-header-row">
+      <div>
+        <h2>Registro</h2>
+        <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
+          Histórico de operaciones y solicitudes del sistema.
+        </p>
+      </div>
+      <button type="button" class="btn btn-secondary" onclick="window.location.href='./app_ui.html'">
+        ← Volver al panel
+      </button>
     </div>
-    <button type="button" class="btn btn-secondary" onclick="window.location.href='./app_ui.html'">
-      ← Volver al panel
-    </button>
-  </div>
 
-  <div class="card" style="padding:1rem 1.2rem;">
-    <div class="reg-toolbar">
-      <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;">
-        <select id="filtro-estado">
-          <option value="todas">Todas</option>
-          <option value="pendiente">Pendientes</option>
-          <option value="aprobada">Aprobadas</option>
-          <option value="rechazada">Rechazadas</option>
-          <option value="completada">Completadas</option>
-          <option value="cancelada">Canceladas</option>
-        </select>
-
-        <input type="search" id="buscador" placeholder="Buscar por ítem o usuario...">
+    <div class="card">
+      <div class="card-header">
+        <h3>Operaciones registradas</h3>
       </div>
 
-      <span class="help-text" id="reg-debug" style="font-style:italic;"></span>
+      <div class="reg-toolbar">
+        <div class="reg-toolbar-group">
+          <input type="search" id="buscador" placeholder="Buscar por solicitante o material..."/>
+        </div>
+
+        <div class="reg-toolbar-group">
+          <select id="filtro-estado">
+            <option value="todas">Todos los estados</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="aprobada">Aprobada</option>
+            <option value="rechazada">Rechazada</option>
+            <option value="cancelada">Cancelada</option>
+            <option value="completada">Completada</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="max-height:560px;overflow:auto;margin-top:.2rem;">
+        <div class="table-container" id="cmp-tab-07"></div>
+      </div>
     </div>
+  </main>
 
-    <div style="max-height:520px;overflow:auto;">
-      <table class="reg-table">
-        <thead>
-        <tr>
-          <th>ID</th>
-          <th>Tipo</th>
-          <th>Ítem</th>
-          <th>Cant.</th>
-          <th>Solicitante</th>
-          <th>Estado</th>
-          <th>Cerrada</th>
-          <th>Detalle</th>
-        </tr>
-        </thead>
-        <tbody id="reg-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-</main>
+  <!-- CAST: TAB-07 -->
+  <script type="module">
+    import { loadComponentById } from './modules/ui_components.js';
 
-<script type="module">
-  import { getOrgStatus } from "./modules/profile.js";
+    function ensureTbodyId(containerId, wantedId){
+      const host = document.getElementById(containerId);
+      if (!host) return;
 
-  document.addEventListener("DOMContentLoaded", async () => {
-    const { supa } = window;
+      const direct = host.querySelector(`#${CSS.escape(wantedId)}`);
+      if (direct) return;
 
-    function formatStatus(st) {
-      return {
-        pendiente: "pendiente",
-        aprobada: "aprobada",
-        rechazada: "rechazada",
-        completada: "completada",
-        cancelada: "cancelada"
-      }[st] || st;
+      const slot = host.querySelector('[data-slot="tbody"]');
+      if (slot) { slot.id = wantedId; return; }
+
+      const tb = host.querySelector('tbody');
+      if (tb) tb.id = wantedId;
     }
 
-    function renderTipo(tipo) {
-      return tipo === "venta" ? "Venta" : "Compra";
-    }
+    await loadComponentById('./components/tab-07.html', 'cmp-tab-07');
+    ensureTbodyId('cmp-tab-07', 'reg-tbody');
 
-    // ------------------- SESIÓN -------------------
-    const { data: { session } } = await supa.auth.getSession();
-    if (!session) return (window.location.href = "./index.html");
+    // Si TAB-07 trae la tabla con clase "table", le añadimos un helper para centrados (sin romper estilos)
+    const host = document.getElementById('cmp-tab-07');
+    const table = host?.querySelector('table');
+    if (table) table.classList.add('reg-table-center');
+  </script>
 
-    const orgStatus = await getOrgStatus();
-    if (!orgStatus || !["miembro","daga","espada","admin"].includes(orgStatus)) {
-      await supa.auth.signOut();
-      return (window.location.href = "./index.html");
-    }
+  <!-- LÓGICA (MISMA IDEA, adaptada a columnas de TAB-07; sin inventar flujos nuevos) -->
+  <script type="module">
+    import { getOrgStatus } from "./modules/profile.js";
 
-    await loadHeader("app");
-    initHeaderUserMenu(
-      session,
-      async () => {
+    document.addEventListener("DOMContentLoaded", async () => {
+      const { supa } = window;
+
+      function formatStatus(st) {
+        const map = {
+          pendiente: "Pendiente",
+          aprobada: "Aprobada",
+          rechazada: "Rechazada",
+          cancelada: "Cancelada",
+          completada: "Completada",
+        };
+        return map[st] || st;
+      }
+
+      function renderTipo(tipo) {
+        if (!tipo) return "-";
+        return tipo === "compra" ? "Compra" : "Venta";
+      }
+
+      /* ✅ TAGs del sistema (los tuyos) */
+      function statusTagClass(st){ return `tag tag--${st}`; }
+      function tipoTagClass(tipo){ return (tipo === "venta") ? "tag tag--venta" : "tag tag--compra"; }
+
+      // Activo: por ahora Registro se nutre de requests (commodities). Dejamos preparado el tag por si ya existe CSS.
+      function activoTagClass(activoKey){
+        // Si en style_prueba.css ya tienes modificadores, engancha aquí sin tocar el resto del módulo.
+        // fallback seguro: tag--info (si existe) o tag base.
+        if (!activoKey) return "tag tag--info";
+        return `tag tag--${activoKey}`;
+      }
+      function renderActivoLabel(key){
+        const map = {
+          commodities: "Commodities",
+          prestamo: "Préstamo",
+          taller: "Taller",
+          armeria: "Armería",
+        };
+        return map[key] || "Commodities";
+      }
+
+      /* ───────────── 1) Sesión + org_status ───────────── */
+      const { data: { session } } = await supa.auth.getSession();
+      if (!session) return (window.location.href = "./index.html");
+
+      const orgStatus = await getOrgStatus();
+      if (!orgStatus || !["miembro","daga","espada","admin"].includes(orgStatus)) {
         await supa.auth.signOut();
-        window.location.href = "./index.html";
-      },
-      () => window.location.href = "./perfil.html"
-    );
+        return (window.location.href = "./index.html");
+      }
 
-    // ------------------- PERMISOS -------------------
-    const { data: meRow } = await supa
-      .from("users")
-      .select("tesoro_internal_role")
-      .eq("id", session.user.id)
-      .maybeSingle();
+      if (typeof window.loadHeader === "function") {
+        await window.loadHeader("app");
+      }
+      if (typeof window.initHeaderUserMenu === "function") {
+        window.initHeaderUserMenu(
+          session,
+          async () => {
+            await supa.auth.signOut();
+            window.location.href = "./index.html";
+          },
+          () => window.location.href = "./perfil.html"
+        );
+      }
 
-    let myRole = meRow?.tesoro_internal_role;
-    if (typeof myRole === "string") myRole = myRole.trim();
+      /* ───────────── 2) Permisos ───────────── */
+      const { data: meRow, error: meError } = await supa
+        .from("users")
+        .select("tesoro_internal_role")
+        .eq("id", session.user.id)
+        .maybeSingle();
 
-    let roleRow = null;
-    if (!isNaN(Number(myRole))) {
-      const { data } = await supa.from("roles_app").select("*").eq("id", Number(myRole)).maybeSingle();
-      roleRow = data;
-    }
-    if (!roleRow && myRole) {
-      const { data } = await supa.from("roles_app").select("*").ilike("role_name", myRole).maybeSingle();
-      roleRow = data;
-    }
+      if (meError) console.error("Error leyendo rol interno:", meError);
 
-    if (!roleRow?.registro) {
-      alert("No tienes acceso al módulo de Registro.");
-      return (window.location.href = "./app_ui.html");
-    }
+      let myRole = meRow?.tesoro_internal_role || null;
+      if (typeof myRole === "string") myRole = myRole.trim();
 
-    // ------------------- USUARIOS -------------------
-    const { data: users } = await supa
-      .from("users")
-      .select("id, handle_name, discord_username, discord_user_id");
+      let roleRow = null;
+      if (myRole) {
+        const asNumber = Number(myRole);
+        if (!Number.isNaN(asNumber) && myRole !== "") {
+          const { data } = await supa.from("roles_app").select("*").eq("id", asNumber).maybeSingle();
+          roleRow = data || null;
+        }
+        if (!roleRow) {
+          const { data } = await supa.from("roles_app").select("*").ilike("role_name", myRole).maybeSingle();
+          roleRow = data || null;
+        }
+      }
 
-    const usersById = {};
-    const usersByDiscord = {};
-    (users || []).forEach(u => {
-      usersById[u.id] = u;
-      if (u.discord_user_id) usersByDiscord[String(u.discord_user_id)] = u;
-    });
+      if (!roleRow?.registro) {
+        alert("No tienes acceso al módulo de Registro.");
+        return (window.location.href = "./app_ui.html");
+      }
 
-    function resolveUser(id) {
-      const idStr = id ? String(id) : "";
-      const u = usersByDiscord[idStr] || usersById[idStr];
-      return u?.handle_name || u?.discord_username || idStr || "-";
-    }
+      /* ───────────── 3) Usuarios ───────────── */
+      const { data: users } = await supa
+        .from("users")
+        .select("id, handle_name, discord_username, discord_user_id");
 
-    // ------------------- WAREHOUSES -------------------
-    const { data: warehouses } = await supa.from("warehouses").select("id,name");
-    const warehousesById = {};
-    (warehouses || []).forEach(w => warehousesById[w.id] = w);
+      const usersById = {};
+      const usersByDiscord = {};
+      (users || []).forEach(u => {
+        usersById[u.id] = u;
+        if (u.discord_user_id) usersByDiscord[String(u.discord_user_id)] = u;
+      });
 
-    // ------------------- DOM -------------------
-    const tbody = document.getElementById("reg-tbody");
-    const filtro = document.getElementById("filtro-estado");
-    const buscador = document.getElementById("buscador");
+      function resolveUser(id) {
+        const idStr = id ? String(id) : "";
+        const u = usersByDiscord[idStr] || usersById[idStr];
+        return u?.handle_name || u?.discord_username || idStr || "-";
+      }
 
-    let allRequests = [];
+      /* ───────────── 4) DOM ───────────── */
+      const tbody = document.getElementById("reg-tbody");
+      const filtro = document.getElementById("filtro-estado");
+      const buscador = document.getElementById("buscador");
 
-    // ------------------- LOAD REQUESTS -------------------
-    async function loadRequests() {
-      const { data } = await supa
-        .from("requests")
-        .select(`
-          id,
-          request_type,
-          item_id,
-          quantity,
-          status,
-          created_at,
-          requester_discord_id,
-          warehouse_id,
-          due_date,
-          approved_at,
-          completed_at,
-          requester_sign_at,
-          warehouse_sign_at,
-          commodities_master(name,symbol)
-        `)
-        .order("created_at", { ascending: false });
+      let allRequests = [];
 
-      allRequests = data || [];
-      renderTable();
-    }
+      /* ───────────── 5) Load data (misma fuente actual: requests) ───────────── */
+      async function loadRequests() {
+        const { data, error } = await supa
+          .from("requests")
+          .select(`
+            id,
+            request_type,
+            item_id,
+            status,
+            created_at,
+            requester_discord_id,
+            approved_at,
+            completed_at,
+            requester_sign_at,
+            warehouse_sign_at,
+            commodities_master(name,symbol)
+          `)
+          .order("created_at", { ascending: false });
 
-    function calcFechaCerrada(r) {
-      const st = r.status;
-
-      if (st === "completada") return r.completed_at || r.requester_sign_at || r.warehouse_sign_at;
-      if (st === "cancelada") return r.requester_sign_at || r.warehouse_sign_at;
-      if (st === "rechazada") return r.approved_at || r.created_at;
-
-      return null;
-    }
-
-    function renderTable() {
-      tbody.innerHTML = "";
-
-      const est = filtro.value;
-      const term = (buscador.value || "").toLowerCase();
-
-      allRequests.forEach(r => {
-        if (est !== "todas" && r.status !== est) return;
-
-        const cm = r.commodities_master;
-        const itemName = cm ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name) : r.item_id;
-
-        const requester = resolveUser(r.requester_discord_id);
-
-        if (term) {
-          const searchable = `${itemName} ${requester}`.toLowerCase();
-          if (!searchable.includes(term)) return;
+        if (error) {
+          console.error("Error cargando registro:", error);
+          tbody.innerHTML = `<tr><td colspan="8">No se ha podido cargar el registro.</td></tr>`;
+          return;
         }
 
-        const tr = document.createElement("tr");
+        allRequests = data || [];
+        renderTable();
+      }
 
-        const fechaCierre = calcFechaCerrada(r);
+      function calcFechaCerrada(r) {
+        const st = r.status;
 
-        tr.innerHTML = `
-          <td>#${r.id}</td>
-          <td><span class="tipo-chip ${r.request_type}">${renderTipo(r.request_type)}</span></td>
-          <td>${itemName}</td>
-          <td>${r.quantity}</td>
-          <td>${requester}</td>
-          <td><span class="badge-status ${r.status}">${formatStatus(r.status)}</span></td>
-          <td>${fechaCierre ? new Date(fechaCierre).toLocaleString() : "-"}</td>
-          <td>
-            <button class="btn btn-secondary" style="padding:0.2rem 0.6rem;"
-              onclick="window.open('./solicitud_detalle.html?id=${encodeURIComponent(r.id)}','_blank','width=720,height=760')">
-              Ver
-            </button>
-          </td>
-        `;
+        if (st === "completada") return r.completed_at || r.requester_sign_at || r.warehouse_sign_at;
+        if (st === "cancelada") return r.requester_sign_at || r.warehouse_sign_at;
+        // "rechazada" no tiene campo dedicado en este módulo original; mantenemos la lógica conservadora:
+        if (st === "rechazada") return r.approved_at || r.created_at;
 
-        tbody.appendChild(tr);
-      });
-    }
+        return null;
+      }
 
-    filtro.addEventListener("change", renderTable);
-    buscador.addEventListener("input", renderTable);
+      function renderTable() {
+        tbody.innerHTML = "";
 
-    await loadRequests();
-  });
-</script>
+        const est = filtro.value;
+        const term = (buscador.value || "").toLowerCase();
 
+        let painted = 0;
+
+        allRequests.forEach(r => {
+          if (est !== "todas" && r.status !== est) return;
+
+          const cm = r.commodities_master;
+          const itemName = cm ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name) : (r.item_id || "");
+
+          const requester = resolveUser(r.requester_discord_id);
+
+          if (term) {
+            const searchable = `${itemName} ${requester}`.toLowerCase();
+            if (!searchable.includes(term)) return;
+          }
+
+          const tr = document.createElement("tr");
+          const fechaCierre = calcFechaCerrada(r);
+
+          // Activo (por ahora: Commodities)
+          const activoKey = "commodities";
+
+          tr.innerHTML = `
+            <td>#${r.id}</td>
+            <td><span class="${tipoTagClass(r.request_type)}">${renderTipo(r.request_type)}</span></td>
+            <td><span class="${activoTagClass(activoKey)}">${renderActivoLabel(activoKey)}</span></td>
+            <td>${requester}</td>
+            <td><span class="${statusTagClass(r.status || "pendiente")}">${formatStatus(r.status || "pendiente")}</span></td>
+            <td>${r.created_at ? new Date(r.created_at).toLocaleString() : "-"}</td>
+            <td>${fechaCierre ? new Date(fechaCierre).toLocaleString() : "-"}</td>
+          `;
+
+          const tdDetalle = document.createElement("td");
+          const btnDetalle = document.createElement("button");
+          btnDetalle.type = "button";
+          btnDetalle.className = "btn btn-secondary btn-sm";
+          btnDetalle.textContent = "Ver";
+          btnDetalle.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            window.open(
+              `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
+              "_blank",
+              "width=720,height=760"
+            );
+          });
+          tdDetalle.appendChild(btnDetalle);
+          tr.appendChild(tdDetalle);
+
+          tbody.appendChild(tr);
+          painted++;
+        });
+
+        if (!painted) {
+          const tr = document.createElement("tr");
+          const td = document.createElement("td");
+          td.colSpan = 8;
+          td.textContent = term ? "No hay resultados con ese filtro." : "No hay registros para mostrar.";
+          tr.appendChild(td);
+          tbody.appendChild(tr);
+        }
+      }
+
+      filtro.addEventListener("change", renderTable);
+      buscador.addEventListener("input", renderTable);
+
+      await loadRequests();
+    });
+  </script>
 </body>
 </html>
