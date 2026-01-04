@@ -29,11 +29,7 @@
       flex-wrap:wrap;
     }
 
-    .reg-toolbar-wrap{
-      margin-top:.25rem;
-      margin-bottom:.6rem;
-    }
-
+    .reg-toolbar-wrap{ margin-top:.25rem; margin-bottom:.6rem; }
     .help-text{ font-size:.75rem; opacity:.75; margin-top:.15rem; }
 
     .reg-table-wrap{
@@ -42,12 +38,12 @@
       margin-top:.2rem;
     }
 
-    /* ======== FIX REAL: nivelar filtros ======== */
+    /* ======= Alineación SIN tocar estética/tamaños ======= */
     .ui-toolbar .ui-group{
       display:flex;
-      gap:.5rem;
-      flex-wrap:wrap;
-      align-items:flex-end; /* clave */
+      gap:.45rem;           /* pequeño, como antes */
+      flex-wrap:wrap;       /* si no cabe, baja (fallback) */
+      align-items:flex-end; /* alinear bottoms */
     }
 
     .ui-filter{
@@ -55,34 +51,29 @@
       flex-direction:column;
       justify-content:flex-end;
       gap:.25rem;
-      min-width: 160px;
     }
 
-    /* Fila fantasma de label: ocupa lo mismo para TODOS */
+    /* Fila para alinear alturas:
+       - En filtros normales: invisible pero ocupa (no muestra guiones)
+       - En fechas: visible ("Desde"/"Hasta") */
     .ui-filter-label{
       height: 14px;
       line-height: 14px;
-      font-size: .72rem;
-      opacity:.0;           /* oculto */
+      font-size:.72rem;
+      opacity:.75;
       user-select:none;
+    }
+    .ui-filter-label.ghost{
+      opacity:0;            /* invisible */
       pointer-events:none;
     }
 
-    /* El host del datepicker debe comportarse como un input normal */
-    .date-host .date-picker{
-      width:100%;
-    }
+    /* Host datepicker: que se comporte como un input normal */
+    .date-host .date-picker{ width:100%; }
 
-    /* Igualar alto visual con selects/inputs del sistema (sin cambiar el componente) */
-    .date-host .date-input{
-      width:100%;
-    }
-
-    /* Por si DAT-01 trae label interno (evita el “Fecha” duplicado) */
-    .date-host .date-label,
-    .date-host label{
-      display:none !important;
-    }
+    /* Ojo: NO ocultamos labels del componente a lo bruto,
+       solo evitamos que meta uno extra si existiera */
+    .date-host .date-label{ display:none !important; }
   </style>
 </head>
 
@@ -111,13 +102,15 @@
         <div class="ui-toolbar">
           <div class="ui-group">
 
+            <!-- Buscar -->
             <div class="ui-filter">
-              <div class="ui-filter-label">_</div>
+              <div class="ui-filter-label ghost">&nbsp;</div>
               <input type="search" id="reg-search" placeholder="Buscar por solicitante o material..." />
             </div>
 
+            <!-- Estado -->
             <div class="ui-filter">
-              <div class="ui-filter-label">_</div>
+              <div class="ui-filter-label ghost">&nbsp;</div>
               <select id="reg-status-filter">
                 <option value="todas">Todos los estados</option>
                 <option value="pendiente">Pendiente</option>
@@ -128,8 +121,9 @@
               </select>
             </div>
 
+            <!-- Tipo -->
             <div class="ui-filter">
-              <div class="ui-filter-label">_</div>
+              <div class="ui-filter-label ghost">&nbsp;</div>
               <select id="reg-type-filter">
                 <option value="todas">Todos los tipos</option>
                 <option value="compra">Compra</option>
@@ -137,8 +131,9 @@
               </select>
             </div>
 
+            <!-- Activo -->
             <div class="ui-filter">
-              <div class="ui-filter-label">_</div>
+              <div class="ui-filter-label ghost">&nbsp;</div>
               <select id="reg-active-filter">
                 <option value="todas">Todos los activos</option>
                 <option value="commodities">Commodities</option>
@@ -148,20 +143,23 @@
               </select>
             </div>
 
+            <!-- Desde -->
             <div class="ui-filter">
-              <div class="ui-filter-label">_</div>
+              <div class="ui-filter-label">Desde</div>
               <div id="reg-date-from-host" class="date-host"></div>
               <input type="hidden" id="reg-date-from-iso" value=""/>
             </div>
 
+            <!-- Hasta -->
             <div class="ui-filter">
-              <div class="ui-filter-label">_</div>
+              <div class="ui-filter-label">Hasta</div>
               <div id="reg-date-to-host" class="date-host"></div>
               <input type="hidden" id="reg-date-to-iso" value=""/>
             </div>
 
-            <div class="ui-filter" style="min-width:auto;">
-              <div class="ui-filter-label">_</div>
+            <!-- Limpiar -->
+            <div class="ui-filter">
+              <div class="ui-filter-label ghost">&nbsp;</div>
               <button type="button" class="btn btn-secondary" id="reg-clear-filters">
                 Limpiar filtros
               </button>
@@ -199,20 +197,11 @@
       if (tb) tb.id = wantedId;
     }
 
-    function normalizeDat01(hostId){
-      const host = document.getElementById(hostId);
-      if (!host) return;
-      // matar labels internos si el componente los trae
-      host.querySelectorAll('label,.date-label').forEach(el => el.style.display = 'none');
-    }
-
     await loadComponentById('./components/tab-07.html', 'cmp-tab-07');
     ensureTbodyId('cmp-tab-07', 'reg-tbody');
 
     await loadComponentById('./components/dat-01.html', 'reg-date-from-host');
     await loadComponentById('./components/dat-01.html', 'reg-date-to-host');
-    normalizeDat01('reg-date-from-host');
-    normalizeDat01('reg-date-to-host');
   </script>
 
   <!-- LÓGICA -->
@@ -244,7 +233,7 @@
         return map[key] || key || '-';
       }
 
-      /* DAT-01 init (mismo que en tu revision) */
+      /* DAT-01 init */
       function initDat01(pickerRoot, opts = {}) {
         if (!pickerRoot) return null;
 
@@ -412,7 +401,7 @@
         return { setISO, getISO: () => selectedISO };
       }
 
-      /* 1) Sesión + org_status */
+      /* Sesión */
       const { data: { session } } = await supa.auth.getSession();
       if (!session) { window.location.href = './index.html'; return; }
 
@@ -432,7 +421,7 @@
         );
       }
 
-      /* 2) Permisos */
+      /* Permisos */
       const { data: meRow } = await supa
         .from('users')
         .select('tesoro_internal_role')
@@ -462,7 +451,7 @@
         return;
       }
 
-      /* 3) DOM */
+      /* DOM */
       const tbody = document.getElementById('reg-tbody');
 
       const searchInput   = document.getElementById('reg-search');
@@ -498,12 +487,12 @@
         }
       });
 
-      /* 4) Cache usuarios */
+      /* Cache usuarios */
       const usersById = {};
       const { data: users } = await supa.from('users').select('id, handle_name, discord_username');
       (users || []).forEach(u => { usersById[u.id] = u; });
 
-      /* 5) Datos registro */
+      /* Datos */
       let rows = [];
 
       async function loadRows(){
