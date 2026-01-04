@@ -950,3 +950,61 @@ body { min-height: 100vh; }
   box-shadow:
     inset 0 0 0 1px rgba(239,68,68,0.25);
 }
+/* =========================================================
+   TOOLBAR / FILTROS — ALINEADO GLOBAL (incluye DAT-01)
+   ========================================================= */
+
+:root{
+  --ui-pill-h: 34px;
+}
+
+/* contenedor de filtros (barra) */
+.ui-toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.6rem;
+  align-items:stretch; /* clave */
+}
+
+.ui-toolbar .ui-group{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.45rem;
+  align-items:stretch; /* clave */
+}
+
+/* pills estándar (search/select/botones en toolbar) */
+.ui-toolbar input[type="search"],
+.ui-toolbar select,
+.ui-toolbar .btn{
+  height: var(--ui-pill-h);
+  padding: 0 .75rem;
+  display:inline-flex;
+  align-items:center;
+  line-height:normal;
+}
+
+/* host del DAT-01 dentro de toolbars */
+.ui-toolbar .date-host{
+  height: var(--ui-pill-h);
+  display:flex;
+  align-items:stretch;
+  min-width:180px;
+}
+
+.ui-toolbar .date-host .date-picker{
+  height:100%;
+  width:100%;
+  display:flex;
+  align-items:center;
+}
+
+.ui-toolbar .date-host .date-input{
+  height:100%;
+  padding:0 .75rem;
+  display:flex;
+  align-items:center;
+  border-radius:999px; /* igual que el resto de pills */
+  line-height:normal;
+  width:100%;
+}
