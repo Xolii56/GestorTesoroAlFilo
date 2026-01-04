@@ -31,62 +31,19 @@
       flex-wrap:wrap;
     }
 
-    .reg-toolbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:.6rem;
-      flex-wrap:wrap;
+    /* Solo para el layout del bloque (NO para “parchear” inputs) */
+    .reg-toolbar-wrap{
+      margin-top:.25rem;
       margin-bottom:.6rem;
     }
-    .reg-toolbar-group{
-      display:flex;
-      gap:.45rem;
-      flex-wrap:wrap;
-      align-items:center;
-    }
 
-    /* Buscador / selects con look del sistema */
-    .reg-toolbar input[type="search"],
-    .reg-toolbar select{
-      padding:0.35rem 0.55rem;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,0.7);
-      background:#020617;
-      color:#e5e7eb;
-      font-size:.8rem;
-      font-family:inherit;
-      outline:none;
-    }
+    .help-text{ font-size:.75rem; opacity:.75; margin-top:.15rem; }
 
-    /* Hosts datepicker */
-    .reg-date-host{
-      display:flex;
-      align-items:center;
-    }
-    .reg-date-host .date-picker{
-      width: 210px;
-    }
-    @media (max-width: 520px){
-      .reg-date-host .date-picker{
-        width: 100%;
-      }
-    }
-
-    /* Ajuste centrados por si TAB-07 no lo hace */
-    .reg-table-center th:nth-child(2),
-    .reg-table-center td:nth-child(2),
-    .reg-table-center th:nth-child(3),
-    .reg-table-center td:nth-child(3),
-    .reg-table-center th:nth-child(5),
-    .reg-table-center td:nth-child(5),
-    .reg-table-center th:nth-child(6),
-    .reg-table-center td:nth-child(6),
-    .reg-table-center th:nth-child(7),
-    .reg-table-center td:nth-child(7),
-    .reg-table-center th:nth-child(8),
-    .reg-table-center td:nth-child(8){
-      text-align:center;
+    /* espacio tabla */
+    .reg-table-wrap{
+      max-height:560px;
+      overflow:auto;
+      margin-top:.2rem;
     }
   </style>
 </head>
@@ -99,7 +56,7 @@
       <div>
         <h2>Registro</h2>
         <p style="opacity:.8;margin-top:.2rem;font-size:.9rem;">
-          Histórico de operaciones y solicitudes del sistema.
+          Histórico unificado de operaciones. Filtra por estado, tipo, activo y rango de fechas.
         </p>
       </div>
       <button type="button" class="btn btn-secondary" onclick="window.location.href='./app_ui.html'">
@@ -109,55 +66,86 @@
 
     <div class="card">
       <div class="card-header">
-        <h3>Operaciones registradas</h3>
+        <h3>Operaciones</h3>
       </div>
 
-      <div class="reg-toolbar">
-        <div class="reg-toolbar-group">
-          <input type="search" id="buscador" placeholder="Buscar por solicitante o material..."/>
+      <!-- TOOLBAR (nivelada con labels + date pickers) -->
+      <div class="reg-toolbar-wrap">
+        <div class="ui-toolbar">
+          <div class="ui-group">
+
+            <div class="ui-filter">
+              <div class="ui-filter-label">&nbsp;</div>
+              <input type="search" id="reg-search" placeholder="Buscar por solicitante o material..." />
+            </div>
+
+            <div class="ui-filter">
+              <div class="ui-filter-label">&nbsp;</div>
+              <select id="reg-status-filter">
+                <option value="todas">Todos los estados</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="aprobada">Aprobada</option>
+                <option value="rechazada">Rechazada</option>
+                <option value="cancelada">Cancelada</option>
+                <option value="completada">Completada</option>
+              </select>
+            </div>
+
+            <div class="ui-filter">
+              <div class="ui-filter-label">&nbsp;</div>
+              <select id="reg-type-filter">
+                <option value="todas">Todos los tipos</option>
+                <option value="compra">Compra</option>
+                <option value="venta">Venta</option>
+              </select>
+            </div>
+
+            <div class="ui-filter">
+              <div class="ui-filter-label">&nbsp;</div>
+              <select id="reg-active-filter">
+                <option value="todas">Todos los activos</option>
+                <option value="commodities">Commodities</option>
+                <option value="prestamo">Préstamo</option>
+                <option value="taller">Taller</option>
+                <option value="armeria">Armería</option>
+              </select>
+            </div>
+
+            <div class="ui-filter">
+              <div class="ui-filter-label">Fecha</div>
+              <div id="reg-date-from-host" class="date-host"></div>
+              <input type="hidden" id="reg-date-from-iso" value=""/>
+            </div>
+
+            <div class="ui-filter">
+              <div class="ui-filter-label">Fecha</div>
+              <div id="reg-date-to-host" class="date-host"></div>
+              <input type="hidden" id="reg-date-to-iso" value=""/>
+            </div>
+
+            <div class="ui-filter">
+              <div class="ui-filter-label">&nbsp;</div>
+              <button type="button" class="btn btn-secondary" id="reg-clear-filters">
+                Limpiar filtros
+              </button>
+            </div>
+
+          </div>
         </div>
 
-        <div class="reg-toolbar-group">
-          <select id="filtro-estado">
-            <option value="todas">Todos los estados</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="aprobada">Aprobada</option>
-            <option value="rechazada">Rechazada</option>
-            <option value="cancelada">Cancelada</option>
-            <option value="completada">Completada</option>
-          </select>
-
-          <select id="filtro-tipo">
-            <option value="todas">Todos los tipos</option>
-            <option value="compra">Compra</option>
-            <option value="venta">Venta</option>
-          </select>
-
-          <select id="filtro-activo">
-            <option value="todas">Todos los activos</option>
-            <option value="commodities">Commodities</option>
-            <option value="prestamo">Préstamo</option>
-            <option value="taller">Taller</option>
-            <option value="armeria">Armería</option>
-          </select>
-
-          <!-- Date pickers (DAT-01) -->
-          <div id="date-from-host" class="reg-date-host" title="Desde"></div>
-          <div id="date-to-host" class="reg-date-host" title="Hasta"></div>
-
-          <button type="button" class="btn btn-secondary btn-sm" id="btn-clear-filters">
-            Limpiar filtros
-          </button>
-        </div>
+        <p class="help-text">
+          Consejo: usa “Desde/Hasta” para acotar por fecha de creación.
+        </p>
       </div>
 
-      <div style="max-height:560px;overflow:auto;margin-top:.2rem;">
+      <!-- TABLA casteada -->
+      <div class="reg-table-wrap">
         <div class="table-container" id="cmp-tab-07"></div>
       </div>
     </div>
   </main>
 
-  <!-- CAST: TAB-07 + DAT-01 x2 -->
+  <!-- Casteo de TAB-07 + DAT-01 -->
   <script type="module">
     import { loadComponentById } from './modules/ui_components.js';
 
@@ -175,136 +163,51 @@
       if (tb) tb.id = wantedId;
     }
 
+    // TAB-07
     await loadComponentById('./components/tab-07.html', 'cmp-tab-07');
     ensureTbodyId('cmp-tab-07', 'reg-tbody');
 
-    const host = document.getElementById('cmp-tab-07');
-    const table = host?.querySelector('table');
-    if (table) table.classList.add('reg-table-center');
-
-    await loadComponentById('./components/dat-01.html', 'date-from-host');
-    await loadComponentById('./components/dat-01.html', 'date-to-host');
-
-    // Etiquetas visuales distintas en placeholders (si existen)
-    const fromInput = document.querySelector('#date-from-host .date-input');
-    const toInput   = document.querySelector('#date-to-host .date-input');
-    if (fromInput) fromInput.placeholder = 'Desde...';
-    if (toInput)   toInput.placeholder   = 'Hasta...';
+    // DAT-01 x2
+    await loadComponentById('./components/dat-01.html', 'reg-date-from-host');
+    await loadComponentById('./components/dat-01.html', 'reg-date-to-host');
   </script>
 
   <!-- LÓGICA -->
   <script type="module">
-    import { getOrgStatus } from "./modules/profile.js";
+    import { getOrgStatus } from './modules/profile.js';
 
-    document.addEventListener("DOMContentLoaded", async () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       const { supa } = window;
 
-      function formatStatus(st) {
-        const map = {
-          pendiente: "Pendiente",
-          aprobada: "Aprobada",
-          rechazada: "Rechazada",
-          cancelada: "Cancelada",
-          completada: "Completada",
-        };
-        return map[st] || st;
-      }
-
-      function renderTipo(tipo) {
-        if (!tipo) return "-";
-        return tipo === "compra" ? "Compra" : "Venta";
-      }
-
-      /* ✅ TAGs del sistema */
+      /* ===================== Helpers TAGS (los tuyos) ===================== */
       function statusTagClass(st){ return `tag tag--${st}`; }
-      function tipoTagClass(tipo){ return (tipo === "venta") ? "tag tag--venta" : "tag tag--compra"; }
+      function tipoTagClass(tipo){ return (tipo === 'venta') ? 'tag tag--venta' : 'tag tag--compra'; }
 
-      // Activo (por ahora: requests -> commodities)
-      function activoTagClass(activoKey){
-        if (!activoKey) return "tag tag--info";
-        return `tag tag--${activoKey}`;
-      }
-      function renderActivoLabel(key){
+      function formatStatus(st){
         const map = {
-          commodities: "Commodities",
-          prestamo: "Préstamo",
-          taller: "Taller",
-          armeria: "Armería",
+          pendiente:'Pendiente',
+          aprobada:'Aprobada',
+          rechazada:'Rechazada',
+          completada:'Completada',
+          cancelada:'Cancelada'
         };
-        return map[key] || "Commodities";
+        return map[st] || st || '-';
+      }
+      function renderTipo(tipo){
+        if (!tipo) return '-';
+        return tipo === 'compra' ? 'Compra' : 'Venta';
+      }
+      function renderActivo(key){
+        const map = {
+          commodities:'Commodities',
+          prestamo:'Préstamo',
+          taller:'Taller',
+          armeria:'Armería'
+        };
+        return map[key] || key || '-';
       }
 
-      /* ───────────── 1) Sesión + org_status ───────────── */
-      const { data: { session } } = await supa.auth.getSession();
-      if (!session) return (window.location.href = "./index.html");
-
-      const orgStatus = await getOrgStatus();
-      if (!orgStatus || !["miembro","daga","espada","admin"].includes(orgStatus)) {
-        await supa.auth.signOut();
-        return (window.location.href = "./index.html");
-      }
-
-      if (typeof window.loadHeader === "function") {
-        await window.loadHeader("app");
-      }
-      if (typeof window.initHeaderUserMenu === "function") {
-        window.initHeaderUserMenu(
-          session,
-          async () => {
-            await supa.auth.signOut();
-            window.location.href = "./index.html";
-          },
-          () => window.location.href = "./perfil.html"
-        );
-      }
-
-      /* ───────────── 2) Permisos ───────────── */
-      const { data: meRow } = await supa
-        .from("users")
-        .select("tesoro_internal_role")
-        .eq("id", session.user.id)
-        .maybeSingle();
-
-      let myRole = meRow?.tesoro_internal_role || null;
-      if (typeof myRole === "string") myRole = myRole.trim();
-
-      let roleRow = null;
-      if (myRole) {
-        const asNumber = Number(myRole);
-        if (!Number.isNaN(asNumber) && myRole !== "") {
-          const { data } = await supa.from("roles_app").select("*").eq("id", asNumber).maybeSingle();
-          roleRow = data || null;
-        }
-        if (!roleRow) {
-          const { data } = await supa.from("roles_app").select("*").ilike("role_name", myRole).maybeSingle();
-          roleRow = data || null;
-        }
-      }
-
-      if (!roleRow?.registro) {
-        alert("No tienes acceso al módulo de Registro.");
-        return (window.location.href = "./app_ui.html");
-      }
-
-      /* ───────────── 3) Usuarios ───────────── */
-      const { data: users } = await supa
-        .from("users")
-        .select("id, handle_name, discord_username, discord_user_id");
-
-      const usersById = {};
-      const usersByDiscord = {};
-      (users || []).forEach(u => {
-        usersById[u.id] = u;
-        if (u.discord_user_id) usersByDiscord[String(u.discord_user_id)] = u;
-      });
-
-      function resolveUser(id) {
-        const idStr = id ? String(id) : "";
-        const u = usersByDiscord[idStr] || usersById[idStr];
-        return u?.handle_name || u?.discord_username || idStr || "-";
-      }
-
-      /* ───────────── 4) Datepicker DAT-01 (misma implementación que usas en revisión) ───────────── */
+      /* ===================== DAT-01 init (mismo comportamiento) ===================== */
       function initDat01(pickerRoot, opts = {}) {
         if (!pickerRoot) return null;
 
@@ -473,188 +376,287 @@
         return { setISO, getISO: () => selectedISO };
       }
 
-      /* ───────────── 5) DOM filtros ───────────── */
-      const tbody = document.getElementById("reg-tbody");
+      /* ===================== 1) Sesión + org_status ===================== */
+      const { data: { session } } = await supa.auth.getSession();
+      if (!session) { window.location.href = './index.html'; return; }
 
-      const filtroEstado = document.getElementById("filtro-estado");
-      const filtroTipo   = document.getElementById("filtro-tipo");
-      const filtroActivo = document.getElementById("filtro-activo");
-      const buscador     = document.getElementById("buscador");
-      const btnClear     = document.getElementById("btn-clear-filters");
+      const orgStatus = await getOrgStatus();
+      if (!orgStatus || !['miembro','daga','espada','admin'].includes(orgStatus)) {
+        await supa.auth.signOut();
+        window.location.href = './index.html';
+        return;
+      }
 
-      // date pickers
-      const fromRoot = document.querySelector('#date-from-host .date-picker');
-      const toRoot   = document.querySelector('#date-to-host .date-picker');
+      if (typeof window.loadHeader === 'function') await window.loadHeader('app');
+      if (typeof window.initHeaderUserMenu === 'function') {
+        window.initHeaderUserMenu(
+          session,
+          async () => { await supa.auth.signOut(); window.location.href = "./index.html"; },
+          () => window.location.href = './perfil.html'
+        );
+      }
 
-      let isoFrom = ""; // YYYY-MM-DD
-      let isoTo   = ""; // YYYY-MM-DD
+      /* ===================== 2) Permisos registro ===================== */
+      const { data: meRow, error: meError } = await supa
+        .from('users')
+        .select('tesoro_internal_role')
+        .eq('id', session.user.id)
+        .maybeSingle();
+      if (meError) console.error('Error leyendo rol interno:', meError);
 
-      const dpFrom = initDat01(fromRoot, {
-        minToday: false,
-        onChange: (iso) => { isoFrom = iso || ""; renderTable(); }
+      let myRole = meRow?.tesoro_internal_role || null;
+      if (typeof myRole === 'string') myRole = myRole.trim();
+
+      let roleRow = null;
+      if (myRole) {
+        const asNumber = Number(myRole);
+        if (!Number.isNaN(asNumber) && myRole !== '') {
+          const { data, error } = await supa.from('roles_app').select('*').eq('id', asNumber).maybeSingle();
+          if (!error) roleRow = data;
+        }
+        if (!roleRow) {
+          const { data, error } = await supa.from('roles_app').select('*').ilike('role_name', myRole).maybeSingle();
+          if (!error) roleRow = data;
+        }
+      }
+
+      let regLevel = roleRow?.registro ?? 0;
+      if (!regLevel || regLevel === 0) {
+        alert('No tienes acceso al módulo de Registro.');
+        window.location.href = './app_ui.html';
+        return;
+      }
+      const readOnly = (regLevel === 1);
+
+      /* ===================== 3) DOM ===================== */
+      const tbody = document.getElementById('reg-tbody');
+
+      const searchInput   = document.getElementById('reg-search');
+      const statusFilter  = document.getElementById('reg-status-filter');
+      const typeFilter    = document.getElementById('reg-type-filter');
+      const activeFilter  = document.getElementById('reg-active-filter');
+      const clearBtn      = document.getElementById('reg-clear-filters');
+
+      const fromIsoHidden = document.getElementById('reg-date-from-iso');
+      const toIsoHidden   = document.getElementById('reg-date-to-iso');
+
+      const fromRoot = document.querySelector('#reg-date-from-host .date-picker');
+      const toRoot   = document.querySelector('#reg-date-to-host .date-picker');
+
+      let fromISO = '';
+      let toISO = '';
+
+      const fromApi = initDat01(fromRoot, {
+        minToday:false,
+        onChange:(iso)=>{
+          fromISO = iso || '';
+          fromIsoHidden.value = fromISO;
+          renderTable();
+        }
       });
 
-      const dpTo = initDat01(toRoot, {
-        minToday: false,
-        onChange: (iso) => { isoTo = iso || ""; renderTable(); }
+      const toApi = initDat01(toRoot, {
+        minToday:false,
+        onChange:(iso)=>{
+          toISO = iso || '';
+          toIsoHidden.value = toISO;
+          renderTable();
+        }
       });
 
-      let allRequests = [];
+      /* ===================== 4) Caches ===================== */
+      const usersById = {};
+      const { data: users, error: usersError } = await supa
+        .from('users')
+        .select('id, handle_name, discord_username');
+      if (!usersError && users) users.forEach(u => { usersById[u.id] = u; });
 
-      /* ───────────── 6) Load data (requests = commodities) ───────────── */
-      async function loadRequests() {
-        const { data, error } = await supa
-          .from("requests")
+      /* ===================== 5) Datos registro ===================== */
+      // Estructura normalizada:
+      // { id, tipo, activo, solicitante, estado, creada_at, cerrada_at, detalle_url, raw }
+      let rows = [];
+
+      async function loadRows(){
+        tbody.innerHTML = '<tr><td colspan="8">Cargando...</td></tr>';
+
+        // Fuente actual: requests (commodities)
+        const { data: reqs, error } = await supa
+          .from('requests')
           .select(`
             id,
             request_type,
-            item_id,
             status,
             created_at,
-            requester_discord_id,
             approved_at,
             completed_at,
-            requester_sign_at,
-            warehouse_sign_at,
-            commodities_master(name,symbol)
+            requester_discord_id,
+            commodities_master(name, symbol)
           `)
-          .order("created_at", { ascending: false });
+          .order('created_at', { ascending:false })
+          .limit(500);
 
         if (error) {
-          console.error("Error cargando registro:", error);
-          tbody.innerHTML = `<tr><td colspan="8">No se ha podido cargar el registro.</td></tr>`;
+          console.error('Error cargando registro:', error);
+          tbody.innerHTML = '<tr><td colspan="8">No se pudo cargar el registro.</td></tr>';
           return;
         }
 
-        allRequests = data || [];
+        rows = (reqs || []).map(r => {
+          const cm = r.commodities_master;
+          const itemName = cm ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name) : '—';
+
+          const user = usersById[r.requester_discord_id];
+          const requesterName = user?.handle_name || user?.discord_username || r.requester_discord_id || '—';
+
+          // “Cerrada”: completada/rechazada/cancelada -> usamos completed_at si existe, si no approved_at como fallback
+          let closedAt = null;
+          if (['completada','rechazada','cancelada'].includes(r.status)) {
+            closedAt = r.completed_at || r.approved_at || null;
+          }
+
+          return {
+            id: r.id,
+            tipo: r.request_type || null,
+            activo: 'commodities',
+            solicitante: requesterName,
+            estado: r.status || 'pendiente',
+            creada_at: r.created_at || null,
+            cerrada_at: closedAt,
+            detalle_url: `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
+            itemName,
+            raw: r
+          };
+        });
+
         renderTable();
       }
 
-      function calcFechaCerrada(r) {
-        const st = r.status;
-
-        if (st === "completada") return r.completed_at || r.requester_sign_at || r.warehouse_sign_at;
-        if (st === "cancelada") return r.requester_sign_at || r.warehouse_sign_at;
-        if (st === "rechazada") return r.approved_at || r.created_at;
-
-        return null;
-      }
-
-      function isoFromDateTime(dtStr){
-        if (!dtStr) return "";
-        // created_at viene ISO -> YYYY-MM-DD
-        return String(dtStr).slice(0,10);
-      }
-
-      function withinRange(createdISO){
-        if (!createdISO) return true;
-
-        // Inclusivo
-        if (isoFrom && createdISO < isoFrom) return false;
-        if (isoTo && createdISO > isoTo) return false;
+      function inDateRange(isoDate, fromIso, toIso){
+        if (!isoDate) return true;
+        const d = isoDate.slice(0,10); // YYYY-MM-DD
+        if (fromIso && d < fromIso) return false;
+        if (toIso && d > toIso) return false;
         return true;
       }
 
-      function renderTable() {
-        tbody.innerHTML = "";
+      function renderTable(){
+        tbody.innerHTML = '';
 
-        const est = filtroEstado.value;
-        const tipo = filtroTipo.value;
-        const activo = filtroActivo.value;
-        const term = (buscador.value || "").toLowerCase();
+        const term = (searchInput.value || '').trim().toLowerCase();
+        const st   = statusFilter.value;
+        const tp   = typeFilter.value;
+        const act  = activeFilter.value;
 
-        let painted = 0;
+        const filtered = rows.filter(r => {
+          if (st !== 'todas' && r.estado !== st) return false;
+          if (tp !== 'todas' && r.tipo !== tp) return false;
+          if (act !== 'todas' && r.activo !== act) return false;
 
-        allRequests.forEach(r => {
-          // Estado
-          if (est !== "todas" && r.status !== est) return;
+          // Rango fechas por creada
+          const createdISO = r.creada_at ? new Date(r.creada_at).toISOString().slice(0,10) : '';
+          if (!inDateRange(createdISO, fromISO, toISO)) return false;
 
-          // Tipo
-          if (tipo !== "todas" && r.request_type !== tipo) return;
-
-          // Activo (de momento: todo viene de requests => commodities)
-          const activoKey = "commodities";
-          if (activo !== "todas" && activoKey !== activo) return;
-
-          const cm = r.commodities_master;
-          const itemName = cm ? (cm.symbol ? `${cm.name} (${cm.symbol})` : cm.name) : (r.item_id || "");
-
-          const requester = resolveUser(r.requester_discord_id);
-
-          // Fecha (creada)
-          const createdISO = isoFromDateTime(r.created_at);
-          if (!withinRange(createdISO)) return;
-
-          // Search
           if (term) {
-            const searchable = `${itemName} ${requester}`.toLowerCase();
-            if (!searchable.includes(term)) return;
+            const hay = `${r.solicitante} ${r.itemName} #${r.id}`.toLowerCase();
+            if (!hay.includes(term)) return false;
           }
 
-          const tr = document.createElement("tr");
-          const fechaCierre = calcFechaCerrada(r);
-
-          tr.innerHTML = `
-            <td>#${r.id}</td>
-            <td><span class="${tipoTagClass(r.request_type)}">${renderTipo(r.request_type)}</span></td>
-            <td><span class="${activoTagClass(activoKey)}">${renderActivoLabel(activoKey)}</span></td>
-            <td>${requester}</td>
-            <td><span class="${statusTagClass(r.status || "pendiente")}">${formatStatus(r.status || "pendiente")}</span></td>
-            <td>${r.created_at ? new Date(r.created_at).toLocaleString() : "-"}</td>
-            <td>${fechaCierre ? new Date(fechaCierre).toLocaleString() : "-"}</td>
-          `;
-
-          const tdDetalle = document.createElement("td");
-          const btnDetalle = document.createElement("button");
-          btnDetalle.type = "button";
-          btnDetalle.className = "btn btn-secondary btn-sm";
-          btnDetalle.textContent = "Ver";
-          btnDetalle.addEventListener("click", (ev) => {
-            ev.stopPropagation();
-            window.open(
-              `./solicitud_detalle.html?id=${encodeURIComponent(r.id)}`,
-              "_blank",
-              "width=720,height=760"
-            );
-          });
-          tdDetalle.appendChild(btnDetalle);
-          tr.appendChild(tdDetalle);
-
-          tbody.appendChild(tr);
-          painted++;
+          return true;
         });
 
-        if (!painted) {
-          const tr = document.createElement("tr");
-          const td = document.createElement("td");
+        if (!filtered.length) {
+          const tr = document.createElement('tr');
+          const td = document.createElement('td');
           td.colSpan = 8;
-          td.textContent = term || est !== "todas" || tipo !== "todas" || activo !== "todas" || isoFrom || isoTo
-            ? "No hay resultados con esos filtros."
-            : "No hay registros para mostrar.";
+          td.textContent = 'No hay resultados con esos filtros.';
           tr.appendChild(td);
           tbody.appendChild(tr);
+          return;
         }
+
+        filtered.forEach(r => {
+          const tr = document.createElement('tr');
+
+          // ID
+          const tdId = document.createElement('td');
+          tdId.textContent = `#${r.id}`;
+
+          // Tipo (TAG)
+          const tdTipo = document.createElement('td');
+          tdTipo.innerHTML = `<span class="${tipoTagClass(r.tipo)}">${renderTipo(r.tipo)}</span>`;
+
+          // Activo (TAG tipo “neutral”: usamos tag base si no existe específico)
+          const tdAct = document.createElement('td');
+          // si tienes tags por activo en components, cámbialo aquí a tag tag--<activo>
+          tdAct.innerHTML = `<span class="tag">${renderActivo(r.activo)}</span>`;
+
+          // Solicitante
+          const tdSol = document.createElement('td');
+          tdSol.textContent = r.solicitante || '—';
+
+          // Estado (TAG)
+          const tdEst = document.createElement('td');
+          tdEst.innerHTML = `<span class="${statusTagClass(r.estado)}">${formatStatus(r.estado)}</span>`;
+
+          // Creada
+          const tdCre = document.createElement('td');
+          tdCre.textContent = r.creada_at ? new Date(r.creada_at).toLocaleString() : '—';
+
+          // Cerrada
+          const tdCer = document.createElement('td');
+          tdCer.textContent = r.cerrada_at ? new Date(r.cerrada_at).toLocaleString() : '—';
+
+          // Detalle (botón Ver)
+          const tdDet = document.createElement('td');
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn btn-secondary btn-sm';
+          btn.textContent = 'Ver';
+          btn.disabled = false;
+          btn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            window.open(r.detalle_url, '_blank', 'width=720,height=760');
+          });
+          tdDet.appendChild(btn);
+
+          tr.appendChild(tdId);
+          tr.appendChild(tdTipo);
+          tr.appendChild(tdAct);
+          tr.appendChild(tdSol);
+          tr.appendChild(tdEst);
+          tr.appendChild(tdCre);
+          tr.appendChild(tdCer);
+          tr.appendChild(tdDet);
+
+          tbody.appendChild(tr);
+        });
       }
 
-      function clearFilters(){
-        buscador.value = "";
-        filtroEstado.value = "todas";
-        filtroTipo.value = "todas";
-        filtroActivo.value = "todas";
-        isoFrom = "";
-        isoTo = "";
-        dpFrom?.setISO("");
-        dpTo?.setISO("");
+      /* ===================== 6) Eventos filtros ===================== */
+      function resetFilters(){
+        searchInput.value = '';
+        statusFilter.value = 'todas';
+        typeFilter.value = 'todas';
+        activeFilter.value = 'todas';
+
+        fromISO = '';
+        toISO = '';
+        fromIsoHidden.value = '';
+        toIsoHidden.value = '';
+        fromApi?.setISO('');
+        toApi?.setISO('');
+
         renderTable();
       }
 
-      buscador.addEventListener("input", renderTable);
-      filtroEstado.addEventListener("change", renderTable);
-      filtroTipo.addEventListener("change", renderTable);
-      filtroActivo.addEventListener("change", renderTable);
-      btnClear.addEventListener("click", clearFilters);
+      searchInput.addEventListener('input', renderTable);
+      statusFilter.addEventListener('change', renderTable);
+      typeFilter.addEventListener('change', renderTable);
+      activeFilter.addEventListener('change', renderTable);
+      clearBtn.addEventListener('click', resetFilters);
 
-      await loadRequests();
+      /* ===================== Init ===================== */
+      await loadRows();
     });
   </script>
 </body>
