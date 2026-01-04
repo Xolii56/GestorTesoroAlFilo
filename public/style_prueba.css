@@ -951,29 +951,50 @@ body { min-height: 100vh; }
     inset 0 0 0 1px rgba(239,68,68,0.25);
 }
 /* =========================================================
-   TOOLBAR / FILTROS — ALINEADO GLOBAL (incluye DAT-01)
+   TOOLBAR / FILTROS — ALINEADO CON FILAS DE LABEL
    ========================================================= */
 
 :root{
   --ui-pill-h: 34px;
+  --ui-filter-label-h: 16px; /* altura reservada para el label */
+  --ui-filter-gap: 6px;
 }
 
-/* contenedor de filtros (barra) */
+/* contenedor general */
 .ui-toolbar{
   display:flex;
   flex-wrap:wrap;
   gap:.6rem;
-  align-items:stretch; /* clave */
+  align-items:flex-start; /* importante: cada filtro gestiona su propia altura */
 }
 
+/* grupo dentro de la toolbar */
 .ui-toolbar .ui-group{
   display:flex;
   flex-wrap:wrap;
   gap:.45rem;
-  align-items:stretch; /* clave */
+  align-items:flex-start;
 }
 
-/* pills estándar (search/select/botones en toolbar) */
+/* cada filtro = label + control */
+.ui-toolbar .ui-filter{
+  display:flex;
+  flex-direction:column;
+  gap:var(--ui-filter-gap);
+}
+
+/* label reservado SIEMPRE (aunque esté vacío) */
+.ui-toolbar .ui-filter-label{
+  height:var(--ui-filter-label-h);
+  line-height:var(--ui-filter-label-h);
+  font-size:.7rem;
+  opacity:.65;
+  letter-spacing:.03em;
+  padding-left:.55rem;
+  user-select:none;
+}
+
+/* pills estándar */
 .ui-toolbar input[type="search"],
 .ui-toolbar select,
 .ui-toolbar .btn{
@@ -1004,7 +1025,7 @@ body { min-height: 100vh; }
   padding:0 .75rem;
   display:flex;
   align-items:center;
-  border-radius:999px; /* igual que el resto de pills */
+  border-radius:999px;
   line-height:normal;
   width:100%;
 }
