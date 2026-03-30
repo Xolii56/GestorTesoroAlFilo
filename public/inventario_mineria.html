@@ -155,6 +155,42 @@
     }
     .min-filter-group select { width: auto; min-width: 140px; }
 
+    /* ── Autocomplete material ── */
+    .mat-ac-wrap {
+      position: relative;
+      display: inline-block;
+    }
+    .mat-ac-wrap input {
+      width: auto;
+      min-width: 160px;
+    }
+    .mat-ac-list {
+      position: absolute;
+      top: calc(100% + 3px);
+      left: 0;
+      min-width: 100%;
+      z-index: 200;
+      background: #080f1e;
+      border: 1px solid rgba(148,163,184,0.35);
+      border-radius: .5rem;
+      max-height: 220px;
+      overflow-y: auto;
+      list-style: none;
+      padding: .25rem 0;
+      display: none;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+    }
+    .mat-ac-list.open { display: block; }
+    .mat-ac-list li {
+      padding: .35rem .7rem;
+      font-size: .83rem;
+      cursor: pointer;
+      color: #e5e7eb;
+      white-space: nowrap;
+    }
+    .mat-ac-list li:hover { background: rgba(56,189,248,0.15); color: #38bdf8; }
+    .mat-ac-list li.ac-empty { color: #94a3b8; cursor: default; font-style: italic; }
+
     /* ── Range slider doble ── */
     .range-wrap {
       position: relative;
@@ -459,9 +495,10 @@
         <div class="min-filters">
           <div class="min-filter-group">
             <label>Material</label>
-            <select id="inv-filter-mat">
-              <option value="">Todos</option>
-            </select>
+            <div class="mat-ac-wrap">
+              <input type="text" id="inv-filter-mat" placeholder="Todos…" autocomplete="off" />
+              <ul class="mat-ac-list" id="inv-filter-mat-list"></ul>
+            </div>
           </div>
 
           <div class="min-filter-group">
@@ -763,7 +800,7 @@
       let traspasos      = [];
       let barChart       = null;
       let pieChart       = null;
-      let pendingItemId  = null; // ID del mining_inventory a traspasar
+      let pendingItemId  = null;
 
       /* ══════════════════════════════════════
          HELPERS
@@ -968,12 +1005,52 @@
       /* ══════════════════════════════════════
          INVENTARIO
       ══════════════════════════════════════ */
+      let _matOptions = [];
+
       function populateMatFilter() {
-        const sel = document.getElementById('inv-filter-mat');
-        const cur = sel.value;
-        const mats = [...new Set(inventario.map(r => r.material))].sort();
-        sel.innerHTML = '<option value="">Todos</option>' +
-          mats.map(m => `<option ${m === cur ? 'selected' : ''}>${m}</option>`).join('');
+        _matOptions = [...new Set(inventario.map(r => r.material))].sort();
+      }
+
+      function setupMatAc() {
+        const input = document.getElementById('inv-filter-mat');
+        const list  = document.getElementById('inv-filter-mat-list');
+
+        function renderList(items) {
+          if (!items.length) {
+            list.innerHTML = '<li class="ac-empty">Sin resultados</li>';
+          } else {
+            list.innerHTML = '<li data-val="">Todos</li>' +
+              items.map(m => `<li data-val="${m}">${m}</li>`).join('');
+          }
+          list.classList.add('open');
+        }
+
+        input.addEventListener('input', () => {
+          const q = input.value.trim().toLowerCase();
+          const filtered = q ? _matOptions.filter(m => m.toLowerCase().includes(q)) : _matOptions;
+          renderList(filtered);
+          renderInv();
+        });
+
+        input.addEventListener('focus', () => {
+          const q = input.value.trim().toLowerCase();
+          const filtered = q ? _matOptions.filter(m => m.toLowerCase().includes(q)) : _matOptions;
+          if (filtered.length) renderList(filtered);
+        });
+
+        list.addEventListener('mousedown', (e) => {
+          const li = e.target.closest('li[data-val]');
+          if (!li) return;
+          input.value = li.dataset.val;
+          list.classList.remove('open');
+          renderInv();
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!input.contains(e.target) && !list.contains(e.target)) {
+            list.classList.remove('open');
+          }
+        });
       }
 
       // Slider doble
@@ -992,26 +1069,27 @@
       document.getElementById('range-fill').style.left  = '0%';
       document.getElementById('range-fill').style.width = '100%';
 
-      document.getElementById('inv-filter-mat').addEventListener('change', renderInv);
+      setupMatAc();
       document.getElementById('inv-filter-ub').addEventListener('change', renderInv);
 
       document.getElementById('btn-reset-filtros').addEventListener('click', () => {
         document.getElementById('inv-filter-mat').value = '';
         document.getElementById('inv-filter-ub').value  = '';
+        document.getElementById('inv-filter-mat-list').classList.remove('open');
         document.getElementById('slider-min').value = 0;
         document.getElementById('slider-max').value = 1000;
         window.onSliderInput();
       });
 
       function renderInv() {
-        const mat = document.getElementById('inv-filter-mat').value;
+        const mat = document.getElementById('inv-filter-mat').value.trim().toLowerCase();
         const ub  = document.getElementById('inv-filter-ub').value;
         const qMin = parseInt(document.getElementById('slider-min').value);
         const qMax = parseInt(document.getElementById('slider-max').value);
         const [lo, hi] = [Math.min(qMin, qMax), Math.max(qMin, qMax)];
 
         const rows = inventario.filter(r => {
-          if (mat && r.material !== mat) return false;
+          if (mat && !r.material.toLowerCase().includes(mat)) return false;
           if (ub  && r.ubicacion !== ub) return false;
           if (r.calidad < lo || r.calidad > hi) return false;
           return true;
@@ -1120,7 +1198,6 @@
         const btn = document.getElementById('btn-confirm-traspaso');
         btn.disabled = true;
 
-        // Insertar solicitud de traspaso
         const { data: newTraspaso, error: tErr } = await supa
           .from('mining_traspasos')
           .insert({
@@ -1174,7 +1251,6 @@
             }
           }
         } catch (notifErr) {
-          // No romper el flujo si las notificaciones fallan
           console.warn('Error enviando notificaciones de traspaso:', notifErr);
         }
 
@@ -1366,7 +1442,6 @@
           return;
         }
 
-        // Si se acepta, cambiar ubicacion en mining_inventory
         if (decision === 'aceptado' && itemId) {
           const { error: invErr } = await supa
             .from('mining_inventory')
