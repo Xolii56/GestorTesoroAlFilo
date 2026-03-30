@@ -606,16 +606,6 @@
           <label>Material</label>
           <select id="f-material">
             <option value="">Selecciona un material...</option>
-            <option>Quantanium</option>
-            <option>Agricium</option>
-            <option>Laranite</option>
-            <option>Titanium</option>
-            <option>Diamond</option>
-            <option>Bexalite</option>
-            <option>Taranite</option>
-            <option>Hephaestanite</option>
-            <option>Borase</option>
-            <option>Gold</option>
           </select>
         </div>
         <div class="min-field">
@@ -730,6 +720,24 @@
 
       const currentUserHandle =
         meRow?.handle_name || meRow?.discord_username || session.user.email || session.user.id;
+
+      // Cargar materiales desde commodities_master
+      const { data: commodities, error: commError } = await supa
+        .from('commodities_master')
+        .select('id, name, symbol')
+        .order('name', { ascending: true });
+
+      if (commError) {
+        console.error('Error cargando commodities_master:', commError);
+      } else {
+        const fMaterial = document.getElementById('f-material');
+        (commodities || []).forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.name;
+          opt.textContent = c.symbol ? `${c.name} (${c.symbol})` : c.name;
+          fMaterial.appendChild(opt);
+        });
+      }
 
       // Mostrar tab Tesoro si tiene permisos
       if (canManageTraspasos) {
