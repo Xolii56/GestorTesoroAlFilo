@@ -318,6 +318,9 @@
 
           <div class="card module-card" data-module="sol_armeria">
             <span class="module-chip">Armería</span>
+          
+          <div class="card module-card" data-module="inventario_mineria">
+            <span class="module-chip">Inventario Minería</span> 
           </div>
         </div>
       </section>
@@ -542,7 +545,8 @@
         avales: 'solicitudes',
         banco: 'almacenes',
         reabastecimiento: 'almacenes',
-        contratos_trabajo: 'usuarios'
+        contratos_trabajo: 'usuarios',
+        inventario_mineria: 'almacenes'
       };
 
       function getPermLevelForModule(normMod) {
@@ -640,6 +644,10 @@
           }
           if (mod === 'reabastecimiento') {
             alert('El módulo "Reabastecimiento" todavía no está implementado.');
+            return;
+          }
+          if (mod === 'inventario_mineria') {
+            window.location.href = './inventario_mineria.html';
             return;
           }
 
