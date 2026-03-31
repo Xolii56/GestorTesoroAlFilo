@@ -1,262 +1,532 @@
 <!doctype html>
+<!-- public/index.html · v4 — AlFilo.org Landing dinámica -->
 <html lang="es">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Inventario — Login</title>
-  <link rel="stylesheet" href="./style.css"/>
-
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="./config.js" defer></script>
-  <script src="./modules/db.js" defer></script>
-  <script src="./modules/auth.js" defer></script>
-  <script src="./modules/layout.js" defer></script>
-
-  <style>
-    main {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 2rem;
-      min-height: calc(100vh - 90px);
-    }
-    #admin-login-btn {
-      position: absolute;
-      right: 20px;
-      top: 90px;
-      font-size: 0.8rem;
-      padding: 0.35rem 0.75rem;
-      border-radius: 999px;
-      cursor: pointer;
-      background: rgba(0,0,0,0.55);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.2);
-      backdrop-filter: blur(8px);
-    }
-    #admin-login-btn:hover {
-      background: rgba(0,0,0,0.85);
-    }
-    #login-discord {
-      width: 100%;
-    }
-  </style>
-
+  <meta name="description" content="AlFilo — Organización operativa en Star Citizen. Industrial, logística, combate y operaciones coordinadas desde 2949."/>
+  <meta property="og:title"       content="AlFilo — Star Citizen"/>
+  <meta property="og:description" content="Organización operativa en Star Citizen desde 2949."/>
+  <title>AlFilo — Star Citizen</title>
+  <link rel="stylesheet" href="./landing.css"/>
 </head>
 <body>
 
-  <!-- Header público -->
-  <div id="site-header"></div>
+<!-- ═══════════════════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════════════════ -->
+<header class="af-header">
 
-  <!-- Botón admin pequeño -->
-  <button id="admin-login-btn">Acceso admin</button>
-
-  <main>
-    <div class="card" style="max-width:420px;width:100%;text-align:center;">
-      <h2>Accede al Tesoro</h2>
-      <p>Inicia sesión para acceder al inventario y crear solicitudes.</p>
-
-      <div style="margin-top:1.2rem">
-        <button id="login-discord">Entrar con Discord</button>
-      </div>
-
-      <p style="opacity:.6;margin-top:1rem;font-size:.85rem">
-        (Solo para miembros de la organización)
-      </p>
+  <a class="af-logo" href="#" aria-label="AlFilo inicio">
+    <div class="af-logo-gem">
+      <div class="af-logo-gem-ring"></div>
+      <div class="af-logo-gem-core"></div>
     </div>
-  </main>
-
-  <!-- 🚨 Lógica previa: header + redirect si ya hay sesión -->
-  <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      // Header en modo público
-      await loadHeader('public');
-
-      // Redirigir al panel si ya hay sesión
-      const { data: { session } } = await window.supa.auth.getSession();
-      if (session) {
-        window.location.href = "./app_ui.html";
-      }
-    });
-  </script>
-
-  <!-- 🚨 Tu módulo previo: comprobación + bot + org_status -->
-  <script type="module">
-    import { ensureProfile, getOrgStatus } from './modules/profile.js';
-
-    const BOT_URL = 'https://juvhyzjjtwfokgnrnejv.supabase.co/functions/v1/check-discord-member';
-
-    async function callBotCheck(discord_user_id) {
-      const res = await fetch(BOT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ discord_user_id })
-      });
-
-      if (!res.ok) {
-        console.error('HTTP error en check-discord-member', res.status);
-        return { allowed: false, reason: 'BOT_HTTP_ERROR' };
-      }
-
-      return await res.json();
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      const { supa } = window;
-
-      const { data: { session } } = await supa.auth.getSession();
-      if (!session) return; // todavía no ha iniciado login
-
-      // 1) Crear/actualizar fila en public.users
-      const profile = await ensureProfile();
-      if (!profile || !profile.discord_user_id) {
-        await supa.auth.signOut();
-        alert('No se ha podido obtener tu perfil de Discord.');
-        return;
-      }
-
-      // 2) Preguntar al bot (Edge Function)
-      const botResult = await callBotCheck(profile.discord_user_id);
-      console.log('check-discord-member:', botResult);
-
-      if (!botResult.allowed) {
-        await supa.auth.signOut();
-        alert('No eres miembro de la organización o no tienes un rol válido.\nMotivo: ' + (botResult.reason || 'desconocido'));
-        return;
-      }
-
-      // 3) Doble check de org_status en la BD
-      const status = await getOrgStatus();
-      if (!status || !['miembro','daga','espada','admin'].includes(status)) {
-        await supa.auth.signOut();
-        alert('Tu acceso al Tesoro no está activado. (org_status=' + status + ')');
-        return;
-      }
-
-      // 4) Si ha pasado todo, entrar
-      window.location.href = './app_ui.html';
-    });
-  </script>
-
-  <!-- 🔻 MODAL PARA LOGIN ADMIN (NUEVO) -->
-  <div id="admin-modal-backdrop"
-       style="position:fixed;inset:0;background:rgba(0,0,0,.65);
-              display:none;align-items:center;justify-content:center;z-index:50;">
-    <div style="background:#111827;border-radius:0.75rem;padding:1.2rem 1.4rem;
-                width:100%;max-width:360px;border:1px solid rgba(148,163,184,0.6);
-                box-shadow:0 18px 40px rgba(0,0,0,0.6);">
-      <h3 style="margin:0 0 .75rem;">Acceso administrador</h3>
-      <p style="margin:0 0 1rem;opacity:.8;font-size:.85rem;">
-        Introduce las credenciales de administración interna.
-      </p>
-
-      <form id="admin-login-form">
-        <label style="display:block;font-size:.8rem;margin-bottom:.25rem;">Email</label>
-        <input id="admin-email" type="email" required
-               style="width:100%;margin-bottom:.75rem;padding:.4rem .5rem;
-                      border-radius:.4rem;border:1px solid rgba(148,163,184,0.8);
-                      background:#020617;color:#e5e7eb;"/>
-
-        <label style="display:block;font-size:.8rem;margin-bottom:.25rem;">Contraseña</label>
-        <div style="display:flex;align-items:center;margin-bottom:.75rem;
-                    border-radius:.4rem;border:1px solid rgba(148,163,184,0.8);
-                    background:#020617;overflow:hidden;">
-          <input id="admin-password" type="password" required
-                 style="flex:1;border:none;outline:none;background:transparent;
-                        color:#e5e7eb;padding:.4rem .5rem;"/>
-          <button type="button" id="admin-toggle-pass"
-                  style="border:none;background:transparent;color:#9ca3af;
-                         padding:0 .55rem;cursor:pointer;font-size:.85rem;">
-            👁
-          </button>
-        </div>
-
-        <div id="admin-error"
-             style="min-height:1rem;font-size:.8rem;color:#fca5a5;margin-bottom:.5rem;"></div>
-
-        <div style="display:flex;justify-content:flex-end;gap:.5rem;">
-          <button type="button" id="admin-cancel"
-                  style="padding:.35rem .7rem;font-size:.85rem;border-radius:.4rem;
-                         border:1px solid rgba(148,163,184,0.8);background:#020617;
-                         color:#e5e7eb;cursor:pointer;">
-            Cancelar
-          </button>
-          <button type="submit"
-                  style="padding:.35rem .9rem;font-size:.85rem;border-radius:.4rem;
-                         border:none;background:#22c55e;color:#020617;font-weight:600;
-                         cursor:pointer;">
-            Entrar
-          </button>
-        </div>
-      </form>
+    <div>
+      <div class="af-logo-name">AlFilo</div>
+      <div class="af-logo-sub">Star Citizen Organization</div>
     </div>
+  </a>
+
+  <ul class="af-nav" id="af-nav">
+    <li><a href="#" onclick="activateTab(0);return false;">Manifiesto</a></li>
+    <li><a href="#" onclick="activateTab(1);return false;">Estructura</a></li>
+    <li><a href="#" onclick="activateTab(2);return false;">Actividades</a></li>
+    <li><a href="#" onclick="activateTab(3);return false;">Únete</a></li>
+    <li><a href="#" onclick="activateTab(4);return false;">Embajada</a></li>
+  </ul>
+
+  <a href="./app.html" class="af-access-btn">
+    Área de miembros ›
+  </a>
+
+  <button class="af-nav-toggle" id="af-toggle" aria-label="Menú">☰</button>
+
+</header>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     MAIN — sección dinámica con tabs
+═══════════════════════════════════════════════════════ -->
+<main class="af-main" id="af-main">
+
+  <!-- ── Cuadrícula de fondo ── -->
+  <div class="af-grid-lines" aria-hidden="true"></div>
+
+  <!-- ── Capa de vídeos (uno por tab) ── -->
+  <!--
+    Para activar un vídeo, coloca el archivo en ./media/ con el nombre indicado.
+    Si el archivo no existe, el fallback CSS actúa automáticamente.
+  -->
+  <div class="af-bg-layer" aria-hidden="true">
+
+    <div class="af-bg-item active" data-idx="0">
+      <video class="af-bg-video" autoplay muted loop playsinline preload="none">
+        <source src="./media/manifesto.mp4" type="video/mp4"/>
+      </video>
+      <div class="af-bg-fallback af-bg-fallback--0"></div>
+    </div>
+
+    <div class="af-bg-item" data-idx="1">
+      <video class="af-bg-video" muted loop playsinline preload="none">
+        <source src="./media/structure.mp4" type="video/mp4"/>
+      </video>
+      <div class="af-bg-fallback af-bg-fallback--1"></div>
+    </div>
+
+    <div class="af-bg-item" data-idx="2">
+      <video class="af-bg-video" muted loop playsinline preload="none">
+        <source src="./media/activities.mp4" type="video/mp4"/>
+      </video>
+      <div class="af-bg-fallback af-bg-fallback--2"></div>
+    </div>
+
+    <div class="af-bg-item" data-idx="3">
+      <video class="af-bg-video" muted loop playsinline preload="none">
+        <source src="./media/join.mp4" type="video/mp4"/>
+      </video>
+      <div class="af-bg-fallback af-bg-fallback--3"></div>
+    </div>
+
+    <div class="af-bg-item" data-idx="4">
+      <video class="af-bg-video" muted loop playsinline preload="none">
+        <source src="./media/embassy.mp4" type="video/mp4"/>
+      </video>
+      <div class="af-bg-fallback af-bg-fallback--4"></div>
+    </div>
+
   </div>
 
-  <!-- 🚨 Lógica de acceso admin usando el modal (contraseña oculta + botón ver) -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const { supa } = window;
+  <!-- Overlays -->
+  <div class="af-overlay-top"      aria-hidden="true"></div>
+  <div class="af-overlay-vignette" aria-hidden="true"></div>
+  <div class="af-overlay-bottom"   aria-hidden="true"></div>
 
-      const adminBtn   = document.getElementById('admin-login-btn');
-      const backdrop   = document.getElementById('admin-modal-backdrop');
-      const form       = document.getElementById('admin-login-form');
-      const emailInput = document.getElementById('admin-email');
-      const passInput  = document.getElementById('admin-password');
-      const toggleBtn  = document.getElementById('admin-toggle-pass');
-      const cancelBtn  = document.getElementById('admin-cancel');
-      const errorBox   = document.getElementById('admin-error');
 
-      function openModal() {
-        if (!backdrop) return;
-        backdrop.style.display = 'flex';
-        errorBox.textContent = '';
-        emailInput.value = '';
-        passInput.value = '';
-        passInput.type = 'password';
-        emailInput.focus();
+  <!-- ── PANELES DE CONTENIDO ── -->
+  <div class="af-content-wrap">
+
+    <!-- ══ PANEL 0: MANIFIESTO ══════════════════════════ -->
+    <div class="af-panel active" data-idx="0" aria-label="Manifiesto">
+      <div class="af-panel-inner">
+
+        <!-- Columna izquierda: texto del manifiesto -->
+        <div>
+          <div class="af-eyebrow">Historia y doctrina</div>
+          <h2 class="af-panel-title">Manifiesto<br>AlFilo</h2>
+
+          <p class="af-mani-intro">
+            Un grupo de personas nos juntamos para formar un lugar con una visión: buscar la rentabilidad en el juego, el respeto a los compañeros y una cadena de mando basada en la meritocracia.
+          </p>
+
+          <blockquote class="af-mani-mission">
+            En ALFILO queremos ver todo el contenido del juego con un ritmo sano. Somos un engranaje forjado a partir de las ilusiones y las aportaciones de sus miembros con la finalidad de divertirse.
+          </blockquote>
+
+          <div class="af-values">
+            <div class="af-value">
+              <span class="af-value-code">Respeto</span>
+              <span class="af-value-text">El respeto por los compañeros es fundamental en todo momento.</span>
+            </div>
+            <div class="af-value">
+              <span class="af-value-code">Cooperación</span>
+              <span class="af-value-text">Reconocemos la importancia del trabajo en equipo para alcanzar nuestros objetivos.</span>
+            </div>
+            <div class="af-value">
+              <span class="af-value-code">ProBillete</span>
+              <span class="af-value-text">Un ataque debe tener motivación económica legítima. Un contrato aceptado se cumple.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna derecha: timeline histórico -->
+        <div>
+          <div class="af-timeline-label">// Línea histórica AlFilo</div>
+          <div class="af-timeline">
+
+            <div class="af-tl-item">
+              <span class="af-tl-year">2949</span>
+              <span class="af-tl-event">Fundación de <strong>AlFilo</strong> por un grupo de personas con ganas de disfrutar Star Citizen.</span>
+            </div>
+            <div class="af-tl-item">
+              <span class="af-tl-year">2949</span>
+              <span class="af-tl-event">Llegamos a <strong>100 miembros</strong> con tan solo 218 días de vida.</span>
+            </div>
+            <div class="af-tl-item">
+              <span class="af-tl-year">2951</span>
+              <span class="af-tl-event"><strong>1.000 días de vida</strong> con más de 400 miembros activos.</span>
+            </div>
+            <div class="af-tl-item">
+              <span class="af-tl-year">2952</span>
+              <span class="af-tl-event">AlFilo alcanza los <strong>500 miembros</strong>.</span>
+            </div>
+            <div class="af-tl-item">
+              <span class="af-tl-year">2952</span>
+              <span class="af-tl-event">Participación en el evento <strong>JumpTown</strong> con más de 30 miembros simultáneos.</span>
+            </div>
+            <div class="af-tl-item">
+              <span class="af-tl-year">2953</span>
+              <span class="af-tl-event">Completamos el <strong>DaymarRally</strong> por primera vez.</span>
+            </div>
+            <div class="af-tl-item">
+              <span class="af-tl-year">2953</span>
+              <span class="af-tl-event">Participación en <strong>Fight or Flight</strong> y presencia en <strong>CitizenCon</strong> con público en vivo.</span>
+            </div>
+            <div class="af-tl-item">
+              <span class="af-tl-year">2954</span>
+              <span class="af-tl-event">AlFilo entra en los salones de la <strong>CitizenCon</strong>. Diseños y camiseta oficial del clan.</span>
+            </div>
+            <div class="af-tl-item">
+              <span class="af-tl-year">2955</span>
+              <span class="af-tl-event"><strong>6 años de vida</strong>. Más de <strong>700 integrantes</strong> activos.</span>
+            </div>
+            <div class="af-tl-item">
+              <span class="af-tl-year">2956</span>
+              <span class="af-tl-event">AlFilo participa en el <strong>DaymarRally</strong> con 2 equipos propios.</span>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- ══ PANEL 1: ESTRUCTURA ══════════════════════════ -->
+    <div class="af-panel" data-idx="1" aria-label="Estructura organizativa">
+      <div class="af-panel-inner--wide" style="width:100%;max-width:1200px;margin:0 auto;">
+
+        <div>
+          <div class="af-eyebrow">Organización interna</div>
+          <h2 class="af-panel-title">Nuestra estructura</h2>
+        </div>
+
+        <div class="af-ranks">
+
+          <div class="af-rank af-rank--top">
+            <div class="af-rank-badge">// Rango fundacional</div>
+            <div class="af-rank-name">Fundador</div>
+            <div class="af-rank-desc">Vela por los valores y el correcto funcionamiento del clan. A efectos de juego comparte derechos y deberes con el rango Daga.</div>
+            <span class="af-rank-tag">Meritocracia</span>
+          </div>
+
+          <div class="af-rank af-rank--top">
+            <div class="af-rank-badge">// Alto mando</div>
+            <div class="af-rank-name">Espada</div>
+            <div class="af-rank-desc">Vela por el bienestar y asuntos de importancia del clan. Comparte derechos y deberes con el rango Daga.</div>
+            <span class="af-rank-tag">Liderazgo</span>
+          </div>
+
+          <div class="af-rank af-rank--top">
+            <div class="af-rank-badge">// Rango activo</div>
+            <div class="af-rank-name">Daga</div>
+            <div class="af-rank-desc">Mayor participación y responsabilidad. Derecho a voto, organización de eventos y promoción de valores. AlFilo debe ser organización principal.</div>
+            <span class="af-rank-tag">Main org requerida</span>
+          </div>
+
+          <div class="af-rank">
+            <div class="af-rank-badge">// Rango estándar</div>
+            <div class="af-rank-name">Miembro</div>
+            <div class="af-rank-desc">Contribuye a la comunidad y sigue las normas. Participa en eventos del clan y obtención de licencias. No se requiere AlFilo como organización principal.</div>
+            <span class="af-rank-tag">Sin restricción de main</span>
+          </div>
+
+          <div class="af-rank">
+            <div class="af-rank-badge">// Acceso inicial</div>
+            <div class="af-rank-name">Afiliado</div>
+            <div class="af-rank-desc">Introducción amigable a la comunidad de AlFilo. Primer contacto con el clan y sus valores.</div>
+            <span class="af-rank-tag">Bienvenida</span>
+          </div>
+
+        </div>
+
+        <div class="af-struct-conclusion">
+          <p>AlFilo es una organización con visión clara: convertirse en un líder destacado dentro del universo de Star Citizen. Su misión se centra en un ambiente donde cada miembro pueda disfrutar al máximo el juego dentro de una estructura con valores sólidos.</p>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- ══ PANEL 2: ACTIVIDADES ══════════════════════════ -->
+    <div class="af-panel" data-idx="2" aria-label="Actividades">
+      <div class="af-panel-inner--wide" style="width:100%;max-width:1200px;margin:0 auto;">
+
+        <div>
+          <div class="af-eyebrow">Operaciones activas en el universo</div>
+          <h2 class="af-panel-title">Actividades</h2>
+        </div>
+
+        <div class="af-activities-grid">
+
+          <div class="af-act">
+            <div class="af-act-icon">⛏</div>
+            <div class="af-act-name">Minería</div>
+            <div class="af-act-desc">Extracción de minerales en asteroides, lunas y planetas. Coordinación de flotas de prospección y gestión de materiales en el Tesoro del clan.</div>
+            <div class="af-act-tag">// Mining ops</div>
+          </div>
+
+          <div class="af-act">
+            <div class="af-act-icon">🔧</div>
+            <div class="af-act-name">Salvamento</div>
+            <div class="af-act-desc">Recuperación de naves y componentes en zonas de conflicto y espacio profundo. Operaciones de salvamento legal e industrial coordinadas.</div>
+            <div class="af-act-tag">// Reclaiming ops</div>
+          </div>
+
+          <div class="af-act">
+            <div class="af-act-icon">🚚</div>
+            <div class="af-act-name">Logística</div>
+            <div class="af-act-desc">Transporte de commodities y recursos entre sistemas. Rutas de carga coordinadas con registro completo en el sistema del Tesoro.</div>
+            <div class="af-act-tag">// Hauling ops</div>
+          </div>
+
+          <div class="af-act">
+            <div class="af-act-icon">⚔</div>
+            <div class="af-act-name">Combate</div>
+            <div class="af-act-desc">Protección de activos industriales, escolta de flotas y respuesta táctica. Defensa del territorio económico de la organización con motivación legítima.</div>
+            <div class="af-act-tag">// Combat ops</div>
+          </div>
+
+          <div class="af-act">
+            <div class="af-act-icon">🏁</div>
+            <div class="af-act-name">Eventos</div>
+            <div class="af-act-desc">Participación activa en eventos del universo: DaymarRally, Fight or Flight, JumpTown y CitizenCon. AlFilo siempre presente donde importa.</div>
+            <div class="af-act-tag">// Community events</div>
+          </div>
+
+          <div class="af-act">
+            <div class="af-act-icon">🛸</div>
+            <div class="af-act-name">Exploración</div>
+            <div class="af-act-desc">Reconocimiento de zonas, mapeo de rutas y apertura de nuevos territorios para las operaciones del clan en sistemas como Stanton y Pyro.</div>
+            <div class="af-act-tag">// Exploration</div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- ══ PANEL 3: ÚNETE ════════════════════════════════ -->
+    <div class="af-panel" data-idx="3" aria-label="Únete a AlFilo">
+      <div class="af-panel-inner--full" style="width:100%;max-width:700px;margin:0 auto;">
+
+        <div class="af-eyebrow">Reclutamiento abierto</div>
+
+        <h2 class="af-panel-title">Únete a AlFilo</h2>
+
+        <p class="af-join-text">
+          Buscamos jugadores que quieran formar parte de una organización con estructura real. No importa tu experiencia: importa tu disposición a cooperar, respetar a los compañeros y contribuir a los objetivos del grupo.
+        </p>
+
+        <p class="af-join-text" style="margin-top:-.75rem;">
+          Con más de 700 miembros y 6 años de historia en Star Citizen, hay un lugar para ti en AlFilo.
+        </p>
+
+        <!--
+          PLACEHOLDER: Sustituye DISCORD_INVITE por el enlace real del servidor.
+          Ejemplo: https://discord.gg/tu-codigo-invite
+        -->
+        <a href="https://discord.gg/DISCORD_INVITE" target="_blank" rel="noopener noreferrer" class="af-discord-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026c.462-.62.874-1.275 1.226-1.963a.074.074 0 0 0-.041-.104 13.201 13.201 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028zM8.02 15.278c-1.182 0-2.157-1.069-2.157-2.38 0-1.312.956-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.956 2.38-2.157 2.38zm7.975 0c-1.183 0-2.157-1.069-2.157-2.38 0-1.312.955-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.946 2.38-2.157 2.38z"/>
+          </svg>
+          Unirse al servidor de Discord
+        </a>
+
+      </div>
+    </div>
+
+
+    <!-- ══ PANEL 4: EMBAJADA ══════════════════════════════ -->
+    <div class="af-panel" data-idx="4" aria-label="Solicitar embajada">
+      <div class="af-panel-inner--full" style="width:100%;max-width:700px;margin:0 auto;">
+
+        <div class="af-eyebrow af-eyebrow--gold">Relaciones externas · Formal</div>
+
+        <h2 class="af-panel-title af-panel-title--gold">Solicita una<br>embajada</h2>
+
+        <p class="af-embassy-intro">
+          Una embajada consiste en establecer una conexión formal entre tu organización y AlFilo. Es el canal oficial para iniciar relaciones de cooperación, contratos de servicio o alianzas operativas entre clanes del universo de Star Citizen.
+        </p>
+
+        <div class="af-embassy-details">
+          <div class="af-embassy-detail">
+            Canales de comunicación dedicados entre organizaciones con acceso formal a ambas partes.
+          </div>
+          <div class="af-embassy-detail">
+            Posibilidad de establecer contratos de servicio, acuerdos de cooperación o coordinación de operaciones conjuntas.
+          </div>
+          <div class="af-embassy-detail">
+            Proceso de validación interno de AlFilo antes de formalizar cualquier relación diplomática.
+          </div>
+          <div class="af-embassy-detail">
+            Tono serio y profesional. Las embajadas implican un compromiso real entre organizaciones.
+          </div>
+        </div>
+
+        <!--
+          PLACEHOLDER: Sustituye DISCORD_EMBASSY por el enlace al canal de diplomacia.
+          Ejemplo: https://discord.gg/canal-diplomacia
+        -->
+        <a href="https://discord.gg/DISCORD_EMBASSY" target="_blank" rel="noopener noreferrer" class="af-embassy-btn">
+          Contactar vía Discord <span style="margin-left:.25rem;">→</span>
+        </a>
+
+      </div>
+    </div>
+
+  </div>
+  <!-- /af-content-wrap -->
+
+
+  <!-- ── TAB STRIP ── -->
+  <nav class="af-tabs" id="af-tabs" aria-label="Secciones de la página">
+
+    <button class="af-tab active" data-idx="0" type="button">
+      <span class="af-tab-num">// 01</span>
+      <span class="af-tab-name">Manifiesto</span>
+      <span class="af-tab-micro">Historia · Doctrina</span>
+    </button>
+
+    <button class="af-tab" data-idx="1" type="button">
+      <span class="af-tab-num">// 02</span>
+      <span class="af-tab-name">Estructura</span>
+      <span class="af-tab-micro">Rangos · Organización</span>
+    </button>
+
+    <button class="af-tab" data-idx="2" type="button">
+      <span class="af-tab-num">// 03</span>
+      <span class="af-tab-name">Actividades</span>
+      <span class="af-tab-micro">Operaciones · Eventos</span>
+    </button>
+
+    <button class="af-tab" data-idx="3" type="button">
+      <span class="af-tab-num">// 04</span>
+      <span class="af-tab-name">Únete</span>
+      <span class="af-tab-micro">Reclutamiento</span>
+    </button>
+
+    <button class="af-tab" data-idx="4" type="button">
+      <span class="af-tab-num">// 05</span>
+      <span class="af-tab-name">Embajada</span>
+      <span class="af-tab-micro">Diplomacia · Formal</span>
+    </button>
+
+  </nav>
+
+</main>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════ -->
+<footer class="af-footer">
+  <div class="af-footer-brand">
+    <div class="af-footer-gem">
+      <div class="af-footer-gem-ring"></div>
+      <div class="af-footer-gem-core"></div>
+    </div>
+    <span class="af-footer-name">AlFilo · Star Citizen Org · © <span id="af-year"></span></span>
+  </div>
+  <div class="af-footer-copy">
+    Star Citizen® es marca registrada de Cloud Imperium Games Corp.<br>
+    AlFilo no está afiliado con Cloud Imperium Games.
+  </div>
+</footer>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     JS — lógica de tabs y vídeos
+═══════════════════════════════════════════════════════ -->
+<script>
+  /* ── Año en footer ── */
+  document.getElementById('af-year').textContent = new Date().getFullYear();
+
+  /* ── Referencias DOM ── */
+  const tabs     = document.querySelectorAll('.af-tab');
+  const panels   = document.querySelectorAll('.af-panel');
+  const bgItems  = document.querySelectorAll('.af-bg-item');
+  const videos   = document.querySelectorAll('.af-bg-video');
+
+  /* ── Función principal de cambio de tab ── */
+  function activateTab(idx) {
+    /* Desactivar todo */
+    tabs.forEach(t    => t.classList.remove('active'));
+    panels.forEach(p  => p.classList.remove('active'));
+    bgItems.forEach(b => b.classList.remove('active'));
+
+    /* Activar el seleccionado */
+    const targetTab   = document.querySelector(`.af-tab[data-idx="${idx}"]`);
+    const targetPanel = document.querySelector(`.af-panel[data-idx="${idx}"]`);
+    const targetBg    = document.querySelector(`.af-bg-item[data-idx="${idx}"]`);
+
+    if (targetTab)   targetTab.classList.add('active');
+    if (targetPanel) targetPanel.classList.add('active');
+    if (targetBg)    targetBg.classList.add('active');
+
+    /* Vídeos: parar los inactivos, reproducir el activo */
+    videos.forEach((v, i) => {
+      if (i === idx) {
+        /* Intentar reproducir; si no hay vídeo no pasa nada */
+        v.play().catch(() => {});
+      } else {
+        v.pause();
       }
-
-      function closeModal() {
-        if (!backdrop) return;
-        backdrop.style.display = 'none';
-      }
-
-      adminBtn?.addEventListener('click', () => {
-        openModal();
-      });
-
-      cancelBtn?.addEventListener('click', () => {
-        closeModal();
-      });
-
-      toggleBtn?.addEventListener('click', () => {
-        passInput.type = (passInput.type === 'password') ? 'text' : 'password';
-      });
-
-      form?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        errorBox.textContent = '';
-
-        const email = emailInput.value.trim();
-        const password = passInput.value;
-
-        if (!email || !password) {
-          errorBox.textContent = 'Introduce email y contraseña.';
-          return;
-        }
-
-        const { data, error } = await supa.auth.signInWithPassword({ email, password });
-
-        if (error) {
-          console.error('Error login admin:', error);
-          errorBox.textContent = 'No se ha podido iniciar sesión: ' + error.message;
-          return;
-        }
-
-        closeModal();
-        window.location.href = './app_ui.html';
-      });
     });
-  </script>
+  }
+
+  /* ── Bind en los tabs ── */
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const idx = Number(tab.dataset.idx);
+      activateTab(idx);
+    });
+  });
+
+  /* ── Tab inicial (el primero) ── */
+  activateTab(0);
+
+  /* ── Ocultar vídeos que no cargan ── */
+  videos.forEach(v => {
+    v.addEventListener('error', () => v.style.display = 'none');
+  });
+
+  /* ── Header: efecto al hacer scroll ── */
+  /* El header ya tiene backdrop-filter, no hace falta cambiar nada,
+     pero si la página tuviera scroll, aquí añadiríamos lógica */
+
+  /* ── Nav mobile toggle ── */
+  const toggle  = document.getElementById('af-toggle');
+  const nav     = document.getElementById('af-nav');
+
+  toggle.addEventListener('click', () => {
+    const open = nav.classList.toggle('open');
+    toggle.textContent = open ? '✕' : '☰';
+  });
+
+  /* Cerrar nav al clicar un enlace */
+  nav.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      nav.classList.remove('open');
+      toggle.textContent = '☰';
+    });
+  });
+
+  /* ── Teclado: flechas para navegar entre tabs ── */
+  document.addEventListener('keydown', (e) => {
+    const activeTab = document.querySelector('.af-tab.active');
+    if (!activeTab) return;
+    const currentIdx = Number(activeTab.dataset.idx);
+
+    if (e.key === 'ArrowRight' && currentIdx < tabs.length - 1) {
+      activateTab(currentIdx + 1);
+    }
+    if (e.key === 'ArrowLeft' && currentIdx > 0) {
+      activateTab(currentIdx - 1);
+    }
+  });
+</script>
 
 </body>
 </html>
