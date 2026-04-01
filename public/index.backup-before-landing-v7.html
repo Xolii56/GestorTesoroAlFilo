@@ -1,6 +1,5 @@
 <!doctype html>
-<!-- public/index.html · v5.4 — AlFilo.org Landing -->
-<!-- Changes: intro/scroll-hint removed · navy palette · right-aligned panels -->
+<!-- public/index.html · v5.2 — AlFilo.org Landing (video playback fix) -->
 <html lang="es">
 <head>
   <meta charset="utf-8"/>
@@ -11,11 +10,11 @@
 </head>
 <body>
 
-<!-- ═══ VIDEO BG LAYER ═══════════════════════════════════ -->
+<!-- VIDEO BG LAYER -->
 <div class="af-bg-layer" aria-hidden="true">
   <div class="af-bg-item active" data-idx="0">
     <video class="af-bg-video" autoplay muted loop playsinline preload="metadata">
-      <source src="./media/manifesto.mp4" type="video/mp4"/>
+      <source src="./media/manifiesto.mp4" type="video/mp4"/>
     </video>
     <div class="af-bg-fallback af-bg-fallback--0"></div>
   </div>
@@ -55,7 +54,7 @@
 <div class="af-overlay-vignette" aria-hidden="true"></div>
 
 
-<!-- ═══ HEADER ═══════════════════════════════════════════ -->
+<!-- HEADER -->
 <header class="af-header">
   <a class="af-logo" href="#" aria-label="AlFilo">
     <img
@@ -85,11 +84,12 @@
     <a href="./app.html" class="af-access-btn">Área de miembros</a>
   </div>
 
+  <!-- FIX 1: eliminado style="display:none;" — la visibilidad la controla el CSS -->
   <button class="af-nav-toggle" id="af-toggle" aria-label="Menú">☰</button>
 </header>
 
 
-<!-- ═══ TABS STRIP ════════════════════════════════════════ -->
+<!-- TABS STRIP -->
 <nav class="af-tabs" id="af-tabs" aria-label="Secciones">
   <button class="af-tab active" data-idx="0" type="button">
     <span class="af-tab-num">// 01</span>
@@ -124,13 +124,19 @@
 </nav>
 
 
-<!-- ═══ SECTIONS WRAP ════════════════════════════════════ -->
+<!-- SECTIONS WRAP -->
 <div class="af-sections-wrap" id="af-sections-wrap">
 
 
   <!-- ══ SECCIÓN 0: MANIFIESTO ══ -->
   <div class="af-section active" data-idx="0">
-    <!-- NO intro spacer — contenido directamente -->
+    <div class="af-section-intro">
+      <div class="af-down-hint" id="hint-0">
+        <span class="af-down-text">Scroll</span>
+        <div class="af-down-bar"></div>
+      </div>
+    </div>
+
     <div class="af-blocks">
 
       <div class="af-block af-block-2col">
@@ -185,6 +191,13 @@
 
   <!-- ══ SECCIÓN 1: ESTRUCTURA ══ -->
   <div class="af-section" data-idx="1">
+    <div class="af-section-intro">
+      <div class="af-down-hint" id="hint-1">
+        <span class="af-down-text">Scroll</span>
+        <div class="af-down-bar"></div>
+      </div>
+    </div>
+
     <div class="af-blocks">
 
       <div class="af-block">
@@ -195,6 +208,7 @@
         </p>
       </div>
 
+      <!-- FIX 2: eliminado border:1px solid var(--bd-blue) del inline style — lo gestiona la clase .af-block -->
       <div class="af-block" style="padding:0;overflow:hidden;">
         <div class="af-rank-bars">
           <div class="af-rank-bar af-rank-bar--top">
@@ -237,6 +251,13 @@
 
   <!-- ══ SECCIÓN 2: ACTIVIDADES ══ -->
   <div class="af-section" data-idx="2">
+    <div class="af-section-intro">
+      <div class="af-down-hint" id="hint-2">
+        <span class="af-down-text">Scroll</span>
+        <div class="af-down-bar"></div>
+      </div>
+    </div>
+
     <div class="af-blocks">
 
       <div class="af-block">
@@ -247,8 +268,9 @@
         </p>
       </div>
 
+      <!-- FIX 2: eliminado border:1px solid var(--bd-blue) del inline style -->
       <div class="af-block" style="padding:0;overflow:hidden;">
-        <div class="af-act-grid" style="padding:1.3rem;">
+        <div class="af-act-grid">
           <div class="af-act-item">
             <div class="af-act-icon">⛏</div>
             <div class="af-act-name">Minería</div>
@@ -294,6 +316,13 @@
 
   <!-- ══ SECCIÓN 3: ÚNETE ══ -->
   <div class="af-section" data-idx="3">
+    <div class="af-section-intro">
+      <div class="af-down-hint" id="hint-3">
+        <span class="af-down-text">Scroll</span>
+        <div class="af-down-bar"></div>
+      </div>
+    </div>
+
     <div class="af-blocks">
       <div class="af-block">
         <div class="af-center-panel">
@@ -326,6 +355,13 @@
 
   <!-- ══ SECCIÓN 4: EMBAJADA ══ -->
   <div class="af-section" data-idx="4">
+    <div class="af-section-intro">
+      <div class="af-down-hint" id="hint-4">
+        <span class="af-down-text">Scroll</span>
+        <div class="af-down-bar"></div>
+      </div>
+    </div>
+
     <div class="af-blocks">
       <div class="af-block">
         <div class="af-center-panel">
@@ -358,10 +394,10 @@
         <h2 class="af-block-title" style="font-size:1.8rem;margin-bottom:.85rem;">
           Creadores de contenido
         </h2>
-        <p class="af-block-text" style="max-width:420px;margin:0 0 1.5rem;">
+        <p class="af-block-text" style="max-width:420px;margin:0 auto 1.5rem;">
           Esta sección está reservada para los creadores de contenido asociados a AlFilo. Próximamente disponible.
         </p>
-        <div style="width:80px;height:1px;background:linear-gradient(to right,transparent,var(--cyan),transparent);opacity:.3;"></div>
+        <div style="margin:0 auto;width:80px;height:2px;background:linear-gradient(to right,transparent,var(--cyan),transparent);"></div>
       </div>
     </div>
   </div>
@@ -370,7 +406,7 @@
 </div><!-- /af-sections-wrap -->
 
 
-<!-- ═══ FOOTER ═══════════════════════════════════════════ -->
+<!-- FOOTER -->
 <footer class="af-footer">
   <div class="af-footer-brand">
     <img
@@ -399,7 +435,7 @@
   /* IntersectionObserver para .af-block */
   const blockObs = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in-view'); });
-  }, { threshold: 0.06 });
+  }, { threshold: 0.08 });
 
   function observeBlocks() {
     document.querySelectorAll('.af-block').forEach(b => blockObs.observe(b));
@@ -408,7 +444,6 @@
 
   /* Activar tab */
   function activateTab(idx) {
-    /* Resetear in-view de la sección saliente */
     const currentSection = document.querySelector('.af-section.active');
     if (currentSection) {
       currentSection.querySelectorAll('.af-block').forEach(b => b.classList.remove('in-view'));
@@ -428,7 +463,8 @@
 
     window.scrollTo({ top: 0, behavior: 'instant' });
 
-    /* Gestionar vídeos */
+    document.querySelectorAll('.af-down-hint').forEach(h => h.classList.remove('hidden'));
+
     videos.forEach((v, i) => {
       if (i === idx) {
         v.load();
@@ -447,17 +483,28 @@
 
   activateTab(0);
 
-  /* Video: canplay → ocultar fallback / error → mantener fallback */
   videos.forEach(v => {
     const bgItem = v.closest('.af-bg-item');
+
+    /* Vídeo operativo → ocultar fallback */
     v.addEventListener('canplay', () => {
       if (bgItem) bgItem.classList.add('video-loaded');
     });
+
+    /* Vídeo con error → mantener fallback visible, ocultar el elemento video */
     v.addEventListener('error', () => {
       if (bgItem) bgItem.classList.remove('video-loaded');
       v.style.display = 'none';
     });
   });
+
+  /* Down hint: ocultar al hacer scroll */
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    document.querySelectorAll('.af-down-hint').forEach(h => {
+      h.classList.toggle('hidden', y > 60);
+    });
+  }, { passive: true });
 
   /* Flechas de teclado */
   document.addEventListener('keydown', (e) => {
@@ -469,7 +516,8 @@
   });
 
   /* Nav mobile toggle */
-  const toggle = document.getElementById('af-toggle');
+  const toggle  = document.getElementById('af-toggle');
+  const navArea = document.getElementById('af-tabs'); /* los tabs son la nav en mobile */
   toggle.addEventListener('click', () => {
     const open = toggle.classList.toggle('active');
     toggle.textContent = open ? '✕' : '☰';
