@@ -147,6 +147,9 @@ body::before {
 .af-bg-item.active { opacity: 1; }
 
 .af-bg-video {
+  position: absolute;
+  inset: 0;
+  z-index: 1;          /* encima del fallback */
   width: 100%; height: 100%;
   object-fit: cover;
   opacity: .32;
@@ -154,7 +157,16 @@ body::before {
 }
 
 /* Fallback backgrounds */
-.af-bg-fallback { position: absolute; inset: 0; }
+/* z-index 0 = debajo del vídeo por defecto */
+/* .video-loaded lo oculta suavemente cuando el vídeo está operativo */
+.af-bg-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 1;
+  transition: opacity .6s ease;
+}
+.af-bg-item.video-loaded .af-bg-fallback { opacity: 0; }
 
 .af-bg-fallback--0 {
   background:
