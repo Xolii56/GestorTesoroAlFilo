@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- public/index.html · v5.2 — AlFilo.org Landing (video playback fix) -->
+<!-- public/index.html · v5.1 — AlFilo.org Landing (compatibility fix) -->
 <html lang="es">
 <head>
   <meta charset="utf-8"/>
@@ -13,37 +13,37 @@
 <!-- VIDEO BG LAYER -->
 <div class="af-bg-layer" aria-hidden="true">
   <div class="af-bg-item active" data-idx="0">
-    <video class="af-bg-video" autoplay muted loop playsinline preload="metadata">
+    <video class="af-bg-video" muted loop playsinline preload="none">
       <source src="./media/manifesto.mp4" type="video/mp4"/>
     </video>
     <div class="af-bg-fallback af-bg-fallback--0"></div>
   </div>
   <div class="af-bg-item" data-idx="1">
-    <video class="af-bg-video" autoplay muted loop playsinline preload="metadata">
+    <video class="af-bg-video" muted loop playsinline preload="none">
       <source src="./media/structure.mp4" type="video/mp4"/>
     </video>
     <div class="af-bg-fallback af-bg-fallback--1"></div>
   </div>
   <div class="af-bg-item" data-idx="2">
-    <video class="af-bg-video" autoplay muted loop playsinline preload="metadata">
+    <video class="af-bg-video" muted loop playsinline preload="none">
       <source src="./media/activities.mp4" type="video/mp4"/>
     </video>
     <div class="af-bg-fallback af-bg-fallback--2"></div>
   </div>
   <div class="af-bg-item" data-idx="3">
-    <video class="af-bg-video" autoplay muted loop playsinline preload="metadata">
+    <video class="af-bg-video" muted loop playsinline preload="none">
       <source src="./media/join.mp4" type="video/mp4"/>
     </video>
     <div class="af-bg-fallback af-bg-fallback--3"></div>
   </div>
   <div class="af-bg-item" data-idx="4">
-    <video class="af-bg-video" autoplay muted loop playsinline preload="metadata">
+    <video class="af-bg-video" muted loop playsinline preload="none">
       <source src="./media/embassy.mp4" type="video/mp4"/>
     </video>
     <div class="af-bg-fallback af-bg-fallback--4"></div>
   </div>
   <div class="af-bg-item" data-idx="5">
-    <video class="af-bg-video" autoplay muted loop playsinline preload="metadata">
+    <video class="af-bg-video" muted loop playsinline preload="none">
       <source src="./media/content.mp4" type="video/mp4"/>
     </video>
     <div class="af-bg-fallback af-bg-fallback--5"></div>
@@ -466,14 +466,8 @@
     document.querySelectorAll('.af-down-hint').forEach(h => h.classList.remove('hidden'));
 
     videos.forEach((v, i) => {
-      if (i === idx) {
-        v.load();
-        v.play().catch((err) => {
-          console.warn('Video playback failed:', v.currentSrc || v.src, err);
-        });
-      } else {
-        v.pause();
-      }
+      if (i === idx) { v.play().catch(() => {}); }
+      else           { v.pause(); }
     });
   }
 
