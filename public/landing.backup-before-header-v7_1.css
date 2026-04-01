@@ -74,7 +74,7 @@
   --ff-mono:     'Share Tech Mono', monospace;
 
   /* Layout */
-  --header-h:    66px;   /* +10% sobre 60px */
+  --header-h:    60px;
   --tabs-h:      80px;
   --fixed-top:   calc(var(--header-h) + var(--tabs-h));
 
@@ -289,23 +289,23 @@ body::before {
 .af-logo:hover { opacity: 1; }
 
 .af-logo-img {
-  height: 38px;   /* era 34px — escala ~10% */
+  height: 34px;
   width: auto;
   object-fit: contain;
   display: block;
 }
 .af-logo-name {
   font-family: var(--ff-display);
-  font-size: .88rem;   /* era .80rem */
+  font-size: .8rem;
   font-weight: 600;
-  letter-spacing: .5px;
+  letter-spacing: .5px;   /* DESIGN.md Display: 0.5px for tech feel */
   text-transform: uppercase;
   color: var(--energy-1);
   line-height: 1;
 }
 .af-logo-sub {
   font-family: var(--ff-mono);
-  font-size: .48rem;   /* era .44rem */
+  font-size: .44rem;
   letter-spacing: .18em;
   color: var(--tx-dim);
   text-transform: uppercase;
@@ -322,13 +322,14 @@ body::before {
 }
 
 .af-avatar-wrap {
-  width: 36px;    /* era 32px */
-  height: 36px;   /* era 32px */
-  border-radius: 50%;   /* redondo */
+  width: 32px;
+  height: 32px;
+  border-radius: 0;  /* DESIGN.md: 0px radius */
   overflow: hidden;
   border: 1px solid var(--ghost-border-px);
   flex-shrink: 0;
   background: var(--surface-high);
+  /* Ambient glow: self-illuminated (DESIGN.md §4) */
   box-shadow: 0 0 20px 0 var(--cyan-bloom);
 }
 .af-avatar {
@@ -342,10 +343,10 @@ body::before {
   align-items: center;
   gap: .35rem;
   font-family: var(--ff-mono);
-  font-size: .6rem;    /* era .56rem */
+  font-size: .56rem;
   letter-spacing: .16em;
   text-transform: uppercase;
-  padding: .44rem 1.1rem;   /* era .38rem 1rem */
+  padding: .38rem 1rem;
   border: 1px solid var(--ghost-border-px);
   background: var(--cyan-s);
   color: var(--energy-2);
@@ -1126,7 +1127,7 @@ body::before {
 
 @media (max-width: 768px) {
   :root {
-    --header-h: 60px;   /* +10% sobre 56px anterior */
+    --header-h: 56px;
     --tabs-h:   72px;
     --panel-w:  min(520px, 92vw);
   }
