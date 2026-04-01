@@ -484,18 +484,7 @@
   activateTab(0);
 
   videos.forEach(v => {
-    const bgItem = v.closest('.af-bg-item');
-
-    /* Vídeo operativo → ocultar fallback */
-    v.addEventListener('canplay', () => {
-      if (bgItem) bgItem.classList.add('video-loaded');
-    });
-
-    /* Vídeo con error → mantener fallback visible, ocultar el elemento video */
-    v.addEventListener('error', () => {
-      if (bgItem) bgItem.classList.remove('video-loaded');
-      v.style.display = 'none';
-    });
+    v.addEventListener('error', () => v.style.display = 'none');
   });
 
   /* Down hint: ocultar al hacer scroll */
