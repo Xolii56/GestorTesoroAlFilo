@@ -1,9 +1,10 @@
-/* public/modules/auth-landing.js · v2
+/* public/modules/auth-landing.js · v3
    Auth real con Supabase + Discord OAuth para la landing pública de AlFilo.
    ─────────────────────────────────────────────────────────────────────────
    Dependencias (deben cargarse antes en el HTML):
      - @supabase/supabase-js v2  (CDN)
-     - config.js                 → window.SUPABASE_URL, window.SUPABASE_KEY
+     - config.js                 → window.SUPABASE_CONFIG.supabaseUrl
+                                   window.SUPABASE_CONFIG.supabaseAnonKey
      - db.js                     → window.supa (supabase client)
 
    Separación autenticación / autorización:
@@ -24,6 +25,12 @@
     '1053858749510594600',  // Espada
     '1146147517826871366',  // Miembro
   ];
+
+  /* ── Lectura de config ────────────────────────────────────────────────── */
+  // config.js expone window.SUPABASE_CONFIG = { supabaseUrl, supabaseAnonKey, redirectUrl }
+  function _getSupabaseUrl() {
+    return window.SUPABASE_CONFIG?.supabaseUrl ?? null;
+  }
 
   /* ── Helper DOM ───────────────────────────────────────────────────────── */
   function $id(id) { return document.getElementById(id); }
@@ -167,13 +174,25 @@
    * discord_user_id desde las identities de Supabase Auth — el frontend
    * NO lo envía en el body (no es de fiar desde el cliente).
    *
+   * La URL se construye desde window.SUPABASE_CONFIG.supabaseUrl.
+   *
    * @param  {string} accessToken  JWT de sesión de Supabase
    * @returns {{ allowed: boolean, org_status?: string, role_ids?: string[], discord_user_id?: string, reason?: string }}
    */
   async function _checkGuildMembership(accessToken) {
+    const supabaseUrl = _getSupabaseUrl();
+
+    if (!supabaseUrl) {
+      console.error(
+        '[AlFiloAuth] window.SUPABASE_CONFIG.supabaseUrl no está definido. ' +
+        'Comprueba que config.js se carga antes que auth-landing.js.'
+      );
+      return { allowed: false, reason: 'Error de configuración interna.' };
+    }
+
     try {
       const res = await fetch(
-        `${window.SUPABASE_URL}/functions/v1/check-discord-member`,
+        `${supabaseUrl}/functions/v1/check-discord-member`,
         {
           method: 'POST',
           headers: {
@@ -192,7 +211,7 @@
       }
 
       const data = await res.json();
-      return data; // espera { allowed: boolean, reason?: string }
+      return data; // espera { allowed: boolean, org_status?, role_ids?, discord_user_id?, reason? }
     } catch (err) {
       console.error('[AlFiloAuth] Error llamando a check-discord-member:', err);
       return { allowed: false, reason: 'No se pudo comprobar tu membresía en AlFilo.' };
@@ -351,6 +370,20 @@
   ═══════════════════════════════════════════════════════════════════════ */
 
   document.addEventListener('DOMContentLoaded', async () => {
+
+    // Guard defensivo: abortar si la config no está disponible
+    if (!window.SUPABASE_CONFIG?.supabaseUrl || !window.SUPABASE_CONFIG?.supabaseAnonKey) {
+      console.error(
+        '[AlFiloAuth] window.SUPABASE_CONFIG no está definido o le faltan campos. ' +
+        'Asegúrate de que config.js se carga antes que auth-landing.js en el HTML.'
+      );
+      // Aplicar estado logged-out para que la UI no quede en limbo
+      _setupDropdownToggle();
+      _setupCloseListeners();
+      _applyLoggedOutState();
+      return;
+    }
+
     _setupDropdownToggle();
     _setupCloseListeners();
 
