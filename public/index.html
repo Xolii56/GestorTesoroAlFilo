@@ -1,6 +1,6 @@
 <!doctype html>
-<!-- public/index.html · v5.5 — AlFilo.org Landing -->
-<!-- Changes: header +10% · botón antes del avatar · avatar redondo -->
+<!-- public/index.html · v5.6 — AlFilo.org Landing -->
+<!-- Changes: header +10% · dropdown avatar · auth state simulation -->
 <html lang="es">
 <head>
   <meta charset="utf-8"/>
@@ -73,16 +73,41 @@
   <div class="af-header-spacer"></div>
 
   <div class="af-user-zone">
-    <a href="./app.html" class="af-access-btn">Área de miembros</a>
-    <div class="af-avatar-wrap">
-      <img
-        src="./assets/default-avatar.png"
-        alt="Usuario"
-        class="af-avatar"
-        id="af-avatar"
-        onerror="this.style.opacity='0'"
-      />
+
+    <!-- Botón Área de miembros: estado gestionado por initHeader() -->
+    <a
+      href="./app.html"
+      class="af-access-btn"
+      id="af-access-btn"
+      data-tooltip="Debes iniciar sesión primero"
+    >Área de miembros</a>
+
+    <!-- Avatar + dropdown -->
+    <div class="af-avatar-wrap" id="af-avatar-wrap">
+      <button
+        class="af-avatar-btn"
+        id="af-avatar-btn"
+        aria-label="Menú de usuario"
+        aria-expanded="false"
+        type="button"
+      >
+        <!--
+          id="af-avatar" — JS reemplaza src por avatar de Discord cuando haya auth real.
+          Por defecto muestra default-avatar.png.
+        -->
+        <img
+          src="./assets/default-avatar.png"
+          alt="Usuario"
+          class="af-avatar"
+          id="af-avatar"
+          onerror="this.style.opacity='0'"
+        />
+      </button>
+
+      <!-- Dropdown — contenido inyectado por initHeader() según estado auth -->
+      <div class="af-dropdown" id="af-dropdown" role="menu"></div>
     </div>
+
   </div>
 
   <button class="af-nav-toggle" id="af-toggle" aria-label="Menú">☰</button>
@@ -389,14 +414,131 @@
 
 
 <script>
+  /* ═══════════════════════════════════════════════════════
+     AUTH STATE SIMULATION
+     ─────────────────────────────────────────────────────
+     Reemplazar este bloque cuando se integre Supabase + Discord.
+     isLoggedIn     → sesión activa
+     mockUser       → datos simulados del usuario
+     Para auth real: obtener sesión de supabase.auth.getSession()
+     y llamar a initHeader() con los datos reales.
+  ═══════════════════════════════════════════════════════ */
+  const isLoggedIn = false;
+
+  const mockUser = {
+    name:       'Piloto AlFilo',
+    avatar_url: './assets/default-avatar.png',
+    // En auth real: usar session.user.user_metadata.avatar_url (Discord)
+  };
+
+  /* ── initHeader: aplica estado auth al header ─────── */
+  function initHeader() {
+    const accessBtn  = document.getElementById('af-access-btn');
+    const avatarImg  = document.getElementById('af-avatar');
+    const dropdown   = document.getElementById('af-dropdown');
+    const avatarBtn  = document.getElementById('af-avatar-btn');
+
+    if (isLoggedIn) {
+      /* --- LOGUEADO --- */
+
+      /* Avatar real del usuario */
+      if (mockUser.avatar_url) avatarImg.src = mockUser.avatar_url;
+
+      /* Botón activo */
+      accessBtn.classList.remove('af-access-btn--disabled-tip');
+      accessBtn.style.pointerEvents = '';
+
+      /* Dropdown: Perfil + Cerrar sesión */
+      dropdown.innerHTML = `
+        <a href="./app.html" class="af-dropdown-item" role="menuitem">
+          <span class="af-dropdown-item-ico">⬡</span> Perfil
+        </a>
+        <div class="af-dropdown-sep"></div>
+        <button class="af-dropdown-item af-dropdown-item--danger" id="af-logout-btn" role="menuitem" type="button">
+          <span class="af-dropdown-item-ico">↩</span> Cerrar sesión
+        </button>
+      `;
+
+      /* Logout — dejar preparado para Supabase */
+      document.getElementById('af-logout-btn').addEventListener('click', () => {
+        /* TODO: await supabase.auth.signOut(); */
+        console.log('[Auth] Sign out triggered — conectar con Supabase');
+        closeDropdown();
+      });
+
+    } else {
+      /* --- NO LOGUEADO --- */
+
+      /* Avatar genérico — ya puesto en HTML, no se toca */
+
+      /* Botón desactivado con tooltip */
+      accessBtn.classList.add('af-access-btn--disabled-tip');
+      accessBtn.style.pointerEvents = 'auto';  /* necesario para que el hover del tooltip funcione */
+      accessBtn.addEventListener('click', (e) => e.preventDefault());
+
+      /* Dropdown: solo iniciar sesión */
+      dropdown.innerHTML = `
+        <button class="af-dropdown-item" id="af-login-btn" role="menuitem" type="button">
+          <span class="af-dropdown-item-ico">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026c.462-.62.874-1.275 1.226-1.963a.074.074 0 0 0-.041-.104 13.201 13.201 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028zM8.02 15.278c-1.182 0-2.157-1.069-2.157-2.38 0-1.312.956-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.956 2.38-2.157 2.38zm7.975 0c-1.183 0-2.157-1.069-2.157-2.38 0-1.312.955-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.946 2.38-2.157 2.38z"/>
+            </svg>
+          </span>
+          Iniciar sesión con Discord
+        </button>
+      `;
+
+      document.getElementById('af-login-btn').addEventListener('click', () => {
+        /* TODO: await supabase.auth.signInWithOAuth({ provider: 'discord' }); */
+        console.log('[Auth] Discord login triggered — conectar con Supabase');
+        closeDropdown();
+      });
+    }
+  }
+
+  /* ── Dropdown: abrir / cerrar ────────────────────── */
+  function openDropdown() {
+    const dropdown  = document.getElementById('af-dropdown');
+    const avatarBtn = document.getElementById('af-avatar-btn');
+    dropdown.classList.add('open');
+    avatarBtn.setAttribute('aria-expanded', 'true');
+  }
+  function closeDropdown() {
+    const dropdown  = document.getElementById('af-dropdown');
+    const avatarBtn = document.getElementById('af-avatar-btn');
+    dropdown.classList.remove('open');
+    avatarBtn.setAttribute('aria-expanded', 'false');
+  }
+  function toggleDropdown() {
+    const dropdown = document.getElementById('af-dropdown');
+    dropdown.classList.contains('open') ? closeDropdown() : openDropdown();
+  }
+
+  document.getElementById('af-avatar-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleDropdown();
+  });
+
+  /* Cerrar al hacer click fuera */
+  document.addEventListener('click', (e) => {
+    const wrap = document.getElementById('af-avatar-wrap');
+    if (wrap && !wrap.contains(e.target)) closeDropdown();
+  });
+
+  /* Cerrar con Escape */
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeDropdown();
+  });
+
+  /* ── Año en footer ──────────────────────────────── */
   document.getElementById('af-year').textContent = new Date().getFullYear();
 
+  /* ── Tabs + secciones + vídeos ──────────────────── */
   const tabs     = document.querySelectorAll('.af-tab');
   const sections = document.querySelectorAll('.af-section');
   const bgItems  = document.querySelectorAll('.af-bg-item');
   const videos   = document.querySelectorAll('.af-bg-video');
 
-  /* IntersectionObserver para .af-block */
   const blockObs = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in-view'); });
   }, { threshold: 0.06 });
@@ -406,9 +548,7 @@
   }
   observeBlocks();
 
-  /* Activar tab */
   function activateTab(idx) {
-    /* Resetear in-view de la sección saliente */
     const currentSection = document.querySelector('.af-section.active');
     if (currentSection) {
       currentSection.querySelectorAll('.af-block').forEach(b => b.classList.remove('in-view'));
@@ -428,7 +568,6 @@
 
     window.scrollTo({ top: 0, behavior: 'instant' });
 
-    /* Gestionar vídeos */
     videos.forEach((v, i) => {
       if (i === idx) {
         v.load();
@@ -447,7 +586,7 @@
 
   activateTab(0);
 
-  /* Video: canplay → ocultar fallback / error → mantener fallback */
+  /* Video fallback */
   videos.forEach(v => {
     const bgItem = v.closest('.af-bg-item');
     v.addEventListener('canplay', () => {
@@ -459,13 +598,15 @@
     });
   });
 
-  /* Flechas de teclado */
+  /* Flechas de teclado entre tabs */
   document.addEventListener('keydown', (e) => {
-    const activeTab  = document.querySelector('.af-tab.active');
-    if (!activeTab) return;
-    const currentIdx = Number(activeTab.dataset.idx);
-    if (e.key === 'ArrowRight' && currentIdx < tabs.length - 1) activateTab(currentIdx + 1);
-    if (e.key === 'ArrowLeft'  && currentIdx > 0)               activateTab(currentIdx - 1);
+    if (['ArrowRight','ArrowLeft'].includes(e.key)) {
+      const activeTab  = document.querySelector('.af-tab.active');
+      if (!activeTab) return;
+      const currentIdx = Number(activeTab.dataset.idx);
+      if (e.key === 'ArrowRight' && currentIdx < tabs.length - 1) activateTab(currentIdx + 1);
+      if (e.key === 'ArrowLeft'  && currentIdx > 0)               activateTab(currentIdx - 1);
+    }
   });
 
   /* Nav mobile toggle */
@@ -474,6 +615,10 @@
     const open = toggle.classList.toggle('active');
     toggle.textContent = open ? '✕' : '☰';
   });
+
+  /* ── Inicializar header con estado auth ─────────── */
+  initHeader();
+
 </script>
 
 </body>
