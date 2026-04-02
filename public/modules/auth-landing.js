@@ -1,4 +1,4 @@
-/* public/modules/auth-landing.js · v1
+/* public/modules/auth-landing.js · v2
    Auth real con Supabase + Discord OAuth para la landing pública de AlFilo.
    ─────────────────────────────────────────────────────────────────────────
    Dependencias (deben cargarse antes en el HTML):
@@ -163,15 +163,14 @@
    * Llama a la Edge Function check-discord-member para verificar
    * que el usuario pertenece al guild con un rol permitido.
    *
-   * Se envía el JWT del usuario como Bearer token para que la Edge Function
-   * pueda verificar la sesión. El bot token y DISCORD_GUILD_ID están en los
-   * Supabase Secrets — nunca salen al frontend.
+   * El JWT se envía como Bearer token. La Edge Function extrae el
+   * discord_user_id desde las identities de Supabase Auth — el frontend
+   * NO lo envía en el body (no es de fiar desde el cliente).
    *
-   * @param  {string} accessToken   JWT de sesión de Supabase
-   * @param  {string} discordUserId ID de usuario de Discord
-   * @returns {{ allowed: boolean, reason?: string }}
+   * @param  {string} accessToken  JWT de sesión de Supabase
+   * @returns {{ allowed: boolean, org_status?: string, role_ids?: string[], discord_user_id?: string, reason?: string }}
    */
-  async function _checkGuildMembership(accessToken, discordUserId) {
+  async function _checkGuildMembership(accessToken) {
     try {
       const res = await fetch(
         `${window.SUPABASE_URL}/functions/v1/check-discord-member`,
@@ -179,15 +178,11 @@
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            // Si la Edge Function requiere la anon key en lugar del JWT de usuario,
-            // cambiar por: `Bearer ${window.SUPABASE_KEY}`
             'Authorization': `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({
-            discord_user_id: discordUserId,
-            // allowed_roles se valida en la Edge Function con ALLOWED_ROLE_IDS
-            // hardcodeados allí también (doble seguridad).
-          }),
+          // Body vacío: la Edge Function deriva discord_user_id del JWT,
+          // no lo acepta desde el cliente.
+          body: JSON.stringify({}),
         }
       );
 
@@ -323,9 +318,9 @@
     }
 
     // ── Autorización: verificar guild + roles ──────────────────────────
+    // La Edge Function valida el JWT y extrae el discord_user_id internamente.
     const { allowed, reason } = await _checkGuildMembership(
-      session.access_token,
-      discordUserId
+      session.access_token
     );
 
     if (allowed) {
