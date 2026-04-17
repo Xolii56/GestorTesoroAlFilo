@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SC Labs — Hand Tracking Viewer v10</title>
+
+  <!-- MediaPipe Tasks Vision — nueva API unificada (reemplaza legacy @mediapipe/hands) -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/vision_bundle.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #07090f;
+      --surface:  rgba(13, 18, 32, 0.88);
+      --border:   rgba(80, 120, 200, 0.22);
+      --accent:   #4a9eff;
+      --accent2:  #00e5c8;
+      --warn:     #f5a623;
+      --danger:   #ff4a6e;
+      --text:     #cdd6f4;
+      --dim:      #6b7a99;
+      --radius:   10px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow: hidden;
+      height: 100vh; width: 100vw;
+    }
+
+    #three-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; }
+
+    /* ── Cámara ── */
+    #cam-wrap {
+      position: fixed; bottom: 20px; right: 20px; z-index: 20;
+      width: 220px; border-radius: var(--radius); overflow: hidden;
+      border: 1px solid var(--border); background: var(--surface);
+      backdrop-filter: blur(12px); transition: width .3s, height .3s;
+    }
+    #cam-wrap.collapsed { width: 44px; height: 44px; }
+    #cam-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 10px; font-size: 11px; color: var(--dim);
+      cursor: pointer; user-select: none; gap: 6px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); flex-shrink: 0; }
+    .dot.on { background: var(--accent2); }
+    #cam-video-container { position: relative; width: 220px; height: 124px; }
+    #cam-wrap.collapsed #cam-video-container { display: none; }
+    #input-video {
+      position: absolute; width: 100%; height: 100%;
+      object-fit: cover; transform: scaleX(-1);
+    }
+    #hand-canvas {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      transform: scaleX(-1);
+    }
+
+    /* ── HUD ── */
+    #hud {
+      position: fixed; top: 20px; left: 20px; z-index: 20;
+      display: flex; flex-direction: column; gap: 10px;
+      pointer-events: none;
+    }
+    .panel {
+      background: var(--surface); backdrop-filter: blur(14px);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 12px 16px; min-width: 220px;
+    }
+    .panel-title {
+      font-size: 10px; font-weight: 600; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
+    }
+    .row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; margin-bottom: 6px; color: var(--dim);
+    }
+    .row:last-child { margin-bottom: 0; }
+    .val { font-family: 'SF Mono', monospace; color: var(--text); font-size: 11px; }
+
+    /* Estado badge grande */
+    #state-badge {
+      display: flex; align-items: center; justify-content: center;
+      padding: 10px 16px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 600; letter-spacing: .05em;
+      text-transform: uppercase; transition: background .2s, color .2s, border-color .2s;
+      border: 1px solid transparent;
+    }
+    #state-badge.IDLE         { background: rgba(107,122,153,0.15); color: var(--dim);    border-color: rgba(107,122,153,0.3); }
+    #state-badge.TRANSLATE_XY { background: rgba(0,229,200,0.15);   color: var(--accent2);border-color: rgba(0,229,200,0.35); }
+    #state-badge.TRANSLATE_Z  { background: rgba(74,158,255,0.18);  color: var(--accent); border-color: rgba(74,158,255,0.4); }
+    #state-badge.ROTATE_YZ    { background: rgba(245,166,35,0.15);  color: var(--warn);   border-color: rgba(245,166,35,0.35); }
+    #state-badge.ROTATE_X     { background: rgba(255,74,110,0.15);  color: var(--danger); border-color: rgba(255,74,110,0.35); }
+    #state-badge.SCALE        { background: rgba(170,136,255,0.15); color: #aa88ff;       border-color: rgba(170,136,255,0.35); }
+
+    /* Botones táctiles — esquina superior derecha, visibles en móvil */
+    #touch-controls {
+      position: fixed; top: 20px; right: 20px; z-index: 20;
+      display: flex; flex-direction: column; gap: 8px;
+      align-items: flex-end;
+    }
+    .touch-btn {
+      background: var(--surface); backdrop-filter: blur(14px);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      color: var(--text); font-size: 13px; font-weight: 500;
+      padding: 10px 16px; cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+      transition: background .15s, border-color .15s;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none; min-width: 120px; justify-content: center;
+    }
+    .touch-btn:active { background: rgba(74,158,255,0.2); border-color: var(--accent); }
+    .touch-btn .tb-icon { font-size: 16px; }
+      position: fixed; bottom: 20px; left: 20px; z-index: 20;
+      display: flex; flex-direction: column; gap: 5px; pointer-events: none;
+    }
+    .leg-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; color: var(--dim);
+    }
+    .leg-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .leg-row.active-row { color: var(--text); }
+
+    /* Drop zone */
+    #drop-zone {
+      position: fixed; inset: 0; z-index: 30;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 16px;
+      background: rgba(7, 9, 15, 0.93); backdrop-filter: blur(4px);
+      transition: opacity .3s;
+    }
+    #drop-zone.hidden { opacity: 0; pointer-events: none; }
+    #drop-zone.drag-over { background: rgba(74, 158, 255, 0.06); }
+    .drop-icon {
+      width: 64px; height: 64px; border: 2px dashed var(--accent);
+      border-radius: 16px; display: flex; align-items: center;
+      justify-content: center; font-size: 26px; color: var(--accent);
+      transition: transform .2s;
+    }
+    #drop-zone.drag-over .drop-icon { transform: scale(1.1); }
+    .drop-title { font-size: 18px; font-weight: 500; }
+    .drop-sub {
+      font-size: 13px; color: var(--dim); text-align: center;
+      max-width: 320px; line-height: 1.6;
+    }
+    .drop-btn {
+      padding: 10px 24px; border: 1px solid var(--accent);
+      border-radius: 8px; background: rgba(74,158,255,0.1);
+      color: var(--accent); font-size: 14px; cursor: pointer;
+      transition: background .2s;
+    }
+    .drop-btn:hover { background: rgba(74,158,255,0.2); }
+    #file-input { display: none; }
+
+    /* Loader */
+    #loader {
+      position: fixed; inset: 0; z-index: 40;
+      display: none; align-items: center; justify-content: center;
+      flex-direction: column; gap: 12px;
+      background: rgba(7,9,15,0.85);
+    }
+    #loader.visible { display: flex; }
+    .spinner {
+      width: 36px; height: 36px; border: 3px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loader-text { font-size: 14px; color: var(--dim); }
+
+    /* Flash de evento */
+    #event-flash {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 50; font-size: 22px; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: white; pointer-events: none;
+      opacity: 0; transition: opacity .15s;
+      text-shadow: 0 0 30px rgba(255,255,255,0.5);
+    }
+    #event-flash.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div id="loader"><div class="spinner"></div><div id="loader-text">Cargando...</div></div>
+
+<div id="drop-zone">
+  <div class="drop-icon">📦</div>
+  <div class="drop-title">SC Labs — Hand Tracking Viewer v2</div>
+  <div class="drop-sub">
+    Arrastra un <strong>.glb</strong> o <strong>.stl</strong> aquí, o selecciónalo.<br>
+    Modelo bloqueado por defecto — usa gestos para moverlo.
+  </div>
+  <button class="drop-btn" onclick="document.getElementById('file-input').click()">Seleccionar archivo</button>
+  <input type="file" id="file-input" accept=".glb,.gltf,.stl">
+</div>
+
+<div id="event-flash"></div>
+<canvas id="three-canvas"></canvas>
+
+<!-- Cámara -->
+<div id="cam-wrap">
+  <div id="cam-header" onclick="toggleCam()">
+    <span class="dot" id="cam-dot"></span>
+    <span id="cam-label">Cámara</span>
+    <span style="margin-left:auto;font-size:10px" id="cam-icon">▼</span>
+  </div>
+  <div id="cam-video-container">
+    <video id="input-video" autoplay playsinline></video>
+    <canvas id="hand-canvas"></canvas>
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="panel">
+    <div class="panel-title">Estado</div>
+    <div id="state-badge" class="IDLE">● IDLE</div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">Tracking</div>
+    <div class="row">Manos <span class="val" id="h-hands">0</span></div>
+    <div class="row">FPS <span class="val" id="h-fps">—</span></div>
+    <div class="row">Handedness <span class="val" id="h-handed">—</span></div>
+  </div>
+  <div class="panel" id="panel-vals" style="display:none">
+    <div class="panel-title">Valores activos</div>
+    <div class="row">Δ X <span class="val" id="v-x">—</span></div>
+    <div class="row">Δ Y <span class="val" id="v-y">—</span></div>
+    <div class="row">Δ Z <span class="val" id="v-z">—</span></div>
+  </div>
+</div>
+
+<!-- Botones táctiles — esquina superior derecha -->
+<div id="touch-controls">
+  <button class="touch-btn" onclick="triggerReset()" ontouchstart="">
+    <span class="tb-icon">↺</span> Reset
+  </button>
+  <button class="touch-btn" onclick="toggleCam()" ontouchstart="">
+    <span class="tb-icon">📷</span> Cámara
+  </button>
+</div>
+
+<!-- Leyenda -->
+<div id="legend">
+  <div class="leg-row" id="leg-txy">
+    <div class="leg-dot" style="background:var(--accent2)"></div>
+    ✊ + ☝️ → Mover XY
+  </div>
+  <div class="leg-row" id="leg-tz">
+    <div class="leg-dot" style="background:var(--accent)"></div>
+    ✊ + ✌️ → Mover Z
+  </div>
+  <div class="leg-row" id="leg-ryz">
+    <div class="leg-dot" style="background:var(--warn)"></div>
+    🤘 + ☝️ → Girar YX
+  </div>
+  <div class="leg-row" id="leg-rx">
+    <div class="leg-dot" style="background:var(--danger)"></div>
+    🤘 + ✌️ → Girar Z
+  </div>
+  <div class="leg-row" id="leg-scale">
+    <div class="leg-dot" style="background:#aa88ff"></div>
+    🖐 🖐 → Escala
+  </div>
+  <div class="leg-row" style="color:var(--dim);margin-top:2px">
+    <div class="leg-dot" style="background:var(--dim)"></div>
+    <kbd style="background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:3px;padding:1px 4px;font-size:10px">R</kbd> Reset
+    &nbsp;|&nbsp;
+    <kbd style="background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:3px;padding:1px 4px;font-size:10px">H</kbd> Cámara
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   SC LABS — Hand Tracking Viewer v9
+   Bindings con gestos de 2 manos:
+   - IDLE          → ningún gesto reconocido
+   - TRANSLATE_XY  → puño (mano A) + índice solo (mano B) → XY sigue posición del índice
+   - TRANSLATE_Z   → puño (mano A) + victoria (mano B)    → Z sigue Y de la victoria
+   - ROTATE_YZ     → cuernos (mano A) + índice solo (mano B) → YZ siguen posición del índice
+   - ROTATE_X      → cuernos (mano A) + victoria (mano B)   → X sigue movimiento horizontal
+   - SCALE         → ambas manos abiertas → separación escala el modelo
+   Reset: tecla R
+================================================================ */
+
+/* ── CONFIG ─────────────────────────────────────────────── */
+const CFG = {
+  TRANS_SCALE:        5.2,
+  DEPTH_SCALE:        5.2,
+  ROT_YZ_SCALE:       2.6,
+  ROT_X_SCALE:        2.6,
+  SCALE_SPEED:        0.016,
+  SCALE_MIN:          0.05,
+  SCALE_MAX:          6.0,
+
+  LERP_ROT:           0.10,
+  LERP_TRANS:         0.12,
+  LERP_SCALE:         0.10,
+
+  DEAD_ZONE:          0.004,
+  GESTURE_CONFIRM_FRAMES: 4,
+};
+
+/* ── ESTADOS ─────────────────────────────────────────────── */
+const STATES = {
+  IDLE:         'IDLE',
+  TRANSLATE_XY: 'TRANSLATE_XY',
+  TRANSLATE_Z:  'TRANSLATE_Z',
+  ROTATE_YZ:    'ROTATE_YZ',
+  ROTATE_X:     'ROTATE_X',
+  SCALE:        'SCALE',
+};
+
+let currentState = STATES.IDLE;
+let rawHands = [];
+
+// Buffer de frames para confirmar gestos (evita activaciones por ruido)
+// Cada gesto necesita GESTURE_CONFIRM_FRAMES frames consecutivos para activarse
+const gestureBuffer = {
+  candidate: STATES.IDLE,  // estado candidato actual
+  frames: 0,               // cuántos frames consecutivos lleva ese candidato
+  confirmed: STATES.IDLE,  // estado confirmado (el que realmente se usa)
+};
+
+// Refs de inicio de gesto — se resetean al entrar en nuevo estado
+let ref = {
+  // traslación
+  idxX: null, idxY: null,   // posición inicial del índice (TRANSLATE_XY)
+  vicY: null,               // posición inicial vertical de la victoria (TRANSLATE_Z)
+  // rotación
+  rotIdxX: null, rotIdxY: null,  // posición inicial del índice para ROTATE_YZ
+  rotVicX: null,                 // posición inicial horizontal de victoria para ROTATE_X
+  // escala
+  orbDist: null,
+};
+
+// FIX: acumuladores de posición — la posición del modelo se acumula frame a frame
+// En v2 se calculaba como delta desde ref, lo que causaba reset al re-entrar en estado
+const accum = { tx:0, ty:0, tz:0, rx:0, ry:0, rz:0 };
+
+// Targets del modelo (solo se modifican dentro de estados activos)
+const target = { tx:0, ty:0, tz:0, rx:0, ry:0, rz:0, scale:1.0 };
+
+// Valores actuales suavizados
+const current = { tx:0, ty:0, tz:0, rx:0, ry:0, rz:0, scale:1.0 };
+
+let fps = 0, fpsFrames = 0, fpsLast = performance.now();
+
+/* ── THREE.JS ──────────────────────────────────────────── */
+const canvas3d = document.getElementById('three-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x07090f);
+scene.fog = new THREE.FogExp2(0x07090f, 0.03);
+
+const cam3d = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 500);
+cam3d.position.set(0, 1.2, 6);
+cam3d.lookAt(0, 0, 0);
+
+scene.add(new THREE.AmbientLight(0x223355, 0.7));
+const key = new THREE.DirectionalLight(0x6699ff, 1.8);
+key.position.set(5, 8, 5); key.castShadow = true;
+scene.add(key);
+const rim = new THREE.DirectionalLight(0x00e5c8, 0.5);
+rim.position.set(-5, 2, -5); scene.add(rim);
+const fill = new THREE.DirectionalLight(0xff8844, 0.25);
+fill.position.set(0, -3, 3); scene.add(fill);
+
+const grid = new THREE.GridHelper(20, 20, 0x1a2640, 0x0d1830);
+grid.position.y = -1.5; scene.add(grid);
+
+// Arquitectura de grupos:
+//   scene > translateGroup > rotateGroup > mesh
+// La rotacion ocurre siempre en (0,0,0) del rotateGroup,
+// independientemente de la traslacion del translateGroup.
+const translateGroup = new THREE.Group();
+const rotateGroup    = new THREE.Group();
+translateGroup.add(rotateGroup);
+scene.add(translateGroup);
+
+// modelGroup apunta a rotateGroup para compatibilidad con loadGLB
+const modelGroup = rotateGroup;
+
+// Placeholder
+const ph = new THREE.Mesh(
+  new THREE.IcosahedronGeometry(1, 1),
+  new THREE.MeshStandardMaterial({ color: 0x1a3a6a, wireframe: true, emissive: 0x0a1a3a, emissiveIntensity: 0.5 })
+);
+rotateGroup.add(ph);
+let modelLoaded = false;
+
+const dracoLoader = new THREE.DRACOLoader();
+dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/draco/');
+const gltfLoader = new THREE.GLTFLoader();
+gltfLoader.setDRACOLoader(dracoLoader);
+const stlLoader = new THREE.STLLoader();
+
+// Material por defecto para STL — STL no tiene info de materiales ni texturas
+const STL_MATERIAL = new THREE.MeshStandardMaterial({
+  color:            0x8899bb,
+  metalness:        0.3,
+  roughness:        0.6,
+  side:             THREE.DoubleSide,  // STL puede tener normales inconsistentes
+});
+
+// Función genérica que enruta al loader correcto según extensión
+function loadModel(url, name) {
+  const ext = name.split('.').pop().toLowerCase();
+  if (ext === 'stl')              loadSTL(url, name);
+  else if (ext === 'glb' || ext === 'gltf') loadGLB(url, name);
+  else {
+    document.getElementById('loader-text').textContent = 'Formato no soportado: .' + ext;
+    document.getElementById('loader').classList.add('visible');
+    setTimeout(() => document.getElementById('loader').classList.remove('visible'), 2500);
+  }
+}
+
+function loadGLB(url, name) {
+  const ldr = document.getElementById('loader');
+  const txt = document.getElementById('loader-text');
+  ldr.classList.add('visible');
+  txt.textContent = 'Cargando ' + name + '...';
+  gltfLoader.load(url, (gltf) => {
+    while (rotateGroup.children.length) rotateGroup.remove(rotateGroup.children[0]);
+    const m = gltf.scene;
+
+    // 1. Normalizar escala primero
+    const box0 = new THREE.Box3().setFromObject(m);
+    const size0 = box0.getSize(new THREE.Vector3());
+    const normScale = 2.5 / Math.max(size0.x, size0.y, size0.z);
+    m.scale.setScalar(normScale);
+
+    // 2. Recentrar en origen exacto DESPUES de escalar
+    const box1 = new THREE.Box3().setFromObject(m);
+    const center1 = box1.getCenter(new THREE.Vector3());
+    m.position.sub(center1);
+
+    m.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
+    rotateGroup.add(m);
+    modelLoaded = true;
+    resetAll();
+    ldr.classList.remove('visible');
+    document.getElementById('drop-zone').classList.add('hidden');
+  }, (p) => {
+    if (p.total) txt.textContent = 'Cargando ' + name + '... ' + Math.round(p.loaded/p.total*100) + '%';
+  }, (e) => {
+    console.error(e);
+    txt.textContent = 'Error al cargar.';
+    setTimeout(() => ldr.classList.remove('visible'), 2000);
+  });
+}
+
+function loadSTL(url, name) {
+  const ldr = document.getElementById('loader');
+  const txt = document.getElementById('loader-text');
+  ldr.classList.add('visible');
+  txt.textContent = 'Cargando ' + name + '...';
+
+  stlLoader.load(url, (geometry) => {
+    // STLLoader devuelve una BufferGeometry, no una escena — hay que envolverla en Mesh
+    geometry.computeVertexNormals();  // recalcular normales por si el STL las tiene mal
+
+    const mesh = new THREE.Mesh(geometry, STL_MATERIAL);
+    mesh.castShadow    = true;
+    mesh.receiveShadow = true;
+
+    // Centrar y normalizar — igual que GLB pero operando directamente sobre la geometry
+    geometry.computeBoundingBox();
+    const box    = geometry.boundingBox;
+    const size   = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+
+    const normScale = 2.5 / Math.max(size.x, size.y, size.z);
+    mesh.scale.setScalar(normScale);
+    // Recentrar: mover el mesh para que su bounding box quede en (0,0,0)
+    mesh.position.set(
+      -center.x * normScale,
+      -center.y * normScale,
+      -center.z * normScale
+    );
+
+    while (rotateGroup.children.length) rotateGroup.remove(rotateGroup.children[0]);
+    rotateGroup.add(mesh);
+    modelLoaded = true;
+    resetAll();
+    ldr.classList.remove('visible');
+    document.getElementById('drop-zone').classList.add('hidden');
+  }, (p) => {
+    if (p.total) txt.textContent = 'Cargando ' + name + '... ' + Math.round(p.loaded/p.total*100) + '%';
+  }, (e) => {
+    console.error(e);
+    txt.textContent = 'Error al cargar STL.';
+    setTimeout(() => ldr.classList.remove('visible'), 2000);
+  });
+}
+
+function resetAll() {
+  Object.assign(target,  { tx:0, ty:0, tz:0, rx:0, ry:0, rz:0, scale:1.0 });
+  Object.assign(current, { tx:0, ty:0, tz:0, rx:0, ry:0, rz:0, scale:1.0 });
+  Object.assign(accum,   { tx:0, ty:0, tz:0, rx:0, ry:0, rz:0 });
+  ref = { palmX:null, palmY:null, palmSize:null, orbDist:null, rotPitch:null, rotRoll:null, rotYaw:null };
+  gestureBuffer.candidate = STATES.IDLE;
+  gestureBuffer.frames = 0;
+  gestureBuffer.confirmed = STATES.IDLE;
+  currentState = STATES.IDLE;
+  // Resetear grupos Three.js al origen
+  translateGroup.position.set(0, 0, 0);
+  rotateGroup.rotation.set(0, 0, 0);
+  translateGroup.scale.setScalar(1.0);
+}
+
+window.addEventListener('resize', () => {
+  cam3d.aspect = window.innerWidth / window.innerHeight;
+  cam3d.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ── DROP / FILE ────────────────────────────────────────── */
+const dz = document.getElementById('drop-zone');
+document.getElementById('file-input').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (f) loadModel(URL.createObjectURL(f), f.name);
+});
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) loadModel(URL.createObjectURL(f), f.name);
+});
+
+/* ── MEDIAPIPE TASKS VISION ─────────────────────────────── */
+// Nueva API: HandLandmarker de @mediapipe/tasks-vision
+// Diferencias clave vs legacy:
+//   - result.landmarks[i]       → coordenadas imagen normalizadas (igual que antes)
+//   - result.worldLandmarks[i]  → coordenadas 3D en METROS reales (nuevo)
+//   - result.handedness[i]      → "Left" / "Right" fiable (nuevo)
+//   - Inicialización asíncrona con createFromOptions()
+
+const videoEl = document.getElementById('input-video');
+const handCanvas = document.getElementById('hand-canvas');
+const handCtx = handCanvas.getContext('2d');
+
+function syncCanvas() {
+  const w = document.getElementById('cam-video-container');
+  handCanvas.width = w.offsetWidth;
+  handCanvas.height = w.offsetHeight;
+}
+
+// El HandLandmarker se inicializa de forma asíncrona
+let handLandmarker = null;
+let HandLandmarker = null;   // referencia global al constructor para HAND_CONNECTIONS
+let mpRunning = false;
+let lastVideoTime = -1;
+
+async function initMediaPipe() {
+  try {
+    // @mediapipe/tasks-vision UMD expone las clases directamente en window:
+    // window.HandLandmarker, window.FilesetResolver, window.DrawingUtils
+    // Si por algún motivo el bundle UMD no cargó, hacemos fallback a ESM
+    let HL, FS, DU;
+    if (window.HandLandmarker && window.FilesetResolver) {
+      HL = window.HandLandmarker;
+      FS = window.FilesetResolver;
+      DU = window.DrawingUtils;
+    } else {
+      const m = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/vision_bundle.mjs');
+      HL = m.HandLandmarker;
+      FS = m.FilesetResolver;
+      DU = m.DrawingUtils;
+    }
+
+    HandLandmarker       = HL;
+    window._DrawingUtils = DU;
+
+    document.getElementById('cam-label').textContent = 'Cargando modelo...';
+
+    const vision = await FS.forVisionTasks(
+      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm'
+    );
+
+    handLandmarker = await HL.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+        delegate: 'GPU',
+      },
+      runningMode:                 'VIDEO',
+      numHands:                    2,
+      minHandDetectionConfidence:  0.72,
+      minHandPresenceConfidence:   0.65,
+      minTrackingConfidence:       0.65,
+    });
+
+    // getUserMedia — Tasks Vision no usa el helper Camera de la API legacy
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 360, facingMode: 'user' }
+    });
+    videoEl.srcObject = stream;
+    videoEl.addEventListener('loadeddata', () => {
+      document.getElementById('cam-dot').classList.add('on');
+      document.getElementById('cam-label').textContent = 'Cámara activa';
+      syncCanvas();
+      mpRunning = true;
+      detectLoop();
+    });
+
+  } catch (err) {
+    console.error('MediaPipe init error:', err);
+    document.getElementById('cam-dot').style.background = 'var(--danger)';
+    document.getElementById('cam-label').textContent = 'Error: ' + (err.message || err);
+  }
+}
+
+// Loop de detección — se llama en requestAnimationFrame sincronizado con el render
+function detectLoop() {
+  if (!mpRunning || !handLandmarker) return;
+  requestAnimationFrame(detectLoop);
+
+  // Solo procesar si hay un frame nuevo
+  if (videoEl.currentTime === lastVideoTime) return;
+  lastVideoTime = videoEl.currentTime;
+
+  const result = handLandmarker.detectForVideo(videoEl, performance.now());
+  onHandResults(result);
+}
+
+// Arrancar MediaPipe en cuanto el DOM esté listo
+initMediaPipe();
+
+/* ── HELPERS DE GEOMETRÍA ───────────────────────────────── */
+function palmCenter(lm) {
+  const pts = [lm[0], lm[5], lm[9], lm[13], lm[17]];
+  return {
+    x: pts.reduce((s,p) => s+p.x, 0) / 5,
+    y: pts.reduce((s,p) => s+p.y, 0) / 5,
+    z: pts.reduce((s,p) => s+p.z, 0) / 5,
+  };
+}
+
+function palmSize(lm, idx) {
+  // Tasks Vision: si tenemos worldLandmarks, usar Z real en metros para el ZOOM
+  // es mucho más preciso que el proxy por tamaño de imagen de la legacy API
+  if (lastWorldLandmarks && lastWorldLandmarks[idx || 0]) {
+    const wlm = lastWorldLandmarks[idx || 0];
+    // Distancia 3D real muñeca→MCP medio en metros
+    return Math.hypot(
+      wlm[0].x - wlm[9].x,
+      wlm[0].y - wlm[9].y,
+      wlm[0].z - wlm[9].z
+    );
+  }
+  // Fallback: proxy por tamaño de imagen (legacy)
+  return Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y);
+}
+
+function dist(a, b) {
+  return Math.hypot(a.x-b.x, a.y-b.y, (a.z||0)-(b.z||0));
+}
+
+function dist2d(a, b) {
+  return Math.hypot(a.x-b.x, a.y-b.y);
+}
+
+function normalize(v) {
+  const l = Math.hypot(v.x, v.y, v.z);
+  return l < 1e-6 ? {x:0,y:0,z:0} : {x:v.x/l, y:v.y/l, z:v.z/l};
+}
+
+function cross(a, b) {
+  return { x: a.y*b.z - a.z*b.y, y: a.z*b.x - a.x*b.z, z: a.x*b.y - a.y*b.x };
+}
+
+function handOrientation(lm) {
+  const vR = normalize({ x: lm[5].x-lm[0].x, y: lm[5].y-lm[0].y, z: lm[5].z-lm[0].z });
+  const vU = normalize({ x: lm[9].x-lm[0].x, y: lm[9].y-lm[0].y, z: lm[9].z-lm[0].z });
+  const vF = normalize(cross(vR, vU));
+  return {
+    roll:  Math.atan2(vR.y, vR.x),
+    pitch: Math.atan2(vU.z, vU.y),
+    yaw:   Math.atan2(vF.x, vF.z),
+  };
+}
+
+/* ── DETECCIÓN DE GESTOS ────────────────────────────────── */
+
+// Devuelve qué dedos están extendidos para una mano
+function getExtendedFingers(lm) {
+  const pc = palmCenter(lm);
+  return {
+    thumb:  dist2d(lm[4], pc) > dist2d(lm[2], pc) * 1.2,
+    index:  lm[8].y  < lm[6].y,
+    middle: lm[12].y < lm[10].y,
+    ring:   lm[16].y < lm[14].y,
+    pinky:  lm[20].y < lm[18].y,
+  };
+}
+
+// Puño cerrado — ningún dedo largo extendido
+function isFist(lm) {
+  const f = getExtendedFingers(lm);
+  return !f.index && !f.middle && !f.ring && !f.pinky;
+}
+
+// Índice solo extendido — solo el índice arriba, el resto doblados
+function isPointing(lm) {
+  const f = getExtendedFingers(lm);
+  return f.index && !f.middle && !f.ring && !f.pinky;
+}
+
+// Victoria — índice + medio arriba, anular + meñique doblados
+function isVictory(lm) {
+  const f = getExtendedFingers(lm);
+  return f.index && f.middle && !f.ring && !f.pinky;
+}
+
+// Cuernos (Rock) — índice + meñique arriba, medio + anular doblados
+function isRock(lm) {
+  const f = getExtendedFingers(lm);
+  return f.index && f.pinky && !f.middle && !f.ring;
+}
+
+// Mano abierta — los 4 dedos largos extendidos
+function isOpen(lm) {
+  const f = getExtendedFingers(lm);
+  return f.index && f.middle && f.ring && f.pinky;
+}
+
+// Busca en rawHands si alguna mano cumple la condición A y otra la condición B
+// Devuelve { handA, handB } con los índices, o null si no se cumple
+function findCombo(condA, condB) {
+  if (rawHands.length < 2) return null;
+  for (let i = 0; i < rawHands.length; i++) {
+    for (let j = 0; j < rawHands.length; j++) {
+      if (i === j) continue;
+      if (condA(rawHands[i]) && condB(rawHands[j])) {
+        return { handA: i, handB: j };
+      }
+    }
+  }
+  return null;
+}
+
+/* ── PROCESAMIENTO DE RESULTADOS (Tasks Vision) ─────────── */
+// Formato nuevo:
+//   result.landmarks[i][j]      — normalizado 0-1 (igual que legacy)
+//   result.worldLandmarks[i][j] — metros reales, origen en centro de palma
+//   result.handedness[i][0].categoryName — "Left" / "Right"
+
+// worldLandmarks expuesto globalmente para uso futuro en gestos de Z preciso
+let lastWorldLandmarks = [];
+
+function onHandResults(result) {
+  handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
+
+  const lms = result.landmarks || [];
+  lastWorldLandmarks = result.worldLandmarks || [];
+
+  if (lms.length > 0 && window._DrawingUtils && HandLandmarker) {
+    const drawingUtils = new window._DrawingUtils(handCtx);
+    for (const lm of lms) {
+      drawingUtils.drawConnectors(lm, HandLandmarker.HAND_CONNECTIONS,
+        { color: 'rgba(74,158,255,0.6)', lineWidth: 1 });
+      drawingUtils.drawLandmarks(lm,
+        { color: '#00e5c8', lineWidth: 0.5, radius: 2 });
+    }
+  }
+
+  rawHands = lms;
+  document.getElementById('h-hands').textContent = rawHands.length;
+
+  // Mostrar handedness — nuevo en Tasks Vision, fiable izq/der
+  const handedEl = document.getElementById('h-handed');
+  if (result.handedness && result.handedness.length > 0) {
+    const labels = result.handedness.map(h => h[0]?.categoryName || '?');
+    handedEl.textContent = labels.join(' + ');
+  } else {
+    handedEl.textContent = '—';
+  }
+}
+
+/* ── MÁQUINA DE ESTADOS ─────────────────────────────────── */
+
+function resolveState() {
+  const n = rawHands.length;
+  if (n === 0) return STATES.IDLE;
+
+  // Prioridad de mayor a menor especificidad:
+
+  // 1. TRANSLATE_XY — puño + índice solo
+  if (findCombo(isFist, isPointing)) return STATES.TRANSLATE_XY;
+
+  // 2. TRANSLATE_Z  — puño + victoria
+  if (findCombo(isFist, isVictory))  return STATES.TRANSLATE_Z;
+
+  // 3. ROTATE_YZ    — cuernos + índice solo
+  if (findCombo(isRock, isPointing)) return STATES.ROTATE_YZ;
+
+  // 4. ROTATE_X     — cuernos + victoria
+  if (findCombo(isRock, isVictory))  return STATES.ROTATE_X;
+
+  // 5. SCALE        — ambas manos abiertas
+  if (n === 2 && isOpen(rawHands[0]) && isOpen(rawHands[1])) return STATES.SCALE;
+
+  return STATES.IDLE;
+}
+
+// FIX: confirmState — un gesto solo se activa tras N frames consecutivos
+// Elimina activaciones por ruido de un único frame
+function confirmState(raw) {
+  if (raw === gestureBuffer.candidate) {
+    gestureBuffer.frames = Math.min(gestureBuffer.frames + 1, CFG.GESTURE_CONFIRM_FRAMES + 1);
+  } else {
+    gestureBuffer.candidate = raw;
+    gestureBuffer.frames = 1;
+  }
+  // IDLE siempre confirma inmediato — soltar un gesto no debe tener lag
+  if (raw === STATES.IDLE || gestureBuffer.frames >= CFG.GESTURE_CONFIRM_FRAMES) {
+    gestureBuffer.confirmed = raw;
+  }
+  return gestureBuffer.confirmed;
+}
+
+/* ── APLICAR TRANSFORMS POR ESTADO ─────────────────────── */
+function applyState(state) {
+  const wasState = currentState;
+  currentState = state;
+
+  if (state !== wasState) {
+    // Guardar posición acumulada al salir del estado anterior
+    accum.tx = target.tx; accum.ty = target.ty; accum.tz = target.tz;
+    accum.rx = target.rx; accum.ry = target.ry; accum.rz = target.rz;
+    ref = { idxX:null, idxY:null, vicY:null,
+            rotIdxX:null, rotIdxY:null, rotVicX:null, orbDist:null };
+  }
+
+  if (state === STATES.IDLE) return;
+
+  // ── TRANSLATE XY — puño + índice ────────────────────────
+  // La mano con índice actúa como "joystick": su posición relativa al inicio
+  // del gesto mueve el modelo en X e Y
+  if (state === STATES.TRANSLATE_XY) {
+    const combo = findCombo(isFist, isPointing);
+    if (!combo) return;
+    const ctrl = rawHands[combo.handB];       // mano con índice = control
+    const tip  = ctrl[8];                     // TIP del índice (pt 8)
+    if (ref.idxX === null) { ref.idxX = tip.x; ref.idxY = tip.y; }
+    const dx = accum.tx + (ref.idxX - tip.x) * CFG.TRANS_SCALE;
+    const dy = accum.ty + (tip.y - ref.idxY) * CFG.TRANS_SCALE * -1;
+    target.tx = Math.abs(dx - accum.tx) > CFG.DEAD_ZONE ? dx : target.tx;
+    target.ty = Math.abs(dy - accum.ty) > CFG.DEAD_ZONE ? dy : target.ty;
+    updateValHUD(target.tx.toFixed(3), target.ty.toFixed(3), '—');
+  }
+
+  // ── TRANSLATE Z — puño + victoria ───────────────────────
+  // La mano con victoria sube/baja: movimiento vertical → Z del modelo
+  else if (state === STATES.TRANSLATE_Z) {
+    const combo = findCombo(isFist, isVictory);
+    if (!combo) return;
+    const ctrl = rawHands[combo.handB];       // mano con victoria = control
+    const mid  = palmCenter(ctrl);            // centro de la mano como referencia
+    if (ref.vicY === null) ref.vicY = mid.y;
+    const dz = accum.tz + (mid.y - ref.vicY) * CFG.DEPTH_SCALE * -1;
+    target.tz = Math.abs(dz - accum.tz) > CFG.DEAD_ZONE ? dz : target.tz;
+    updateValHUD('—', '—', target.tz.toFixed(3));
+  }
+
+  // ── ROTATE YX — cuernos + índice ────────────────────────
+  // Índice izquierda/derecha → rotY; índice arriba/abajo → rotX
+  else if (state === STATES.ROTATE_YZ) {
+    const combo = findCombo(isRock, isPointing);
+    if (!combo) return;
+    const ctrl = rawHands[combo.handB];
+    const tip  = ctrl[8];
+    if (ref.rotIdxX === null) { ref.rotIdxX = tip.x; ref.rotIdxY = tip.y; }
+    // X del dedo → rotación Y (izq/der)  |  Y del dedo → rotación X (arriba/abajo)
+    const dRy = accum.ry + (ref.rotIdxX - tip.x) * CFG.ROT_YZ_SCALE;
+    const dRx = accum.rx + (tip.y - ref.rotIdxY) * CFG.ROT_YZ_SCALE * -1;
+    target.ry = Math.abs(dRy - accum.ry) > CFG.DEAD_ZONE ? dRy : target.ry;
+    target.rx = Math.abs(dRx - accum.rx) > CFG.DEAD_ZONE ? dRx : target.rx;
+    updateValHUD(target.rx.toFixed(3), target.ry.toFixed(3), '—');
+  }
+
+  // ── ROTATE Z — cuernos + victoria ───────────────────────
+  // Victoria izquierda/derecha → rotación Z (alabeo)
+  else if (state === STATES.ROTATE_X) {
+    const combo = findCombo(isRock, isVictory);
+    if (!combo) return;
+    const ctrl = rawHands[combo.handB];
+    const mid  = palmCenter(ctrl);
+    if (ref.rotVicX === null) ref.rotVicX = mid.x;
+    const dRz = accum.rz + (ref.rotVicX - mid.x) * CFG.ROT_X_SCALE;
+    target.rz = Math.abs(dRz - accum.rz) > CFG.DEAD_ZONE ? dRz : target.rz;
+    updateValHUD('—', '—', target.rz.toFixed(3));
+  }
+
+  // ── SCALE — ambas manos abiertas ────────────────────────
+  else if (state === STATES.SCALE) {
+    const pc0 = palmCenter(rawHands[0]);
+    const pc1 = palmCenter(rawHands[1]);
+    const d = dist2d(pc0, pc1);
+    if (ref.orbDist === null) { ref.orbDist = d; return; }
+    const delta = (d - ref.orbDist) * CFG.SCALE_SPEED * 60;
+    target.scale = Math.max(CFG.SCALE_MIN, Math.min(CFG.SCALE_MAX, target.scale + delta));
+    ref.orbDist = d;
+    updateValHUD('—', '—', target.scale.toFixed(2));
+  }
+}
+
+function updateValHUD(x, y, z) {
+  const p = document.getElementById('panel-vals');
+  p.style.display = 'block';
+  document.getElementById('v-x').textContent = x;
+  document.getElementById('v-y').textContent = y;
+  document.getElementById('v-z').textContent = z;
+}
+
+/* ── RESET ──────────────────────────────────────────────── */
+function triggerReset() {
+  resetAll();
+  showFlash('RESET');
+}
+
+function showFlash(text) {
+  const el = document.getElementById('event-flash');
+  el.textContent = text;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 600);
+}
+
+/* ── HUD ESTADO ─────────────────────────────────────────── */
+const STATE_LABELS = {
+  IDLE:         '● IDLE',
+  TRANSLATE_XY: '↔ MOVER XY',
+  TRANSLATE_Z:  '⇕ MOVER Z',
+  ROTATE_YZ:    '↻ GIRAR YZ',
+  ROTATE_X:     '↺ GIRAR X',
+  SCALE:        '⤢ ESCALA',
+};
+
+const LEG_IDS = {
+  TRANSLATE_XY: 'leg-txy',
+  TRANSLATE_Z:  'leg-tz',
+  ROTATE_YZ:    'leg-ryz',
+  ROTATE_X:     'leg-rx',
+  SCALE:        'leg-scale',
+};
+
+function updateHUD(state) {
+  const badge = document.getElementById('state-badge');
+  badge.textContent = STATE_LABELS[state] || state;
+  badge.className = state;
+
+  // Leyenda — resaltar activo
+  for (const [s, id] of Object.entries(LEG_IDS)) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active-row', s === state);
+  }
+
+  // Ocultar panel de valores en IDLE
+  if (state === STATES.IDLE) {
+    document.getElementById('panel-vals').style.display = 'none';
+  }
+}
+
+/* ── LERP ───────────────────────────────────────────────── */
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+/* ── RENDER LOOP ────────────────────────────────────────── */
+let phAngle = 0;
+
+function animate(ts) {
+  requestAnimationFrame(animate);
+
+  const dt = Math.min((ts - (animate._last || ts)) / 1000, 0.05);
+  animate._last = ts;
+
+  // FPS
+  fpsFrames++;
+  if (ts - fpsLast > 1000) {
+    fps = fpsFrames; fpsFrames = 0; fpsLast = ts;
+    document.getElementById('h-fps').textContent = fps;
+  }
+
+  // Resolver estado con buffer de confirmación de frames
+  const rawState = resolveState();
+  const state = confirmState(rawState);
+  applyState(state);
+  updateHUD(state);
+
+  // Lerp hacia targets
+  current.tx    = lerp(current.tx,    target.tx,    CFG.LERP_TRANS);
+  current.ty    = lerp(current.ty,    target.ty,    CFG.LERP_TRANS);
+  current.tz    = lerp(current.tz,    target.tz,    CFG.LERP_TRANS);
+  current.rx    = lerp(current.rx,    target.rx,    CFG.LERP_ROT);
+  current.ry    = lerp(current.ry,    target.ry,    CFG.LERP_ROT);
+  current.rz    = lerp(current.rz,    target.rz,    CFG.LERP_ROT);
+  current.scale = lerp(current.scale, target.scale, CFG.LERP_SCALE);
+
+  // Aplicar traslacion y escala al translateGroup, rotacion al rotateGroup
+  // La rotacion ocurre en (0,0,0) del rotateGroup sin importar la traslacion
+  translateGroup.position.set(current.tx, current.ty, current.tz);
+  translateGroup.scale.setScalar(current.scale);
+  rotateGroup.rotation.set(current.rx, current.ry, current.rz, 'YXZ');
+
+  // Placeholder
+  if (!modelLoaded) {
+    phAngle += dt * 0.5;
+    ph.rotation.y = phAngle;
+    ph.rotation.x = Math.sin(phAngle * 0.4) * 0.3;
+  }
+
+  renderer.render(scene, cam3d);
+}
+animate(performance.now());
+
+/* ── UI ─────────────────────────────────────────────────── */
+let camCollapsed = false;
+function toggleCam() {
+  camCollapsed = !camCollapsed;
+  document.getElementById('cam-wrap').classList.toggle('collapsed', camCollapsed);
+  document.getElementById('cam-icon').textContent = camCollapsed ? '▲' : '▼';
+}
+
+window.addEventListener('keydown', e => {
+  if (e.key.toLowerCase() === 'r') triggerReset();
+  if (e.key.toLowerCase() === 'h') toggleCam();
+  if (e.key.toLowerCase() === 'g') grid.visible = !grid.visible;
+});
+
+</script>
+</body>
+</html>
