@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ALFILO — Preview Popup Evento</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --blue: #1A7FD4;
+      --blue-glow: rgba(26,127,212,0.6);
+      --blue-dim: rgba(26,127,212,0.15);
+      --silver: #8A9BB0;
+      --copper: #D4691A;
+      --bg: #080A0F;
+      --white: #E8EDF5;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { overflow-x: hidden; }
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Exo 2', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .preview-info {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      background: rgba(8,10,15,0.85);
+      border: 1px solid var(--blue);
+      padding: 0.8rem 1.2rem;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      color: var(--silver);
+      z-index: 1;
+    }
+    .preview-info b { color: var(--blue); }
+    .reopen-btn {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      padding: 0.9rem 1.6rem;
+      background: var(--bg);
+      color: var(--white);
+      border: 1px solid var(--blue);
+      cursor: pointer;
+      z-index: 999;
+      border-radius: 999px;
+      box-shadow: 0 0 20px var(--blue-glow);
+      display: none;
+    }
+    .reopen-btn:hover { background: var(--blue-dim); }
+
+    /* === POPUP OVERLAY === */
+    .event-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(8,10,15,0.85) 0%, rgba(8,10,15,0.97) 70%);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(40px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0)    scale(1); }
+    }
+    .event-overlay.closing { animation: fadeOut 0.4s ease forwards; }
+    @keyframes fadeOut { to { opacity: 0; } }
+
+    /* === MODAL === */
+    .event-modal {
+      position: relative;
+      width: min(1180px, 100%);
+      max-height: 90vh;
+      background: linear-gradient(135deg, #0c1018 0%, #0a0d14 100%);
+      border: 1px solid var(--blue);
+      box-shadow:
+        0 0 60px rgba(26,127,212,0.35),
+        inset 0 0 30px rgba(26,127,212,0.05);
+      border-radius: 22px;
+      animation: slideUp 0.6s cubic-bezier(0.2,0.8,0.2,1);
+      display: grid;
+      grid-template-columns: 0.78fr 1.22fr;
+      overflow: hidden;
+    }
+    @media (max-width: 900px) {
+      .event-modal { grid-template-columns: 1fr; max-height: 95vh; overflow-y: auto; }
+    }
+
+    /* === CORNER ACCENTS (rounded sci-fi) === */
+    .corner {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      border: 2px solid var(--blue);
+      pointer-events: none;
+      filter: drop-shadow(0 0 6px var(--blue-glow));
+    }
+    .corner.tl { top: 10px; left: 10px; border-right: none; border-bottom: none; border-top-left-radius: 14px; }
+    .corner.tr { top: 10px; right: 10px; border-left: none; border-bottom: none; border-top-right-radius: 14px; }
+    .corner.bl { bottom: 10px; left: 10px; border-right: none; border-top: none; border-bottom-left-radius: 14px; }
+    .corner.br { bottom: 10px; right: 10px; border-left: none; border-top: none; border-bottom-right-radius: 14px; }
+
+    /* === CLOSE BUTTON === */
+    .close-btn {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 38px;
+      height: 38px;
+      background: rgba(8,10,15,0.9);
+      border: 1px solid var(--blue);
+      color: var(--white);
+      font-size: 1.2rem;
+      cursor: pointer;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.25s;
+      border-radius: 50%;
+    }
+    .close-btn:hover {
+      background: var(--blue);
+      box-shadow: 0 0 20px var(--blue-glow);
+    }
+
+    /* === LEFT SIDE: POSTER === */
+    .poster-side {
+      position: relative;
+      background:
+        radial-gradient(ellipse at center, rgba(26,127,212,0.08) 0%, transparent 70%),
+        linear-gradient(135deg, #0d1218 0%, #080a0f 100%);
+      overflow: hidden;
+      min-height: 520px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.4rem;
+    }
+    .poster-side img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 4px 24px rgba(0,0,0,0.6));
+    }
+    .poster-frame {
+      position: absolute;
+      inset: 12px;
+      border: 1px solid rgba(26,127,212,0.25);
+      pointer-events: none;
+    }
+    .poster-side::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, transparent 75%, rgba(8,10,15,0.35) 100%);
+      pointer-events: none;
+    }
+
+    /* === RIGHT SIDE: CONTENT === */
+    .content-side {
+      padding: 1.8rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      overflow: hidden;
+    }
+
+    .event-tag {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      text-align: center;
+    }
+    .event-tag::before,
+    .event-tag::after {
+      content: '';
+      width: 30px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--blue));
+    }
+    .event-tag::after {
+      background: linear-gradient(to right, var(--blue), transparent);
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--blue);
+      box-shadow: 0 0 10px var(--blue-glow);
+      animation: pulseDot 1.5s infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.4); }
+    }
+
+    .event-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.5rem;
+    }
+    .event-logo {
+      width: 130px;
+      height: 130px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 22px rgba(255,255,255,0.2)) drop-shadow(0 4px 10px rgba(0,0,0,0.6));
+    }
+
+    .event-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: 0.02em;
+    }
+    .event-title .accent { color: var(--blue); }
+
+    .event-subtitle {
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      color: var(--silver);
+      text-transform: uppercase;
+    }
+
+    .event-meta {
+      display: flex;
+      gap: 1.3rem;
+      flex-wrap: wrap;
+      padding: 0.7rem 0;
+      border-top: 1px solid rgba(26,127,212,0.25);
+      border-bottom: 1px solid rgba(26,127,212,0.25);
+    }
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .meta-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.55rem;
+      letter-spacing: 0.25em;
+      color: var(--silver);
+      text-transform: uppercase;
+    }
+    .meta-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--white);
+    }
+    .meta-value.highlight { color: var(--blue); text-shadow: 0 0 12px var(--blue-glow); }
+
+    .event-description {
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: var(--silver);
+    }
+
+    .event-cta {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+    .btn-primary, .btn-secondary {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 0.7rem 1.5rem 0.7rem 0.7rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue), #2596e8);
+      color: var(--white);
+      border: 1px solid var(--blue);
+      border-radius: 999px;
+      box-shadow: 0 0 20px rgba(26,127,212,0.4);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #2596e8, #3aa8f0);
+      box-shadow: 0 0 30px rgba(26,127,212,0.75);
+      transform: translateY(-2px);
+    }
+    .btn-primary img {
+      height: 42px; width: 42px; object-fit: cover;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.5);
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--white);
+      border: 1px solid var(--silver);
+      border-radius: 999px;
+    }
+    .btn-secondary:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    /* === SPONSORS FOOTER === */
+    .sponsors {
+      margin-top: auto;
+      padding-top: 0.9rem;
+      border-top: 1px solid rgba(26,127,212,0.15);
+    }
+    .sponsors-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.55rem;
+      letter-spacing: 0.3em;
+      color: var(--silver);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      opacity: 0.7;
+      text-align: center;
+    }
+    .sponsors-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .sponsors-row img {
+      height: 64px;
+      width: auto;
+      object-fit: contain;
+      opacity: 0.95;
+      transition: opacity 0.3s, filter 0.3s, transform 0.3s;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+    }
+    .sponsors-row img:hover,
+    .sponsors-row a:hover img {
+      opacity: 1;
+      transform: translateY(-2px);
+    }
+    .sponsors-row a { display: inline-flex; }
+    .sponsors-row .made-by {
+      filter: invert(1) drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+      opacity: 0.75;
+    }
+    .sponsors-row .made-by:hover { opacity: 1; }
+    .raffle-hint {
+      margin-top: 1rem;
+      text-align: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--silver);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .raffle-hint a {
+      color: var(--blue);
+      text-decoration: none;
+      letter-spacing: 0.22em;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.25s, color 0.25s;
+    }
+    .raffle-hint a:hover {
+      color: #2596e8;
+      border-bottom-color: var(--blue);
+    }
+    .raffle-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--blue);
+      box-shadow: 0 0 8px var(--blue-glow);
+      animation: pulseDot 1.8s infinite;
+    }
+
+    /* === Decorative lines === */
+    .scan-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--blue), transparent);
+      opacity: 0.6;
+      animation: scan 3s infinite ease-in-out;
+      pointer-events: none;
+    }
+    @keyframes scan {
+      0%, 100% { top: 10%; opacity: 0; }
+      50% { top: 90%; opacity: 0.8; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="preview-info">
+  <b>PREVIEW MODE</b> · Popup evento ALFILO · Pulsa <b>ESC</b> o la <b>X</b> para cerrar
+</div>
+
+<button class="reopen-btn" id="reopenBtn">📅 Ver evento</button>
+
+<!-- ============ POPUP DEL EVENTO ============ -->
+<div class="event-overlay" id="eventOverlay">
+  <div class="event-modal" role="dialog" aria-modal="true" aria-labelledby="evtTitle">
+
+    <!-- Esquinas decorativas sci-fi -->
+    <span class="corner tl"></span>
+    <span class="corner tr"></span>
+    <span class="corner bl"></span>
+    <span class="corner br"></span>
+
+    <!-- Línea de escaneo animada -->
+    <div class="scan-line"></div>
+
+    <!-- Botón cerrar -->
+    <button class="close-btn" id="closeBtn" aria-label="Cerrar">✕</button>
+
+    <!-- IZQUIERDA: Cartel del evento -->
+    <div class="poster-side">
+      <img src="assets/events/streetbar/cartel.jpg" alt="Mapa Street Bar Citizen Ourense" onerror="this.style.display='none'; this.parentNode.style.background='linear-gradient(135deg,#3a2a1a,#1a1410)'; this.parentNode.innerHTML+='<div style=\'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#8A9BB0;font-family:Orbitron;font-size:0.7rem;letter-spacing:0.2em;text-align:center;padding:2rem\'>FALTA<br>cartel.jpg<br><small style=opacity:0.6;margin-top:1rem;display:block>(/public/assets/events/streetbar/)</small></div>';" />
+      <div class="poster-frame"></div>
+    </div>
+
+    <!-- DERECHA: Contenido -->
+    <div class="content-side">
+      <div class="event-tag">
+        <span class="pulse-dot"></span>
+        Evento destacado de ALFILO
+      </div>
+
+      <div class="event-header">
+        <img src="assets/events/streetbar/logo-clean.png" alt="Logo Street Bar Citizen Ourense" class="event-logo" onerror="this.onerror=null; this.src='assets/events/streetbar/logo.png';" />
+        <h2 class="event-title" id="evtTitle">
+          STREET BAR CITIZEN<br><span class="accent">OURENSE</span>
+        </h2>
+        <div class="event-subtitle">Bar Citizen World Tour 2026 · Ourense</div>
+      </div>
+
+      <div class="event-meta">
+        <div class="meta-item">
+          <span class="meta-label">Fecha</span>
+          <span class="meta-value highlight">6 JUN 2026</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Lugar</span>
+          <span class="meta-value">Ourense</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Tipo</span>
+          <span class="meta-value">Tour de bares y pinchos</span>
+        </div>
+      </div>
+
+      <p class="event-description">
+        Únete al recorrido oficial por las plazas y tabernas de Ourense. Una jornada
+        para reunir a la comunidad de Star Citizen, brindar entre ciudadanos y celebrar
+        el universo que nos une. <strong style="color:var(--white)">¡Tour de bares y pinchos por todo lo alto!</strong>
+      </p>
+
+      <div class="event-cta">
+        <a href="https://www.twitch.tv/herbizida" target="_blank" rel="noopener" class="btn-primary" title="Más info en el canal de Herbizida">
+          <img src="assets/events/streetbar/herbizida.png" alt="" onerror="this.style.display='none'" />
+          + Info en Twitch
+        </a>
+      </div>
+
+      <div class="sponsors">
+        <div class="sponsors-label">Organizan / Colaboran</div>
+        <div class="sponsors-row">
+          <img src="assets/events/streetbar/logo-alfilo.png" alt="ALFILO" title="ALFILO" onerror="this.style.display='none'" />
+          <a href="https://www.monster.tech/en/?ref=qxhxhdwg" target="_blank" rel="noopener" title="Monstertech">
+            <img src="assets/events/streetbar/sponsor-mva.png" alt="Monstertech" onerror="this.style.display='none'" />
+          </a>
+          <img src="assets/events/streetbar/made-by-community.png" alt="Made by the Community" class="made-by" title="Made by the Community" onerror="this.style.display='none'" />
+        </div>
+
+        <div class="raffle-hint">
+          <span class="raffle-dot"></span>
+          Sorteos durante el evento vía
+          <a href="https://sclabs.space/" target="_blank" rel="noopener"><strong>SC LABS</strong></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const overlay = document.getElementById('eventOverlay');
+  const closeBtn = document.getElementById('closeBtn');
+  const reopenBtn = document.getElementById('reopenBtn');
+
+  function closePopup() {
+    overlay.classList.add('closing');
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      overlay.classList.remove('closing');
+      reopenBtn.style.display = 'inline-block';
+    }, 400);
+  }
+  function openPopup() {
+    overlay.style.display = 'flex';
+    reopenBtn.style.display = 'none';
+  }
+
+  closeBtn.addEventListener('click', closePopup);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closePopup(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.style.display !== 'none') closePopup(); });
+  reopenBtn.addEventListener('click', openPopup);
+</script>
+
+</body>
+</html>
