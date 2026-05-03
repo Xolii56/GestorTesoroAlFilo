@@ -31,7 +31,7 @@
     descriptionHighlight: '¡Tour de bares y pinchos por todo lo alto!',
 
     // === Enlaces ===
-    twitchUrl: 'https://www.twitch.tv/herbizida',
+    tapLinkUrl: 'https://sbarou.taplink.site/',
     monstertechUrl: 'https://www.monster.tech/en/?ref=qxhxhdwg',
     sclabsUrl: 'https://sclabs.space/',
 
@@ -39,9 +39,11 @@
     posterImg: 'assets/events/streetbar/cartel.jpg',
     eventLogoImg: 'assets/events/streetbar/logo-clean.png',
     herbizidaImg: 'assets/events/streetbar/herbizida.png',
+    qrImg: 'assets/events/streetbar/qr-taplink.png',
     alfiloImg: 'assets/events/streetbar/logo-alfilo.png',
     monstertechImg: 'assets/events/streetbar/sponsor-mva.png',
     madeByCommunityImg: 'assets/events/streetbar/made-by-community.png',
+    sclabsImg: 'assets/events/streetbar/SCLABS.png',
   };
 
   // === Comprobar ventana de fechas ===
@@ -158,12 +160,22 @@
 
   .alf-evt-raffle { margin-top:1rem; text-align:center; font-family:'Orbitron',sans-serif;
     font-size:.62rem; letter-spacing:.18em; text-transform:uppercase; color:#8A9BB0;
-    display:flex; align-items:center; justify-content:center; gap:.5rem; }
+    display:flex; align-items:center; justify-content:flex-end; gap:.5rem; padding-right:151px; }
   .alf-evt-raffle a { color:#1A7FD4; text-decoration:none; letter-spacing:.22em;
     border-bottom:1px solid transparent; transition:all .25s; }
   .alf-evt-raffle a:hover { color:#2596e8; border-bottom-color:#1A7FD4; }
   .alf-evt-raffle-dot { width:6px; height:6px; border-radius:50%; background:#1A7FD4;
     box-shadow:0 0 8px rgba(26,127,212,0.6); animation: alfEvtPulse 1.8s infinite; }
+
+  .alf-evt-cta { justify-content:center; }
+  .alf-evt-qr-wrap { display:flex; flex-direction:row; align-items:center; gap:1.2rem; }
+  .alf-evt-qr-wrap a { display:inline-block; border-radius:8px; overflow:hidden;
+    border:2px solid rgba(26,127,212,0.4); transition:all .3s; flex-shrink:0;
+    box-shadow:0 0 16px rgba(26,127,212,0.2); }
+  .alf-evt-qr-wrap a:hover { border-color:#1A7FD4; box-shadow:0 0 28px rgba(26,127,212,0.5); transform:scale(1.03); }
+  .alf-evt-qr { display:block; width:110px; height:110px; object-fit:contain; }
+  .alf-evt-qr-label { font-family:'Orbitron',sans-serif; font-size:.62rem;
+    letter-spacing:.18em; color:#8A9BB0; text-transform:uppercase; line-height:1.6; }
 
   .alf-evt-reopen { position:fixed; bottom:2rem; right:2rem; z-index:9998;
     font-family:'Orbitron',sans-serif; font-size:.75rem; letter-spacing:.2em;
@@ -232,11 +244,14 @@
         </p>
 
         <div class="alf-evt-cta">
-          <a href="${CONFIG.twitchUrl}" target="_blank" rel="noopener" class="alf-evt-btn"
-             title="Más info en el canal de Herbizida">
-            <img src="${CONFIG.herbizidaImg}" alt="" onerror="this.style.display='none'" />
-            + Info en Twitch
-          </a>
+          <div class="alf-evt-qr-wrap">
+            <a href="${CONFIG.tapLinkUrl}" target="_blank" rel="noopener" title="Más info del evento">
+              <img class="alf-evt-qr"
+                   src="${CONFIG.qrImg}"
+                   alt="QR Code — Más info del evento" />
+            </a>
+            <span class="alf-evt-qr-label">Escanea para más info</span>
+          </div>
         </div>
 
         <div class="alf-evt-sponsors">
@@ -251,12 +266,15 @@
             <img src="${CONFIG.madeByCommunityImg}" alt="Made by the Community"
                  class="alf-made" title="Made by the Community"
                  onerror="this.style.display='none'" />
+            <a href="${CONFIG.sclabsUrl}" target="_blank" rel="noopener" title="SC LABS">
+              <img src="${CONFIG.sclabsImg}" alt="SC LABS" style="height:60px;width:auto;object-fit:contain;"
+                   onerror="this.style.display='none'" />
+            </a>
           </div>
 
           <div class="alf-evt-raffle">
             <span class="alf-evt-raffle-dot"></span>
-            Sorteos durante el evento vía
-            <a href="${CONFIG.sclabsUrl}" target="_blank" rel="noopener"><strong>SC LABS</strong></a>
+            Sorteos durante el evento vía <strong>SC LABS</strong>
           </div>
         </div>
       </div>
