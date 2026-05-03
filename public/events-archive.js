@@ -36,7 +36,7 @@
     #eventos {
       scroll-margin-top: 80px;
       position: relative;
-      background: url('assets/eventos-bg.jpg.png') center center / cover no-repeat;
+      background: url('assets/eventos-bg.png') center center / cover no-repeat;
     }
     #eventos::before {
       content: '';
