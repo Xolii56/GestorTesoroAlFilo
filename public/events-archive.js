@@ -33,7 +33,22 @@
     // Inyectar CSS de la sección
     const style = document.createElement('style');
     style.textContent = `
-    #eventos { scroll-margin-top: 80px; }
+    #eventos {
+      scroll-margin-top: 80px;
+      position: relative;
+      background: url('assets/eventos-bg.jpg.png') center center / cover no-repeat;
+    }
+    #eventos::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom,
+        rgba(8,10,15,0.75) 0%,
+        rgba(8,10,15,0.55) 50%,
+        rgba(8,10,15,0.75) 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    #eventos > * { position: relative; z-index: 1; }
     .eventos-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
