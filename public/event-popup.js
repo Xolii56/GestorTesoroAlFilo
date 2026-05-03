@@ -284,7 +284,7 @@
   // Botón flotante de reapertura
   const reopenBtn = document.createElement('button');
   reopenBtn.className = 'alf-evt-reopen';
-  reopenBtn.innerHTML = `📅 Ver evento`;
+  reopenBtn.innerHTML = `📅 Bar Citizen Ourense`;
   reopenBtn.setAttribute('aria-label', 'Volver a abrir el popup del evento');
 
   function open() {
