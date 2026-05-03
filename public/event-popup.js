@@ -1,58 +1,30 @@
 /* ============================================================
    ALFILO · POPUP DE EVENTO
    ----------------------------------------------------------------
-   · Para CAMBIAR el contenido, edita el bloque CONFIG de abajo.
-   · Para QUITAR el popup antes de tiempo, borra la línea
-       <script src="event-popup.js" defer></script>
-     del index.html (o comenta este archivo).
-   · Después de CONFIG.endDate el popup NO aparece (ni el botón).
+   Lee los eventos de events-data.js (window.ALFILO_EVENTS).
+   · Evento activo de mayor prioridad → popup al entrar
+   · Resto de activos → botón flotante visible desde el inicio
+   · Para añadir eventos: edita solo events-data.js
    ============================================================ */
 
 (() => {
   'use strict';
 
-  const CONFIG = {
-    // === Fechas (YYYY-MM-DD) ===
-    startDate: '2026-05-03',   // se empieza a mostrar
-    endDate:   '2026-06-07',   // se deja de mostrar (día después del evento)
+  const events  = window.ALFILO_EVENTS || [];
+  const today   = new Date();
 
-    // === Comportamiento ===
-    appearDelayMs: 1500,       // milisegundos antes de aparecer al entrar
-    showEveryVisit: true,      // true = cada visita; false = sólo si no fue cerrado
+  // Filtrar activos y ordenar por prioridad (mayor primero)
+  const active = events
+    .filter(ev => {
+      const s = new Date(ev.startDate + 'T00:00:00');
+      const e = new Date(ev.endDate   + 'T23:59:59');
+      return today >= s && today <= e;
+    })
+    .sort((a, b) => (b.priority || 0) - (a.priority || 0));
 
-    // === Contenido del evento ===
-    eventTitle1: 'STREET BAR CITIZEN',
-    eventTitle2: 'OURENSE',
-    eventSubtitle: 'Bar Citizen World Tour 2026 · Ourense',
-    eventDate: '6 JUN 2026',
-    eventLocation: 'Ourense',
-    eventType: 'Tour de bares y pinchos',
-    description: 'Únete al recorrido oficial por las plazas y tabernas de Ourense. Una jornada para reunir a la comunidad de Star Citizen, brindar entre ciudadanos y celebrar el universo que nos une.',
-    descriptionHighlight: '¡Tour de bares y pinchos por todo lo alto!',
+  if (!active.length) return;
 
-    // === Enlaces ===
-    tapLinkUrl: 'https://sbarou.taplink.site/',
-    monstertechUrl: 'https://www.monster.tech/en/?ref=qxhxhdwg',
-    sclabsUrl: 'https://sclabs.space/',
-
-    // === Imágenes (rutas relativas a /public) ===
-    posterImg: 'assets/events/streetbar/cartel.jpg',
-    eventLogoImg: 'assets/events/streetbar/logo-clean.png',
-    herbizidaImg: 'assets/events/streetbar/herbizida.png',
-    qrImg: 'assets/events/streetbar/qr-taplink.png',
-    alfiloImg: 'assets/events/streetbar/logo-alfilo.png',
-    monstertechImg: 'assets/events/streetbar/sponsor-mva.png',
-    madeByCommunityImg: 'assets/events/streetbar/made-by-community.png',
-    sclabsImg: 'assets/events/streetbar/SCLABS.png',
-  };
-
-  // === Comprobar ventana de fechas ===
-  const today = new Date();
-  const start = new Date(CONFIG.startDate + 'T00:00:00');
-  const end   = new Date(CONFIG.endDate   + 'T23:59:59');
-  if (today < start || today > end) return;  // fuera de rango → no hacer nada
-
-  // === Inyectar CSS ===
+  // ── CSS ──────────────────────────────────────────────────────
   const css = `
   .alf-evt-overlay { position: fixed; inset: 0;
     background: radial-gradient(ellipse at center, rgba(8,10,15,0.85) 0%, rgba(8,10,15,0.97) 70%);
@@ -61,11 +33,11 @@
     animation: alfEvtFadeIn 0.5s ease; opacity: 0; }
   .alf-evt-overlay.alf-show { opacity: 1; }
   .alf-evt-overlay.alf-closing { animation: alfEvtFadeOut 0.4s ease forwards; }
-  @keyframes alfEvtFadeIn { from { opacity:0;} to { opacity:1;} }
-  @keyframes alfEvtFadeOut { to { opacity:0;} }
-  @keyframes alfEvtSlideUp { from { opacity:0; transform: translateY(40px) scale(0.96);} to { opacity:1; transform: translateY(0) scale(1);} }
-  @keyframes alfEvtPulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.4;transform:scale(1.4);} }
-  @keyframes alfEvtScan { 0%,100%{top:10%;opacity:0;} 50%{top:90%;opacity:0.8;} }
+  @keyframes alfEvtFadeIn  { from { opacity:0; } to { opacity:1; } }
+  @keyframes alfEvtFadeOut { to   { opacity:0; } }
+  @keyframes alfEvtSlideUp { from { opacity:0; transform: translateY(40px) scale(0.96); } to { opacity:1; transform: translateY(0) scale(1); } }
+  @keyframes alfEvtPulse   { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.4;transform:scale(1.4);} }
+  @keyframes alfEvtScan    { 0%,100%{top:10%;opacity:0;} 50%{top:90%;opacity:0.8;} }
 
   .alf-evt-modal { position: relative; width: min(1180px, 100%); max-height: 90vh;
     background: linear-gradient(135deg,#0c1018 0%,#0a0d14 100%);
@@ -133,19 +105,15 @@
   .alf-evt-desc { font-size:.85rem; line-height:1.5; color:#8A9BB0; }
   .alf-evt-desc strong { color:#E8EDF5; }
 
-  .alf-evt-cta { display:flex; gap:.8rem; flex-wrap:wrap; margin-top:.5rem; }
-  .alf-evt-btn { font-family:'Orbitron',sans-serif; font-size:.85rem; letter-spacing:.18em;
-    text-transform:uppercase; padding:.7rem 1.5rem .7rem .7rem;
-    background: linear-gradient(135deg,#1A7FD4,#2596e8); color:#fff;
-    border:1px solid #1A7FD4; border-radius:999px;
-    box-shadow:0 0 20px rgba(26,127,212,0.4); text-decoration:none;
-    display:inline-flex; align-items:center; gap:.6rem; cursor:pointer;
-    transition:all .3s; }
-  .alf-evt-btn:hover { background: linear-gradient(135deg,#2596e8,#3aa8f0);
-    box-shadow:0 0 30px rgba(26,127,212,0.75); transform:translateY(-2px); }
-  .alf-evt-btn img { height:42px; width:42px; object-fit:cover;
-    border-radius:50%; border:2px solid rgba(255,255,255,0.5);
-    box-shadow:0 0 10px rgba(0,0,0,0.4); }
+  .alf-evt-cta { display:flex; gap:.8rem; flex-wrap:wrap; margin-top:.5rem; justify-content:center; }
+  .alf-evt-qr-wrap { display:flex; flex-direction:row; align-items:center; gap:1.2rem; }
+  .alf-evt-qr-wrap a { display:inline-block; border-radius:8px; overflow:hidden;
+    border:2px solid rgba(26,127,212,0.4); transition:all .3s; flex-shrink:0;
+    box-shadow:0 0 16px rgba(26,127,212,0.2); }
+  .alf-evt-qr-wrap a:hover { border-color:#1A7FD4; box-shadow:0 0 28px rgba(26,127,212,0.5); transform:scale(1.03); }
+  .alf-evt-qr { display:block; width:110px; height:110px; object-fit:contain; }
+  .alf-evt-qr-label { font-family:'Orbitron',sans-serif; font-size:.62rem;
+    letter-spacing:.18em; color:#8A9BB0; text-transform:uppercase; line-height:1.6; }
 
   .alf-evt-sponsors { margin-top:auto; padding-top:.9rem; border-top:1px solid rgba(26,127,212,0.15); }
   .alf-evt-sp-label { font-family:'Orbitron',sans-serif; font-size:.55rem; letter-spacing:.3em;
@@ -167,22 +135,12 @@
   .alf-evt-raffle-dot { width:6px; height:6px; border-radius:50%; background:#1A7FD4;
     box-shadow:0 0 8px rgba(26,127,212,0.6); animation: alfEvtPulse 1.8s infinite; }
 
-  .alf-evt-cta { justify-content:center; }
-  .alf-evt-qr-wrap { display:flex; flex-direction:row; align-items:center; gap:1.2rem; }
-  .alf-evt-qr-wrap a { display:inline-block; border-radius:8px; overflow:hidden;
-    border:2px solid rgba(26,127,212,0.4); transition:all .3s; flex-shrink:0;
-    box-shadow:0 0 16px rgba(26,127,212,0.2); }
-  .alf-evt-qr-wrap a:hover { border-color:#1A7FD4; box-shadow:0 0 28px rgba(26,127,212,0.5); transform:scale(1.03); }
-  .alf-evt-qr { display:block; width:110px; height:110px; object-fit:contain; }
-  .alf-evt-qr-label { font-family:'Orbitron',sans-serif; font-size:.62rem;
-    letter-spacing:.18em; color:#8A9BB0; text-transform:uppercase; line-height:1.6; }
-
-  .alf-evt-reopen { position:fixed; bottom:2rem; right:2rem; z-index:9998;
+  .alf-evt-reopen { position:fixed; right:2rem; z-index:9998;
     font-family:'Orbitron',sans-serif; font-size:.75rem; letter-spacing:.2em;
     padding:.9rem 1.6rem; background:#080A0F; color:#E8EDF5;
     border:1px solid #1A7FD4; cursor:pointer; border-radius:999px;
     box-shadow:0 0 20px rgba(26,127,212,0.6); display:none;
-    align-items:center; gap:.5rem; }
+    align-items:center; gap:.5rem; transition: bottom 0.3s ease; }
   .alf-evt-reopen:hover { background: rgba(26,127,212,0.15); }
   .alf-evt-reopen.alf-show { display:inline-flex; }
   `;
@@ -190,12 +148,10 @@
   styleEl.textContent = css;
   document.head.appendChild(styleEl);
 
-  // === Crear el HTML del overlay ===
-  const overlay = document.createElement('div');
-  overlay.className = 'alf-evt-overlay';
-  overlay.setAttribute('role', 'dialog');
-  overlay.setAttribute('aria-modal', 'true');
-  overlay.innerHTML = `
+  // ── Helpers ──────────────────────────────────────────────────
+
+  function buildOverlayHTML(ev) {
+    return `
     <div class="alf-evt-modal">
       <span class="alf-evt-corner tl"></span>
       <span class="alf-evt-corner tr"></span>
@@ -205,7 +161,7 @@
       <button class="alf-evt-close" aria-label="Cerrar">✕</button>
 
       <div class="alf-evt-poster">
-        <img src="${CONFIG.posterImg}" alt="Cartel del evento" />
+        <img src="${ev.posterImg}" alt="Cartel del evento" />
       </div>
 
       <div class="alf-evt-content">
@@ -215,40 +171,38 @@
         </div>
 
         <div class="alf-evt-header">
-          <img src="${CONFIG.eventLogoImg}" alt="" class="alf-evt-logo"
+          <img src="${ev.eventLogoImg}" alt="" class="alf-evt-logo"
                onerror="this.style.display='none'" />
           <h2 class="alf-evt-title">
-            ${CONFIG.eventTitle1}<br><span class="alf-accent">${CONFIG.eventTitle2}</span>
+            ${ev.title1}<br><span class="alf-accent">${ev.title2}</span>
           </h2>
-          <div class="alf-evt-subtitle">${CONFIG.eventSubtitle}</div>
+          <div class="alf-evt-subtitle">${ev.subtitle}</div>
         </div>
 
         <div class="alf-evt-meta">
           <div class="alf-evt-meta-item">
             <span class="alf-evt-meta-label">Fecha</span>
-            <span class="alf-evt-meta-value hl">${CONFIG.eventDate}</span>
+            <span class="alf-evt-meta-value hl">${ev.date}</span>
           </div>
           <div class="alf-evt-meta-item">
             <span class="alf-evt-meta-label">Lugar</span>
-            <span class="alf-evt-meta-value">${CONFIG.eventLocation}</span>
+            <span class="alf-evt-meta-value">${ev.location}</span>
           </div>
           <div class="alf-evt-meta-item">
             <span class="alf-evt-meta-label">Tipo</span>
-            <span class="alf-evt-meta-value">${CONFIG.eventType}</span>
+            <span class="alf-evt-meta-value">${ev.type}</span>
           </div>
         </div>
 
         <p class="alf-evt-desc">
-          ${CONFIG.description}
-          <strong>${CONFIG.descriptionHighlight}</strong>
+          ${ev.description}
+          <strong>${ev.descriptionHighlight}</strong>
         </p>
 
         <div class="alf-evt-cta">
           <div class="alf-evt-qr-wrap">
-            <a href="${CONFIG.tapLinkUrl}" target="_blank" rel="noopener" title="Más info del evento">
-              <img class="alf-evt-qr"
-                   src="${CONFIG.qrImg}"
-                   alt="QR Code — Más info del evento" />
+            <a href="${ev.infoUrl}" target="_blank" rel="noopener" title="Más info del evento">
+              <img class="alf-evt-qr" src="${ev.qrImg}" alt="QR — Más info del evento" />
             </a>
             <span class="alf-evt-qr-label">Escanea para más info</span>
           </div>
@@ -257,21 +211,21 @@
         <div class="alf-evt-sponsors">
           <div class="alf-evt-sp-label">Organizan / Colaboran</div>
           <div class="alf-evt-sp-row">
-            <img src="${CONFIG.alfiloImg}" alt="ALFILO" title="ALFILO"
+            <img src="${ev.alfiloImg}" alt="ALFILO" title="ALFILO"
                  onerror="this.style.display='none'" />
-            <a href="${CONFIG.monstertechUrl}" target="_blank" rel="noopener" title="Monstertech">
-              <img src="${CONFIG.monstertechImg}" alt="Monstertech"
+            <a href="${ev.monstertechUrl}" target="_blank" rel="noopener" title="Monstertech">
+              <img src="${ev.monstertechImg}" alt="Monstertech"
                    onerror="this.style.display='none'" />
             </a>
-            <img src="${CONFIG.madeByCommunityImg}" alt="Made by the Community"
+            <img src="${ev.madeByCommunityImg}" alt="Made by the Community"
                  class="alf-made" title="Made by the Community"
                  onerror="this.style.display='none'" />
-            <a href="${CONFIG.sclabsUrl}" target="_blank" rel="noopener" title="SC LABS">
-              <img src="${CONFIG.sclabsImg}" alt="SC LABS" style="height:60px;width:auto;object-fit:contain;"
+            <a href="${ev.sclabsUrl}" target="_blank" rel="noopener" title="SC LABS">
+              <img src="${ev.sclabsImg}" alt="SC LABS"
+                   style="height:60px;width:auto;object-fit:contain;"
                    onerror="this.style.display='none'" />
             </a>
           </div>
-
           <div class="alf-evt-raffle">
             <span class="alf-evt-raffle-dot"></span>
             Sorteos durante el evento vía <strong>SC LABS</strong>
@@ -280,38 +234,67 @@
       </div>
     </div>
   `;
-
-  // Botón flotante de reapertura
-  const reopenBtn = document.createElement('button');
-  reopenBtn.className = 'alf-evt-reopen';
-  reopenBtn.innerHTML = `📅 Bar Citizen Ourense`;
-  reopenBtn.setAttribute('aria-label', 'Volver a abrir el popup del evento');
-
-  function open() {
-    document.body.appendChild(overlay);
-    requestAnimationFrame(() => overlay.classList.add('alf-show'));
-    reopenBtn.classList.remove('alf-show');
-  }
-  function close() {
-    overlay.classList.add('alf-closing');
-    setTimeout(() => {
-      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-      overlay.classList.remove('alf-closing','alf-show');
-      reopenBtn.classList.add('alf-show');
-    }, 400);
   }
 
-  // Listeners
-  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
-  overlay.querySelector('.alf-evt-close').addEventListener('click', close);
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && overlay.parentNode) close();
+  // ── Crear overlay + botón para cada evento activo ─────────────
+  const BTN_HEIGHT_REM  = 3.2;  // altura aprox del botón flotante
+  const BTN_GAP_REM     = 0.5;  // separación entre botones
+  const BTN_BOTTOM_BASE = 2;    // rem desde el borde inferior
+
+  const overlays     = [];
+  const reopenBtns   = [];
+
+  active.forEach((ev, idx) => {
+    // — Overlay —
+    const overlay = document.createElement('div');
+    overlay.className = 'alf-evt-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.innerHTML = buildOverlayHTML(ev);
+    overlays.push(overlay);
+
+    // — Botón flotante —
+    const btn = document.createElement('button');
+    btn.className = 'alf-evt-reopen';
+    const bottomRem = BTN_BOTTOM_BASE + idx * (BTN_HEIGHT_REM + BTN_GAP_REM);
+    btn.style.bottom = bottomRem + 'rem';
+    btn.innerHTML = `📅 ${ev.reopenLabel || ev.title1}`;
+    btn.setAttribute('aria-label', `Ver evento: ${ev.title1} ${ev.title2}`);
+    reopenBtns.push(btn);
+
+    // — Abrir / cerrar —
+    function openPopup() {
+      document.body.appendChild(overlay);
+      requestAnimationFrame(() => overlay.classList.add('alf-show'));
+      btn.classList.remove('alf-show');
+    }
+
+    function closePopup() {
+      overlay.classList.add('alf-closing');
+      setTimeout(() => {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        overlay.classList.remove('alf-closing', 'alf-show');
+        btn.classList.add('alf-show');
+      }, 400);
+    }
+
+    overlay.addEventListener('click', e => { if (e.target === overlay) closePopup(); });
+    overlay.querySelector('.alf-evt-close').addEventListener('click', closePopup);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && overlay.parentNode) closePopup();
+    });
+    btn.addEventListener('click', openPopup);
+
+    document.body.appendChild(btn);
+
+    // — Comportamiento inicial —
+    if (idx === 0) {
+      // Evento principal → popup tras delay
+      setTimeout(openPopup, ev.appearDelayMs || 1500);
+    } else {
+      // Eventos secundarios → botón flotante visible desde el inicio
+      btn.classList.add('alf-show');
+    }
   });
-  reopenBtn.addEventListener('click', open);
 
-  // Insertar el botón flotante (oculto inicialmente)
-  document.body.appendChild(reopenBtn);
-
-  // Abrir tras el delay configurado
-  setTimeout(open, CONFIG.appearDelayMs);
 })();
