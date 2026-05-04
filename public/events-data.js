@@ -44,4 +44,37 @@ window.ALFILO_EVENTS = [
     sclabsImg:          'assets/events/streetbar/SCLABS.png',
   },
 
+  {
+    id: 'tsg-alfilo-2026',
+    priority: 2,                       // mayor prioridad → es el que abre el popup principal
+    startDate: '2026-05-01',           // PROVISIONAL — actualizar con fecha real
+    endDate:   '2026-08-31',           // PROVISIONAL — actualizar con fecha real
+    appearDelayMs: 1500,
+
+    // --- Contenido ---
+    title1:               'TACTICAL STRIKE',
+    title2:               'GROUP',
+    subtitle:             'AlFilo · Operaciones tácticas · Patch 4.8',
+    date:                 'PATCH 4.8',
+    location:             'En el verso',
+    type:                 'Operaciones tácticas',
+    description:          'Con el nuevo parche 4.8 en ALFILO efectuaremos varios TSG. Únete a nosotros en nuestras aventuras.',
+    descriptionHighlight: '¡¡ Te esperamos !!',
+    reopenLabel:          'Tactical Strike Group',
+
+    // --- Enlaces ---
+    infoUrl:       'https://discord.com/invite/Bmx5Dw4mEf',
+    sclabsUrl:     'https://sclabs.space/',
+
+    // --- Imágenes / Vídeo ---
+    posterVideo:        'assets/events/tsg/tsg3.mp4',
+    posterImg:          'assets/events/tsg/cartel.jpg',
+    eventLogoImg:       'assets/events/tsg/alfiloTSG.png',
+    qrImg:              'assets/events/streetbar/qr-taplink.png',  // placeholder, sin QR propio aún
+    alfiloImg:          'assets/events/streetbar/logo-alfilo.png',
+    monstertechImg:     'assets/events/streetbar/sponsor-mva.png',
+    madeByCommunityImg: 'assets/events/streetbar/made-by-community.png',
+    sclabsImg:          'assets/events/streetbar/SCLABS.png',
+  },
+
 ];
