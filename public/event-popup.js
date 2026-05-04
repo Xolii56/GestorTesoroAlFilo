@@ -161,13 +161,7 @@
       <button class="alf-evt-close" aria-label="Cerrar">✕</button>
 
       <div class="alf-evt-poster">
-        ${ev.posterVideo
-          ? `<video autoplay muted loop playsinline poster="${ev.posterImg || ''}"
-                    style="width:100%;height:100%;object-fit:cover;">
-               <source src="${ev.posterVideo}" type="video/mp4" />
-             </video>`
-          : `<img src="${ev.posterImg}" alt="Cartel del evento" />`
-        }
+        <img src="${ev.posterImg}" alt="Cartel del evento" />
       </div>
 
       <div class="alf-evt-content">
