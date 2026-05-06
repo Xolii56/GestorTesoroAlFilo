@@ -42,9 +42,25 @@
       margin-top: 2.5rem;
     }
     .eventos-group-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      display: flex;
+      flex-direction: row;
       gap: 1.8rem;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(26,127,212,0.4) transparent;
+      padding-bottom: .8rem;
+      -webkit-overflow-scrolling: touch;
+    }
+    .eventos-group-cards::-webkit-scrollbar { height: 6px; }
+    .eventos-group-cards::-webkit-scrollbar-track { background: transparent; }
+    .eventos-group-cards::-webkit-scrollbar-thumb {
+      background: rgba(26,127,212,0.4); border-radius: 3px;
+    }
+    .eventos-group-cards .evento-card {
+      flex: 0 0 380px;
+      scroll-snap-align: start;
     }
     .eventos-group-separator {
       height: 1px;
@@ -62,7 +78,7 @@
       border-radius: 14px;
       overflow: hidden;
       transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
-      cursor: default;
+      cursor: pointer;
     }
     .evento-card:hover {
       border-color: rgba(26,127,212,0.6);
@@ -144,7 +160,7 @@
       font-size: .85rem; text-align: center; padding: 2rem 0;
     }
     @media (max-width: 600px) {
-      .eventos-group-cards { grid-template-columns: 1fr; }
+      .eventos-group-cards .evento-card { flex: 0 0 88vw; }
     }
     `;
     document.head.appendChild(style);
@@ -213,6 +229,11 @@
           <div class="evento-card-type">${ev.type || ''}</div>
         </div>
       `;
+
+      // Click → abrir el popup del evento
+      card.addEventListener('click', () => {
+        if (window.ALFEvents) window.ALFEvents.open(ev.id);
+      });
 
       // Hover → play / leave → pausa y vuelve al inicio
       const cardVideo = card.querySelector('video.evento-card-poster');

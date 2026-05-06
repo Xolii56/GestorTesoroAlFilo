@@ -369,42 +369,41 @@
   `;
   }
 
-  // ── Crear overlay + botón para cada evento activo ─────────────
-  const BTN_HEIGHT_REM  = 3.2;  // altura aprox del botón flotante
-  const BTN_GAP_REM     = 0.5;  // separación entre botones
-  const BTN_BOTTOM_BASE = 2;    // rem desde el borde inferior
+  // ── Crear overlay + (opcional) botón flotante para cada evento ─────
+  const BTN_HEIGHT_REM  = 3.2;
+  const BTN_GAP_REM     = 0.5;
+  const BTN_BOTTOM_BASE = 2;
 
-  const overlays     = [];
-  const reopenBtns   = [];
+  // Registro id → openPopup para que otros scripts puedan abrir eventos
+  const popupRegistry = new Map();
 
-  active.forEach((ev, idx) => {
-    // — Overlay —
+  function createEventPopup(ev, opts = {}) {
+    const { withFloatingBtn = false, btnIndexFromBottom = 0 } = opts;
+
     const overlay = document.createElement('div');
     overlay.className = 'alf-evt-overlay';
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-modal', 'true');
     overlay.innerHTML = buildOverlayHTML(ev);
-    overlays.push(overlay);
 
-    // — Botón flotante —
-    const btn = document.createElement('button');
-    btn.className = 'alf-evt-reopen';
-    // Priority 1 arriba del todo, los menos prioritarios debajo
-    const bottomRem = BTN_BOTTOM_BASE + (active.length - 1 - idx) * (BTN_HEIGHT_REM + BTN_GAP_REM);
-    btn.style.bottom = bottomRem + 'rem';
-    btn.innerHTML = `📅 ${ev.reopenLabel || ev.title1}`;
-    btn.setAttribute('aria-label', `Ver evento: ${ev.title1} ${ev.title2}`);
-    reopenBtns.push(btn);
+    let btn = null;
+    if (withFloatingBtn) {
+      btn = document.createElement('button');
+      btn.className = 'alf-evt-reopen';
+      btn.style.bottom = (BTN_BOTTOM_BASE + btnIndexFromBottom * (BTN_HEIGHT_REM + BTN_GAP_REM)) + 'rem';
+      btn.innerHTML = `📅 ${ev.reopenLabel || ev.title1}`;
+      btn.setAttribute('aria-label', `Ver evento: ${ev.title1} ${ev.title2}`);
+    }
 
-    // — Abrir / cerrar —
     function openPopup() {
+      if (overlay.parentNode) return;            // ya abierto
       document.body.appendChild(overlay);
       requestAnimationFrame(() => {
         overlay.classList.add('alf-show');
         const vid = overlay.querySelector('video');
         if (vid) { vid.muted = true; vid.play().catch(() => {}); }
       });
-      btn.classList.remove('alf-show');
+      if (btn) btn.classList.remove('alf-show');
     }
 
     function closePopup() {
@@ -412,7 +411,7 @@
       setTimeout(() => {
         if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
         overlay.classList.remove('alf-closing', 'alf-show');
-        btn.classList.add('alf-show');
+        if (btn) btn.classList.add('alf-show');
       }, 400);
     }
 
@@ -421,18 +420,43 @@
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && overlay.parentNode) closePopup();
     });
-    btn.addEventListener('click', openPopup);
 
-    document.body.appendChild(btn);
+    if (btn) {
+      btn.addEventListener('click', openPopup);
+      document.body.appendChild(btn);
+    }
 
-    // — Comportamiento inicial —
+    popupRegistry.set(ev.id, { openPopup, closePopup });
+    return { openPopup, closePopup, btn };
+  }
+
+  // Activos → con botón flotante; priority 1 arriba, menores debajo
+  active.forEach((ev, idx) => {
+    const indexFromBottom = active.length - 1 - idx;
+    const { openPopup, btn } = createEventPopup(ev, {
+      withFloatingBtn: true,
+      btnIndexFromBottom: indexFromBottom,
+    });
+
     if (idx === 0) {
-      // Evento principal → popup tras delay
+      // El de mayor prioridad → popup tras delay
       setTimeout(openPopup, ev.appearDelayMs || 1500);
     } else {
-      // Eventos secundarios → botón flotante visible desde el inicio
       btn.classList.add('alf-show');
     }
   });
+
+  // Resto (pasados o futuros) → solo registrar para que el archivo pueda abrirlos
+  events.forEach(ev => {
+    if (!popupRegistry.has(ev.id)) {
+      createEventPopup(ev, { withFloatingBtn: false });
+    }
+  });
+
+  // API pública para abrir cualquier evento por id
+  window.ALFEvents = {
+    open(id)  { popupRegistry.get(id)?.openPopup(); },
+    close(id) { popupRegistry.get(id)?.closePopup(); },
+  };
 
 })();

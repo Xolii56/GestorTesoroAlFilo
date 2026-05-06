@@ -74,4 +74,32 @@ window.ALFILO_EVENTS = [
     eventLogoImg: 'assets/events/tsg/alfilo-transparent.png',  // solo para mini-tarjeta del archivo
   },
 
+  {
+    id:       'xenothreat-alfilo-2026',
+    layout:   'ingame',
+    priority: 2,                       // 1 = más prioritario, 3 = menos
+    startDate: '2026-05-01',           // PROVISIONAL
+    endDate:   '2026-08-31',           // PROVISIONAL
+    appearDelayMs: 1500,
+
+    // --- Contenido ---
+    title1:               'STAR CITIZEN 4.8',
+    title2:               'XENOTHREAT',
+    subtitle:             'Star Citizen 4.8 · Operación de combate',
+    date:                 'Star Citizen 4.8',
+    type:                 'Operación in-game',
+    description:          'Con el nuevo parche, en ALFILO nos vamos a coordinar para acabar con esos malditos bastardos de la Xenothreat. Únete a nuestras aventuras.',
+    descriptionHighlight: '¡¡ Te esperamos !!',
+    reopenLabel:          'Xenothreat',
+
+    // --- CTA ---
+    ctaUrl:   'https://discord.com/invite/Bmx5Dw4mEf',
+    ctaLabel: 'Únete en Discord',
+
+    // --- Vídeo / Imágenes ---
+    posterVideo:  'assets/events/xenothreat/xeno2.mp4',
+    posterImg:    'assets/events/xenothreat/cartel.jpg',
+    eventLogoImg: 'assets/events/xenothreat/alfilo-transparent.png',
+  },
+
 ];
