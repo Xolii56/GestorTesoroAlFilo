@@ -21,6 +21,12 @@
 
     const today = new Date();
 
+    // Activar puntito verde en el nav si hay eventos activos
+    const hasActive = events.some(ev => isActive(ev, today));
+    if (hasActive) {
+      document.querySelectorAll('[data-active-pulse]').forEach(el => el.classList.add('active'));
+    }
+
     // Ordenar: activos primero (por priority asc), luego pasados por fecha desc
     const sorted = [...events].sort((a, b) => {
       const aActive = isActive(a, today);
@@ -35,6 +41,27 @@
     const style = document.createElement('style');
     style.textContent = `
     #eventos { scroll-margin-top: 80px; }
+
+    /* Puntito verde parpadeante en el nav cuando hay eventos activos */
+    .nav-event-pulse {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      margin-left: 7px;
+      vertical-align: middle;
+      box-shadow: 0 0 8px rgba(34,197,94,0.85);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .nav-event-pulse.active {
+      opacity: 1;
+      animation: navEvtPulse 1.6s infinite ease-in-out;
+    }
+    @keyframes navEvtPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 8px rgba(34,197,94,0.85); }
+      50%      { transform: scale(1.5); box-shadow: 0 0 14px rgba(34,197,94,1); }
+    }
     .eventos-grid {
       display: flex;
       flex-direction: column;
