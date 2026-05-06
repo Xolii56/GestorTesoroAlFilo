@@ -227,7 +227,7 @@
       card.className = 'evento-card' + (active ? ' activo' : '');
 
       const media = ev.posterVideo
-        ? `<video class="evento-card-poster" muted loop playsinline preload="metadata"
+        ? `<video class="evento-card-poster" muted loop playsinline preload="none"
                   poster="${ev.posterImg || ''}">
              <source src="${ev.posterVideo}" type="video/mp4" />
            </video>`
