@@ -20,7 +20,7 @@
       const e = new Date(ev.endDate   + 'T23:59:59');
       return today >= s && today <= e;
     })
-    .sort((a, b) => (b.priority || 0) - (a.priority || 0));
+    .sort((a, b) => (a.priority || 99) - (b.priority || 99));  // 1 = más prioritario
 
   if (!active.length) return;
 
@@ -135,6 +135,87 @@
   .alf-evt-raffle-dot { width:6px; height:6px; border-radius:50%; background:#1A7FD4;
     box-shadow:0 0 8px rgba(26,127,212,0.6); animation: alfEvtPulse 1.8s infinite; }
 
+  /* ── Layout INGAME (eventos internos: vídeo hero, sin patrocinadores) ── */
+  .alf-evt-modal.alf-ingame {
+    display: block;                     /* anula grid de 2 columnas */
+    grid-template-columns: none;
+    width: min(1080px, 100%);
+    max-height: none;
+    overflow: hidden;
+  }
+  .alf-evt-hero {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #000;
+    overflow: hidden;
+  }
+  .alf-evt-hero video,
+  .alf-evt-hero img {
+    width: 100%; height: 100%;
+    object-fit: contain; display: block;
+    background: #000;
+  }
+  .alf-evt-hero::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(to bottom,
+      transparent 0%, transparent 55%,
+      rgba(8,10,15,0.6) 85%, rgba(10,13,20,1) 100%);
+    pointer-events: none;
+  }
+  .alf-evt-hero-tag {
+    position: absolute; top: 6rem; left: 1.2rem;
+    z-index: 2;
+    font-family: 'Orbitron', sans-serif; font-size: .58rem;
+    letter-spacing: .3em; text-transform: uppercase;
+    color: #1A7FD4;
+    background: rgba(8,10,15,0.85);
+    border: 1px solid rgba(26,127,212,0.5);
+    padding: .5rem .9rem; border-radius: 999px;
+    display: flex; align-items: center; gap: .6rem;
+    backdrop-filter: blur(6px);
+  }
+  .alf-evt-ingame-body {
+    padding: .9rem 2rem 1.3rem;
+    display: flex; flex-direction: column;
+    align-items: center; text-align: center;
+    gap: .4rem;
+  }
+  .alf-evt-ingame-body .alf-evt-cta-btn { margin-top: .5rem; }
+  .alf-evt-ingame-body .alf-evt-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1.6rem, 3vw, 2.3rem);
+    font-weight: 900; line-height: 1;
+    letter-spacing: .02em;
+  }
+  .alf-evt-ingame-body .alf-evt-subtitle {
+    font-family: 'Orbitron', sans-serif; font-size: .7rem;
+    letter-spacing: .25em; text-transform: uppercase;
+    color: #8A9BB0;
+  }
+  .alf-evt-ingame-body .alf-evt-desc {
+    max-width: 620px; font-size: .92rem; line-height: 1.55;
+    color: #B5C0CE; margin-top: .4rem;
+  }
+  .alf-evt-ingame-body .alf-evt-desc strong { color: #E8EDF5; }
+  .alf-evt-cta-btn {
+    margin-top: .8rem;
+    font-family: 'Orbitron', sans-serif; font-size: .8rem;
+    letter-spacing: .2em; text-transform: uppercase;
+    padding: .9rem 2.4rem;
+    background: linear-gradient(135deg,#1A7FD4,#2596e8);
+    color: #fff; text-decoration: none;
+    border: 1px solid #1A7FD4; border-radius: 999px;
+    box-shadow: 0 0 22px rgba(26,127,212,0.45);
+    transition: all .3s;
+    display: inline-flex; align-items: center; gap: .6rem;
+  }
+  .alf-evt-cta-btn:hover {
+    background: linear-gradient(135deg,#2596e8,#3aa8f0);
+    box-shadow: 0 0 32px rgba(26,127,212,0.8);
+    transform: translateY(-2px);
+  }
+
   .alf-evt-reopen { position:fixed; right:2rem; z-index:9998;
     font-family:'Orbitron',sans-serif; font-size:.75rem; letter-spacing:.2em;
     padding:.9rem 1.6rem; background:#080A0F; color:#E8EDF5;
@@ -151,6 +232,52 @@
   // ── Helpers ──────────────────────────────────────────────────
 
   function buildOverlayHTML(ev) {
+    if (ev.layout === 'ingame') return buildOverlayIngame(ev);
+    return buildOverlayClassic(ev);
+  }
+
+  function buildOverlayIngame(ev) {
+    const heroMedia = ev.posterVideo
+      ? `<video autoplay muted loop playsinline poster="${ev.posterImg || ''}">
+           <source src="${ev.posterVideo}" type="video/mp4" />
+         </video>`
+      : `<img src="${ev.posterImg}" alt="${ev.title1}" />`;
+
+    return `
+    <div class="alf-evt-modal alf-ingame">
+      <span class="alf-evt-corner tl"></span>
+      <span class="alf-evt-corner tr"></span>
+      <span class="alf-evt-corner bl"></span>
+      <span class="alf-evt-corner br"></span>
+      <button class="alf-evt-close" aria-label="Cerrar">✕</button>
+
+      <div class="alf-evt-hero">
+        ${heroMedia}
+        <div class="alf-evt-hero-tag">
+          <span class="alf-evt-pulse"></span>
+          ${ev.type || 'Evento ALFILO'}
+        </div>
+      </div>
+
+      <div class="alf-evt-ingame-body">
+        <h2 class="alf-evt-title">
+          ${ev.title1} <span class="alf-accent">${ev.title2}</span>
+        </h2>
+        ${ev.subtitle ? `<div class="alf-evt-subtitle">${ev.subtitle}</div>` : ''}
+        <p class="alf-evt-desc">
+          ${ev.description}
+          ${ev.descriptionHighlight ? `<strong>${ev.descriptionHighlight}</strong>` : ''}
+        </p>
+        ${ev.ctaUrl ? `
+          <a href="${ev.ctaUrl}" target="_blank" rel="noopener" class="alf-evt-cta-btn">
+            ${ev.ctaLabel || 'Más info'}
+          </a>
+        ` : ''}
+      </div>
+    </div>`;
+  }
+
+  function buildOverlayClassic(ev) {
     return `
     <div class="alf-evt-modal">
       <span class="alf-evt-corner tl"></span>
@@ -161,7 +288,13 @@
       <button class="alf-evt-close" aria-label="Cerrar">✕</button>
 
       <div class="alf-evt-poster">
-        <img src="${ev.posterImg}" alt="Cartel del evento" />
+        ${ev.posterVideo
+          ? `<video autoplay muted loop playsinline poster="${ev.posterImg || ''}"
+                    style="width:100%;height:100%;object-fit:cover;">
+               <source src="${ev.posterVideo}" type="video/mp4" />
+             </video>`
+          : `<img src="${ev.posterImg}" alt="Cartel del evento" />`
+        }
       </div>
 
       <div class="alf-evt-content">
@@ -256,7 +389,8 @@
     // — Botón flotante —
     const btn = document.createElement('button');
     btn.className = 'alf-evt-reopen';
-    const bottomRem = BTN_BOTTOM_BASE + idx * (BTN_HEIGHT_REM + BTN_GAP_REM);
+    // Priority 1 arriba del todo, los menos prioritarios debajo
+    const bottomRem = BTN_BOTTOM_BASE + (active.length - 1 - idx) * (BTN_HEIGHT_REM + BTN_GAP_REM);
     btn.style.bottom = bottomRem + 'rem';
     btn.innerHTML = `📅 ${ev.reopenLabel || ev.title1}`;
     btn.setAttribute('aria-label', `Ver evento: ${ev.title1} ${ev.title2}`);
@@ -265,7 +399,11 @@
     // — Abrir / cerrar —
     function openPopup() {
       document.body.appendChild(overlay);
-      requestAnimationFrame(() => overlay.classList.add('alf-show'));
+      requestAnimationFrame(() => {
+        overlay.classList.add('alf-show');
+        const vid = overlay.querySelector('video');
+        if (vid) { vid.muted = true; vid.play().catch(() => {}); }
+      });
       btn.classList.remove('alf-show');
     }
 

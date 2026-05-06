@@ -4,16 +4,16 @@
    Añade aquí cada nuevo evento. El sistema se encarga de:
    · Mostrar como popup si está dentro de fechas (startDate → endDate)
    · Mostrarlo en la sección de Eventos de la web siempre
-   · Si hay varios activos a la vez: el de mayor priority abre
-     como popup principal; los demás aparecen como botones
-     flotantes en la esquina.
+   · Si hay varios activos a la vez: el de menor priority (1)
+     abre como popup principal; los demás aparecen como botones
+     flotantes en la esquina (priority 2 abajo, 3 encima).
    ============================================================ */
 
 window.ALFILO_EVENTS = [
 
   {
     id: 'streetbar-ourense-2026',
-    priority: 1,                       // mayor número = más prioritario
+    priority: 1,                       // 1 = más prioritario, 3 = menos
     startDate: '2026-05-03',
     endDate:   '2026-06-07',
     appearDelayMs: 1500,
@@ -42,6 +42,36 @@ window.ALFILO_EVENTS = [
     monstertechImg:     'assets/events/streetbar/sponsor-mva.png',
     madeByCommunityImg: 'assets/events/streetbar/made-by-community.png',
     sclabsImg:          'assets/events/streetbar/SCLABS.png',
+  },
+
+  // ── PLANTILLA: evento interno in-game ────────────────────────
+  // layout 'ingame' → vídeo hero, título, descripción y CTA. Sin patrocinadores ni QR.
+  {
+    id:       'tsg-alfilo-2026',
+    layout:   'ingame',
+    priority: 2,                       // 1 = más prioritario, 3 = menos
+    startDate: '2026-05-01',           // PROVISIONAL
+    endDate:   '2026-08-31',           // PROVISIONAL
+    appearDelayMs: 1500,
+
+    // --- Contenido ---
+    title1:               'TACTICAL STRIKE',
+    title2:               'GROUP',
+    subtitle:             'Star Citizen 4.8 · Operaciones tácticas',
+    date:                 'Star Citizen 4.8',
+    type:                 'Operación in-game',
+    description:          'Con el nuevo parche 4.8 en ALFILO efectuaremos varios TSG. Únete a nosotros en nuestras aventuras.',
+    descriptionHighlight: '¡¡ Te esperamos !!',
+    reopenLabel:          'Tactical Strike Group',
+
+    // --- CTA ---
+    ctaUrl:   'https://discord.com/invite/Bmx5Dw4mEf',
+    ctaLabel: 'Únete en Discord',
+
+    // --- Vídeo / Imágenes ---
+    posterVideo:  'assets/events/tsg/tsg3.mp4',
+    posterImg:    'assets/events/tsg/cartel.jpg',     // fallback / mini-tarjeta
+    eventLogoImg: 'assets/events/tsg/alfilo-transparent.png',  // solo para mini-tarjeta del archivo
   },
 
 ];

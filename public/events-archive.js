@@ -21,12 +21,13 @@
 
     const today = new Date();
 
-    // Ordenar: activos primero, luego por fecha desc
+    // Ordenar: activos primero (por priority asc), luego pasados por fecha desc
     const sorted = [...events].sort((a, b) => {
       const aActive = isActive(a, today);
       const bActive = isActive(b, today);
       if (aActive && !bActive) return -1;
       if (!aActive && bActive) return 1;
+      if (aActive && bActive) return (a.priority || 99) - (b.priority || 99);
       return new Date(b.endDate) - new Date(a.endDate);
     });
 
@@ -35,10 +36,24 @@
     style.textContent = `
     #eventos { scroll-margin-top: 80px; }
     .eventos-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1.6rem;
+      margin-top: 2.5rem;
+    }
+    .eventos-group-cards {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 1.8rem;
-      margin-top: 2.5rem;
+    }
+    .eventos-group-separator {
+      height: 1px;
+      background: linear-gradient(to right,
+        transparent 0%,
+        rgba(138,155,176,0.18) 25%,
+        rgba(138,155,176,0.18) 75%,
+        transparent 100%);
+      margin: .4rem 0;
     }
     .evento-card {
       position: relative;
@@ -65,6 +80,7 @@
       filter: brightness(0.85);
       transition: filter 0.3s;
     }
+    video.evento-card-poster { object-position: center; }
     .evento-card:hover .evento-card-poster { filter: brightness(1); }
     .evento-card-body {
       padding: 1.2rem 1.4rem;
@@ -74,7 +90,8 @@
       display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
     }
     .evento-card-logo {
-      width: 48px; height: 48px; object-fit: contain;
+      height: 64px; width: auto; max-width: 180px;
+      object-fit: contain;
       filter: drop-shadow(0 0 8px rgba(26,127,212,0.3));
     }
     .evento-badge-activo {
@@ -127,20 +144,55 @@
       font-size: .85rem; text-align: center; padding: 2rem 0;
     }
     @media (max-width: 600px) {
-      .eventos-grid { grid-template-columns: 1fr; }
+      .eventos-group-cards { grid-template-columns: 1fr; }
     }
     `;
     document.head.appendChild(style);
 
-    // Renderizar tarjetas
+    // Helper: clave de grupo (1, 2, 3 o 'pasado')
+    function groupKey(ev) {
+      return isActive(ev, today) ? (ev.priority || 99) : 'pasado';
+    }
+
+    // Render: agrupa por prioridad y mete separadores entre grupos
+    let currentGroupKey = null;
+    let currentGroupEl  = null;
+
     sorted.forEach(ev => {
+      const key = groupKey(ev);
+
+      // Cambio de grupo → separador + nuevo contenedor
+      if (key !== currentGroupKey) {
+        if (currentGroupKey !== null) {
+          const sep = document.createElement('div');
+          sep.className = 'eventos-group-separator';
+          grid.appendChild(sep);
+        }
+        currentGroupEl = document.createElement('div');
+        currentGroupEl.className = 'eventos-group-cards';
+        currentGroupEl.dataset.priority = key;
+        grid.appendChild(currentGroupEl);
+        currentGroupKey = key;
+      }
+
+      renderCard(ev, currentGroupEl);
+    });
+
+    function renderCard(ev, container) {
       const active = isActive(ev, today);
       const card = document.createElement('div');
       card.className = 'evento-card' + (active ? ' activo' : '');
 
+      const media = ev.posterVideo
+        ? `<video class="evento-card-poster" muted loop playsinline preload="metadata"
+                  poster="${ev.posterImg || ''}">
+             <source src="${ev.posterVideo}" type="video/mp4" />
+           </video>`
+        : `<img class="evento-card-poster" src="${ev.posterImg}" alt="${ev.title1} ${ev.title2}"
+                onerror="this.style.display='none'" />`;
+
       card.innerHTML = `
-        <img class="evento-card-poster" src="${ev.posterImg}" alt="${ev.title1} ${ev.title2}"
-             onerror="this.style.display='none'" />
+        ${media}
         <div class="evento-card-body">
           <div class="evento-card-header">
             <img class="evento-card-logo" src="${ev.eventLogoImg}" alt=""
@@ -155,15 +207,28 @@
           </div>
           <div class="evento-card-divider"></div>
           <div class="evento-card-meta">
-            <span class="evento-card-meta-item">📅 ${ev.date}</span>
-            <span class="evento-card-meta-item">📍 ${ev.location}</span>
+            ${ev.date ? `<span class="evento-card-meta-item">📅 ${ev.date}</span>` : ''}
+            ${ev.location ? `<span class="evento-card-meta-item">📍 ${ev.location}</span>` : ''}
           </div>
-          <div class="evento-card-type">${ev.type}</div>
+          <div class="evento-card-type">${ev.type || ''}</div>
         </div>
       `;
 
-      grid.appendChild(card);
-    });
+      // Hover → play / leave → pausa y vuelve al inicio
+      const cardVideo = card.querySelector('video.evento-card-poster');
+      if (cardVideo) {
+        card.addEventListener('mouseenter', () => {
+          cardVideo.muted = true;
+          cardVideo.play().catch(() => {});
+        });
+        card.addEventListener('mouseleave', () => {
+          cardVideo.pause();
+          cardVideo.currentTime = 0;
+        });
+      }
+
+      container.appendChild(card);
+    }
   });
 
   function isActive(ev, today) {
