@@ -262,16 +262,34 @@
         if (window.ALFEvents) window.ALFEvents.open(ev.id);
       });
 
-      // Hover → play / leave → pausa y vuelve al inicio
+      // Hover → play / leave → quita el src y vuelve al poster
       const cardVideo = card.querySelector('video.evento-card-poster');
       if (cardVideo) {
+        const videoSrc = ev.posterVideo;
+
         card.addEventListener('mouseenter', () => {
+          // Si previamente quitamos el source, lo restauramos
+          let sourceEl = cardVideo.querySelector('source');
+          if (!sourceEl) {
+            sourceEl = document.createElement('source');
+            sourceEl.type = 'video/mp4';
+            cardVideo.appendChild(sourceEl);
+          }
+          if (sourceEl.getAttribute('src') !== videoSrc) {
+            sourceEl.setAttribute('src', videoSrc);
+            cardVideo.load();
+          }
           cardVideo.muted = true;
           cardVideo.play().catch(() => {});
         });
+
         card.addEventListener('mouseleave', () => {
           cardVideo.pause();
-          cardVideo.currentTime = 0;
+          // Quitar el source para que el navegador muestre de nuevo el poster
+          const sourceEl = cardVideo.querySelector('source');
+          if (sourceEl) sourceEl.removeAttribute('src');
+          cardVideo.removeAttribute('src');
+          cardVideo.load();
         });
       }
 
