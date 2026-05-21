@@ -254,7 +254,7 @@
         text-overflow: ellipsis;
       ">${_escHtml(name)}</div>
       <div class="af-dropdown-sep"></div>
-      <a href="./app.html" class="af-dropdown-item" role="menuitem">
+      <a href="./app_ui.html" class="af-dropdown-item" role="menuitem">
         <span class="af-dropdown-item-ico">⬡</span> Área de miembros
       </a>
       <div class="af-dropdown-sep"></div>
