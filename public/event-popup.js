@@ -430,23 +430,28 @@
     return { openPopup, closePopup, btn };
   }
 
-  // Activos → con botón flotante; priority 1 arriba, menores debajo
-  active.forEach((ev, idx) => {
-    const indexFromBottom = active.length - 1 - idx;
+  // Solo los eventos marcados con autoPopup:true salen como popup automático
+  // y/o con botón flotante persistente. El resto se registra para que se
+  // puedan abrir desde las tarjetas de la sección Eventos, sin invadir la UI.
+  const autoPopupActive = active.filter(ev => ev.autoPopup === true);
+
+  autoPopupActive.forEach((ev, idx) => {
+    const indexFromBottom = autoPopupActive.length - 1 - idx;
     const { openPopup, btn } = createEventPopup(ev, {
       withFloatingBtn: true,
       btnIndexFromBottom: indexFromBottom,
     });
 
     if (idx === 0) {
-      // El de mayor prioridad → popup tras delay
+      // El de mayor prioridad con autoPopup → popup tras delay
       setTimeout(openPopup, ev.appearDelayMs || 1500);
     } else {
       btn.classList.add('alf-show');
     }
   });
 
-  // Resto (pasados o futuros) → solo registrar para que el archivo pueda abrirlos
+  // Resto de eventos (activos sin autoPopup, pasados o futuros) → solo
+  // registrar para que las tarjetas de la sección Eventos puedan abrirlos.
   events.forEach(ev => {
     if (!popupRegistry.has(ev.id)) {
       createEventPopup(ev, { withFloatingBtn: false });

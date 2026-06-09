@@ -2,11 +2,13 @@
    ALFILO · REGISTRO CENTRAL DE EVENTOS
    ----------------------------------------------------------------
    Añade aquí cada nuevo evento. El sistema se encarga de:
-   · Mostrar como popup si está dentro de fechas (startDate → endDate)
    · Mostrarlo en la sección de Eventos de la web siempre
-   · Si hay varios activos a la vez: el de menor priority (1)
-     abre como popup principal; los demás aparecen como botones
-     flotantes en la esquina (priority 2 abajo, 3 encima).
+   · Si además lleva `autoPopup: true` y está dentro de fechas,
+     se abrirá como popup automático al cargar la web. El de menor
+     priority (1) abre como popup principal; los demás con autoPopup
+     aparecen como botones flotantes en la esquina.
+   · Sin `autoPopup`: el evento NO interrumpe la navegación; solo se
+     abre como popup al pulsar su tarjeta en la sección Eventos.
    ============================================================ */
 
 window.ALFILO_EVENTS = [
@@ -14,6 +16,7 @@ window.ALFILO_EVENTS = [
   {
     id: 'streetbar-ourense-2026',
     priority: 1,                       // 1 = más prioritario, 3 = menos
+    autoPopup: true,                   // único evento que se abre solo al cargar
     startDate: '2026-05-03',
     endDate:   '2026-06-07',
     appearDelayMs: 1500,
